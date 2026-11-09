@@ -102,7 +102,7 @@ export function SiteNav({ links, cta }: { links: NavLink[]; cta: NavLink }) {
       >
         <ul>
           {all.map((l) => (
-            <li key={l.href}>
+            <li key={l.label}>
               <Link href={href(l.href)} aria-current={pathname === l.href ? "page" : undefined}>
                 {l.label}
               </Link>

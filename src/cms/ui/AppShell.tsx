@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { interLatin, interLatinExt } from "./fonts";
 import styles from "./os.module.css";
 import { SideNav, type NavSection } from "./SideNav";
@@ -30,7 +30,10 @@ export function AppShell({ product, logo, homeHref, nav, headerActions, children
           <img src={logo.src} alt={logo.alt} width={96} height={38} />
           <span className={styles.product}>{product}</span>
         </a>
-        <SideNav sections={nav} homeHref={homeHref} />
+        {/* The current page is known only per request; until then show the nav unhighlighted. */}
+        <Suspense fallback={<SideNav sections={nav} homeHref={homeHref} static />}>
+          <SideNav sections={nav} homeHref={homeHref} />
+        </Suspense>
       </aside>
       <div className={styles.main}>
         <header className={styles.header}>{headerActions}</header>

@@ -13,7 +13,14 @@ export function proxy(request: NextRequest) {
   const portalSubdomain = parsePortalSubdomain(process.env.PORTAL_SUBDOMAIN);
   const isPortal = surfaceForHost(hostname, portalSubdomain) === "portal";
 
-  const decision = routeRequest({ hostname, pathname: url.pathname, role, portalSubdomain });
+  const decision = routeRequest({
+    hostname,
+    pathname: url.pathname,
+    role,
+    portalSubdomain,
+    // Studio has no sign-in yet, so it only runs under `npm run dev`.
+    adminLocked: process.env.NODE_ENV === "production",
+  });
 
   let response: NextResponse;
   switch (decision.kind) {

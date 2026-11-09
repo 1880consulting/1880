@@ -17,17 +17,30 @@ Source for **1880.io** (public website + the 1880 Studio CMS) and a private clie
 
 ## Run it locally
 
-Needs Node 22 (see `.nvmrc`).
+Needs Node 22 (see `.nvmrc`) and Docker (for the local database).
 
 ```bash
 npm install
+```
+
+```bash
+npm run db:up
+```
+
+```bash
+npm run db:migrate
+```
+
+```bash
 npm run dev
 ```
+
+`db:up` starts MySQL in Docker, `db:migrate` creates the tables. Copy `.env.example` to `.env.local` for optional settings such as `RESEND_API_KEY` (email alerts). `npm test` uses a separate `studio_test` database, so it never touches your local data.
 
 Then open:
 
 - http://localhost:3000: public site (`1880.io`)
-- http://localhost:3000/admin: 1880 Studio (the CMS)
+- http://localhost:3000/admin: 1880 Studio (the CMS). It works only under `npm run dev` until staff sign-in is built.
 - http://clients.localhost:3000/acme: client portal (works in Chrome and Edge with no setup)
 
 ## Checks
@@ -55,6 +68,8 @@ npm run build
 | `src/app/admin/` | 1880 Studio, `1880.io/admin` |
 | `src/app/(portal)/portal/` | Client portal, served at `<PORTAL_SUBDOMAIN>.1880.io` |
 | `src/app/api/health/` | Uptime check |
+| `src/cms/` | The CMS engine: inquiries, settings, email, admin UI (`ui/`) |
+| `src/lib/db/` | Database connection and tables (`schema.ts`). `npm run db:generate` turns a schema change into a numbered migration in `drizzle/` |
 | `src/cms/ui/` | Admin building blocks in the 1880 OS look |
 | `design-system/tokens.css` | Public-site tokens: the 1880 Design System v0.3, as on 1880consulting.com |
 | `design-system/fonts/` | Libre Bodoni (OFL), self-hosted |

@@ -94,6 +94,8 @@ export function routeRequest(input: {
   pathname: string;
   role: SiteRole;
   portalSubdomain?: string;
+  /** Answer 404 for /admin. On in production until staff sign-in exists (see src/cms/auth.ts). */
+  adminLocked?: boolean;
 }): RouteDecision {
   const hostname = input.hostname.toLowerCase();
   const { pathname, role } = input;
@@ -120,6 +122,10 @@ export function routeRequest(input: {
       kind: "rewrite",
       pathname: pathname === "/" ? PORTAL_PREFIX : PORTAL_PREFIX + pathname,
     };
+  }
+
+  if (input.adminLocked && (pathname === "/admin" || pathname.startsWith("/admin/"))) {
+    return { kind: "not-found" };
   }
 
   // Public host: the portal's internal routes don't exist here.

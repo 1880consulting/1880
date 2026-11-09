@@ -40,6 +40,7 @@ Last updated: 2026-11-09
 | D29 | The CMS is a **reusable engine** (`src/cms/`), separate from 1880's blocks and styling (`src/blocks/`), so it can run other sites later | Nov 9, Drew |
 | D30 | Admin look: **1880 OS**, the 1880 team's work-UI design system (Inter, charcoal sidebar, light + dark themes; [design system](https://claude.ai/artifact/3v3y6Zh7fSP6zQZXs744t7)). Tokens, font and logo live in `design-system/1880-os/`. The public site keeps the Bodoni 1880 Design System | Nov 9, Drew |
 | D31 | **The public site starts as a rebuild of today's 1880consulting.com** (WordPress + Elementor Pro): the one-page home and the Contact page, same words, design and motion, in Next.js. Its sections become the first CMS blocks (`src/blocks/`). This replaces the Claude Design prototype of the public site for now | Nov 9, Drew |
+| D32 | **Inquiries inbox:** every contact-form message is saved first, then the alert email goes out in the background (Resend, plain text, Reply-To = the sender). Failed alerts retry automatically up to 5 times, then wait for **Send alert again**. **Until staff sign-in exists, 1880 Studio runs only under `npm run dev`**: production answers 404 for `/admin` | Nov 9, Drew |
 
 ---
 
@@ -224,8 +225,9 @@ media              id, storage_key, filename, mime, width, height, focal_x, foca
 media_blobs        media_id, variant, data LONGBLOB        -- only while storage = MySQL
 redirects          id, from_path, to_path, code, created_at   -- automatic on slug change
 settings           key, value JSON                       -- menus, footer, inquiry alert recipients
-inquiries          id, name, email, company, message, status(new|read|archived),
-                   email_status(pending|sent|failed), email_attempts, created_at
+inquiries          id(random), name, email, message, status(new|read|archived),
+                   alert_status(pending|sent|failed|skipped), alert_attempts, alert_error,
+                   alert_claimed_at, alerted_at, created_at, read_at
 
 -- portal
 tenants            id, slug, name, logo_media_id, accent_color, status, created_at
@@ -292,7 +294,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 
 ### Phase 0: Repo foundation (no design or hosting needed, can start now)
 - [x] Scaffold Next.js 16 at the repo root, TypeScript strict, ESLint, Prettier
-- [ ] Docker MySQL for local dev, Drizzle schema + first migration
+- [x] Docker MySQL for local dev, Drizzle schema + first migration (`inquiries`, `settings`)
 - [x] `proxy.ts` hostname routing (`1880.io` / `clients.1880.io`), reserved names, `SITE_ROLE`
 - [ ] Foundations: staff sign-in (password + magic link) and roles, activity log, security headers, health check with DB, mail via Resend
 - [x] GitHub Actions CI: lint, typecheck, unit tests, build
@@ -310,10 +312,9 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] Admin shell in the 1880 OS look, with placeholder sections
 - [ ] People + roles
 - [x] Rebuild of 1880consulting.com (D31): home + Contact, as blocks (hero, statement, feature, namesake, services, contact band) with zod schemas, content in `src/site/content.ts` until the CMS stores it
-- [ ] Contact form delivery: the form validates and has a honeypot; saving + emailing waits for the inquiries inbox below
 - [ ] Collections: case studies, services
 - [ ] Media library + pipeline, SEO panel, menus + footer, automatic slug redirects
-- [ ] Contact form → inquiries inbox + email alert via Resend, recipients in Settings
+- [x] Contact form → inquiries inbox + email alert via Resend, recipients in Settings (D32). Emails go out once Resend is set up (§4.1, Phase 5)
 - [ ] SEO (metadata, JSON-LD, sitemap, OG images, `llms.txt`), Plausible, accessibility, Lighthouse ≥ 95
 
 ### Phase 3: Portal foundation

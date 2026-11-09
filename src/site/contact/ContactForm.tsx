@@ -66,7 +66,7 @@ export function ContactForm({ action, email }: { action: Action; email: string }
       </Button>
       {state.status === "unavailable" && (
         <p className={styles.message} role="alert">
-          Messages can&apos;t be sent from this form yet. Email us at{" "}
+          Sorry, your message didn&apos;t go through. Please email us at{" "}
           <a href={`mailto:${email}`}>{email}</a> and we&apos;ll reply soon.
         </p>
       )}

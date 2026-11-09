@@ -10,6 +10,8 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
   - `SITE_ROLE` (`public` | `portal` | `all`) limits what a deployment serves. Wrong-role routes must 404, enforced in `proxy.ts` **and** in each route group's layout.
 - **No deployments for now.** Hostinger is on hold until the client buys her own plan. Work happens in GitHub only. DNS will be at **GoDaddy**; never propose moving DNS to Hostinger.
 - Database: **MySQL** (Hostinger's in production, Docker locally) via **Drizzle ORM**. Schema changes are generated, numbered migrations. Never edit a shipped one.
+- Every Studio page section and server action that reads or changes data calls `requireStaff()` (`src/cms/auth.ts`) first. Until staff sign-in exists it allows only `npm run dev`, and `proxy.ts` 404s `/admin` in production. Validate server-action arguments with zod: actions are public endpoints.
+- `npm test` uses the `studio_test` database (never the dev one). Database tests skip when MySQL isn't running.
 - Never write files to disk at runtime (Hostinger wipes them on deploy). Use the storage adapter.
 - Styling: design tokens as CSS variables in `design-system/` + CSS Modules. No Tailwind.
   - Public site: the 1880 Design System (Bodoni) in `design-system/tokens.css`.

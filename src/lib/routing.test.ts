@@ -73,6 +73,17 @@ describe("routeRequest", () => {
   });
 });
 
+describe("admin lock", () => {
+  it("404s Studio while it has no sign-in, and only Studio", () => {
+    const r = (pathname: string) =>
+      routeRequest({ hostname: "1880.io", pathname, role: "all", adminLocked: true });
+    expect(r("/admin")).toEqual({ kind: "not-found" });
+    expect(r("/admin/inquiries")).toEqual({ kind: "not-found" });
+    expect(r("/administrator-guide")).toEqual({ kind: "next" });
+    expect(r("/contact")).toEqual({ kind: "next" });
+  });
+});
+
 describe("portal subdomain setting", () => {
   it("routes whichever subdomain is configured to the portal", () => {
     const r = (hostname: string) =>

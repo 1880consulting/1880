@@ -17,10 +17,26 @@ export interface NavSection {
 }
 
 /** The sidebar's link list. Highlights the current page (exact match for the home link). */
-export function SideNav({ sections, homeHref }: { sections: NavSection[]; homeHref: string }) {
-  const pathname = usePathname();
+export function SideNav(props: { sections: NavSection[]; homeHref: string; static?: boolean }) {
+  return props.static ? <NavLinks {...props} pathname={null} /> : <CurrentNav {...props} />;
+}
+
+function CurrentNav(props: { sections: NavSection[]; homeHref: string }) {
+  return <NavLinks {...props} pathname={usePathname()} />;
+}
+
+function NavLinks({
+  sections,
+  homeHref,
+  pathname,
+}: {
+  sections: NavSection[];
+  homeHref: string;
+  pathname: string | null;
+}) {
   const isCurrent = (href: string) =>
-    href === homeHref ? pathname === href : pathname === href || pathname.startsWith(href + "/");
+    pathname !== null &&
+    (href === homeHref ? pathname === href : pathname === href || pathname.startsWith(href + "/"));
 
   return (
     <nav aria-label="Studio" className={styles.nav}>

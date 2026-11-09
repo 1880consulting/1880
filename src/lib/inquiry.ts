@@ -25,13 +25,3 @@ export interface InquiryState {
   errors?: Partial<Record<InquiryField, string>>;
   values?: Partial<Record<InquiryField, string>>;
 }
-
-/**
- * Saves an inquiry and alerts the team. Not connected yet: it needs the
- * database (inquiries inbox) and Resend (email alert), both PLAN Phase 2.
- * Until then it reports "unavailable" so nothing is silently lost.
- */
-export async function deliverInquiry(inquiry: Inquiry): Promise<"sent" | "unavailable"> {
-  void inquiry;
-  return "unavailable";
-}
