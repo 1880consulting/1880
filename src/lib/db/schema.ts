@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
+import { sql } from "drizzle-orm";
 
 /**
  * Database tables. Change this file, then run `npm run db:generate` to create
@@ -124,3 +125,65 @@ export const auditLog = mysqlTable(
   },
   (t) => [index("audit_log_time").on(t.createdAt), index("audit_log_actor").on(t.actorId)],
 );
+
+// ---------------------------------------------------------------------------
+// Content (PLAN §3.2): entries, immutable versions, redirects
+// ---------------------------------------------------------------------------
+
+/**
+ * One page (or later, case study, service…). Points at its current draft
+ * version and its published version; both live in entry_versions.
+ */
+export const entries = mysqlTable(
+  "entries",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    type: varchar("type", { length: 32 }).notNull(),
+    /** Draft address, e.g. "about" → /about. The home page is "". */
+    slug: varchar("slug", { length: 200 }).notNull(),
+    /** Address of what's live, so a slug change can redirect the old one. */
+    publishedSlug: varchar("published_slug", { length: 200 }),
+    status: mysqlEnum("status", ["draft", "published", "archived"]).notNull().default("draft"),
+    draftVersionId: varchar("draft_version_id", { length: 36 }),
+    publishedVersionId: varchar("published_version_id", { length: 36 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+    updatedBy: varchar("updated_by", { length: 36 }),
+    publishedAt: timestamp("published_at"),
+  },
+  (t) => [
+    uniqueIndex("entries_type_slug").on(t.type, t.slug),
+    index("entries_type_status").on(t.type, t.status),
+  ],
+);
+
+export type EntryRow = typeof entries.$inferSelect;
+
+/** Every save is a new row here, never changed afterwards (undo and history). */
+export const entryVersions = mysqlTable(
+  "entry_versions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    entryId: varchar("entry_id", { length: 36 }).notNull(),
+    doc: json("doc").notNull(),
+    authorId: varchar("author_id", { length: 36 }),
+    /** What made this version: a save, a restore… */
+    note: varchar("note", { length: 200 }),
+    // Microseconds, so versions saved in the same second still sort in order.
+    createdAt: timestamp("created_at", { fsp: 6 })
+      .notNull()
+      .default(sql`(now(6))`),
+  },
+  (t) => [index("entry_versions_entry").on(t.entryId, t.createdAt)],
+);
+
+export type EntryVersionRow = typeof entryVersions.$inferSelect;
+
+/** Old address → new address. Added automatically when a published page moves. */
+export const redirects = mysqlTable("redirects", {
+  id: int("id").autoincrement().primaryKey(),
+  fromPath: varchar("from_path", { length: 300 }).notNull().unique(),
+  toPath: varchar("to_path", { length: 300 }).notNull(),
+  code: int("code").notNull().default(308),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

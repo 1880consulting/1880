@@ -22,6 +22,11 @@ export function proxy(request: NextRequest) {
     https: proto === "https" || url.protocol === "https:",
     dev: process.env.NODE_ENV === "development",
     private: isPortal || url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
+    frames: url.pathname.startsWith("/admin/preview/")
+      ? "framed"
+      : url.pathname.startsWith("/admin/")
+        ? "host"
+        : "none",
   });
   const finish = (response: NextResponse) => {
     for (const [key, value] of Object.entries(headers)) response.headers.set(key, value);

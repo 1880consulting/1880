@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { peekToken } from "@/cms/staff/service";
 import { AuthCard } from "@/cms/ui";
@@ -16,6 +17,7 @@ export default function SetPasswordPage({ searchParams }: PageProps<"/admin/set-
 }
 
 async function Content({ searchParams }: Pick<PageProps<"/admin/set-password">, "searchParams">) {
+  await connection(); // one-time links: check them only for a real visit
   const { token } = await searchParams;
   const found =
     typeof token === "string" && token.length < 100

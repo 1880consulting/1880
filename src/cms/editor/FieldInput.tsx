@@ -1,0 +1,202 @@
+"use client";
+
+import { IconPlus, IconX } from "@tabler/icons-react";
+import { controls as c } from "../ui/client";
+import type { Field } from "../content/fields";
+import { pathKey, type Path } from "./doc";
+import s from "./editor.module.css";
+
+interface Props {
+  field: Field;
+  value: unknown;
+  path: Path;
+  errors: Map<string, string>;
+  onChange: (path: Path, value: unknown) => void;
+}
+
+const idFor = (path: Path) => `f-${pathKey(path).replace(/[^a-zA-Z0-9-]/g, "-")}`;
+
+function Label({
+  field,
+  htmlFor,
+  optional,
+}: {
+  field: Field;
+  htmlFor?: string;
+  optional?: boolean;
+}) {
+  return (
+    <label htmlFor={htmlFor} className={c.label}>
+      {field.label}
+      {optional && <span className={s.optional}> Optional</span>}
+    </label>
+  );
+}
+
+function ErrorText({ id, message }: { id: string; message?: string }) {
+  return message ? (
+    <p id={`${id}-error`} className={c.error}>
+      {message}
+    </p>
+  ) : null;
+}
+
+/** One form control for one field of a block, built from its description. */
+export function FieldInput({ field, value, path, errors, onChange }: Props) {
+  const id = idFor(path);
+  const error = errors.get(pathKey(path));
+  const describedBy =
+    [field.help && `${id}-help`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
+  const help = field.help ? (
+    <p id={`${id}-help`} className={c.hint}>
+      {field.help}
+    </p>
+  ) : null;
+
+  switch (field.kind) {
+    case "text": {
+      const text = typeof value === "string" ? value : "";
+      const props = {
+        id,
+        value: text,
+        maxLength: field.maxLength,
+        className: c.input,
+        "aria-invalid": error ? true : undefined,
+        "aria-describedby": describedBy,
+        onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+          onChange(path, e.target.value),
+      };
+      return (
+        <div className={c.field}>
+          <div className={s.labelRow}>
+            <Label field={field} htmlFor={id} optional={!field.required} />
+            {field.maxLength && (
+              <span className={s.count} aria-hidden>
+                {text.length}/{field.maxLength}
+              </span>
+            )}
+          </div>
+          {field.multiline ? <textarea rows={3} {...props} /> : <input type="text" {...props} />}
+          {help}
+          <ErrorText id={id} message={error} />
+        </div>
+      );
+    }
+
+    case "boolean":
+      return (
+        <div className={c.field}>
+          <label className={s.check}>
+            <input
+              type="checkbox"
+              checked={value === true}
+              onChange={(e) => onChange(path, e.target.checked)}
+            />
+            {field.label}
+          </label>
+          {help}
+        </div>
+      );
+
+    case "select":
+      return (
+        <div className={c.field}>
+          <Label field={field} htmlFor={id} optional={!field.required} />
+          <select
+            id={id}
+            className={c.input}
+            value={typeof value === "string" ? value : ""}
+            onChange={(e) => onChange(path, e.target.value)}
+          >
+            {!field.required && <option value="">None</option>}
+            {field.options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+          {help}
+          <ErrorText id={id} message={error} />
+        </div>
+      );
+
+    case "list": {
+      const items = Array.isArray(value) ? (value as string[]) : [];
+      const canAdd = field.max === undefined || items.length < field.max;
+      return (
+        <fieldset className={s.fieldset} aria-describedby={describedBy}>
+          <legend className={c.label}>{field.label}</legend>
+          {help}
+          <ol className={s.list}>
+            {items.map((item, i) => {
+              const itemPath = [...path, i];
+              const itemError = errors.get(pathKey(itemPath));
+              return (
+                <li key={i}>
+                  <div className={s.listRow}>
+                    <input
+                      className={c.input}
+                      value={item}
+                      maxLength={field.maxLength}
+                      aria-label={`${field.label} ${i + 1}`}
+                      aria-invalid={itemError ? true : undefined}
+                      onChange={(e) => onChange(itemPath, e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className={s.iconButton}
+                      aria-label={`Remove ${field.label.toLowerCase()} ${i + 1}`}
+                      onClick={() =>
+                        onChange(
+                          path,
+                          items.filter((_, j) => j !== i),
+                        )
+                      }
+                    >
+                      <IconX size={16} stroke={2} aria-hidden />
+                    </button>
+                  </div>
+                  {itemError && <p className={c.error}>{itemError}</p>}
+                </li>
+              );
+            })}
+          </ol>
+          {canAdd && (
+            <button
+              type="button"
+              className={s.addItem}
+              onClick={() => onChange(path, [...items, ""])}
+            >
+              <IconPlus size={16} stroke={2} aria-hidden />
+              Add
+            </button>
+          )}
+          <ErrorText id={id} message={error} />
+        </fieldset>
+      );
+    }
+
+    case "group": {
+      const obj = (value && typeof value === "object" ? value : {}) as Record<string, unknown>;
+      return (
+        <fieldset className={s.fieldset}>
+          <legend className={c.label}>
+            {field.label}
+            {!field.required && <span className={s.optional}> Optional: leave blank for none</span>}
+          </legend>
+          {help}
+          {field.fields.map((sub) => (
+            <FieldInput
+              key={sub.key}
+              field={sub}
+              value={obj[sub.key]}
+              path={[...path, sub.key]}
+              errors={errors}
+              onChange={onChange}
+            />
+          ))}
+        </fieldset>
+      );
+    }
+  }
+}

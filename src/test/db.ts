@@ -27,6 +27,9 @@ export function setupTestDatabase() {
       schema.staffTokens,
       schema.rateLimits,
       schema.auditLog,
+      schema.entries,
+      schema.entryVersions,
+      schema.redirects,
     ]) {
       await db().delete(table);
     }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { peekToken } from "@/cms/staff/service";
 import { AuthCard, authStyles as s, Button } from "@/cms/ui";
@@ -20,6 +21,7 @@ export default function LinkPage({ searchParams }: PageProps<"/admin/link">) {
 }
 
 async function Confirm({ searchParams }: Pick<PageProps<"/admin/link">, "searchParams">) {
+  await connection(); // one-time links: check them only for a real visit
   const { token } = await searchParams;
   const found =
     typeof token === "string" && token.length < 100 ? await peekToken(token, ["login"]) : null;

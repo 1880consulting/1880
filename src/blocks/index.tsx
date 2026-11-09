@@ -27,6 +27,15 @@ export const blockSchema = z.discriminatedUnion("type", [
 
 export type Block = z.infer<typeof blockSchema>;
 
+/** Visible, valid blocks, ready for <RenderBlocks>. Anything that doesn't fit its schema is left out. */
+export function visibleBlocks(doc: { blocks: { hidden?: boolean; type: string }[] }): Block[] {
+  return doc.blocks.flatMap((b) => {
+    if (b.hidden) return [];
+    const parsed = blockSchema.safeParse(b);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
 /** Site-wide values some blocks need (e.g. the contact email). */
 export interface BlockContext {
   email: string;

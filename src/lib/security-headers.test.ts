@@ -39,6 +39,16 @@ describe("security headers", () => {
     expect(csp).not.toContain("unsafe-eval");
   });
 
+  it("lets Studio frame only its own preview, and only Studio frame it", () => {
+    expect(securityHeaders(live)["Content-Security-Policy"]).toContain("frame-src 'none'");
+    const host = securityHeaders({ ...live, frames: "host" });
+    expect(host["Content-Security-Policy"]).toContain("frame-src 'self'");
+    expect(host["Content-Security-Policy"]).toContain("frame-ancestors 'none'");
+    const framed = securityHeaders({ ...live, frames: "framed" });
+    expect(framed["Content-Security-Policy"]).toContain("frame-ancestors 'self'");
+    expect(framed["X-Frame-Options"]).toBe("SAMEORIGIN");
+  });
+
   it("relaxes only what hot reload needs in development", () => {
     const csp = contentSecurityPolicy({ https: false, dev: true });
     expect(csp).toContain("'unsafe-eval'");

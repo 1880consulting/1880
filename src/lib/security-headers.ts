@@ -18,9 +18,17 @@ export interface SecurityContext {
   dev: boolean;
   /** Private pages (Studio, portal): never stored by browsers or caches. */
   private: boolean;
+  /**
+   * Studio's live preview: the editor shows the page in a frame. "host" may
+   * frame this site's own pages; "framed" is the preview page itself, which
+   * only this site may frame. Everything else can neither frame nor be framed.
+   */
+  frames?: "none" | "host" | "framed";
 }
 
-export function contentSecurityPolicy(ctx: Pick<SecurityContext, "https" | "dev">): string {
+export function contentSecurityPolicy(
+  ctx: Pick<SecurityContext, "https" | "dev" | "frames">,
+): string {
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "script-src": ["'self'", "'unsafe-inline'", ...(ctx.dev ? ["'unsafe-eval'"] : [])],
@@ -30,12 +38,12 @@ export function contentSecurityPolicy(ctx: Pick<SecurityContext, "https" | "dev"
     "connect-src": ["'self'", ...(ctx.dev ? ["ws:", "wss:"] : [])],
     "media-src": ["'self'"],
     "object-src": ["'none'"],
-    "frame-src": ["'none'"],
+    "frame-src": [ctx.frames === "host" ? "'self'" : "'none'"],
     "worker-src": ["'self'", "blob:"],
     "manifest-src": ["'self'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
-    "frame-ancestors": ["'none'"],
+    "frame-ancestors": [ctx.frames === "framed" ? "'self'" : "'none'"],
   };
   const policy = Object.entries(directives).map(([k, v]) => `${k} ${v.join(" ")}`);
   if (ctx.https) policy.push("upgrade-insecure-requests");
@@ -48,7 +56,7 @@ export function securityHeaders(ctx: SecurityContext): Record<string, string> {
     // Don't guess file types: a "text file" can't be run as a script.
     "X-Content-Type-Options": "nosniff",
     // Other sites can't put 1880.io in a frame (stops click-jacking). Older-browser twin of frame-ancestors.
-    "X-Frame-Options": "DENY",
+    "X-Frame-Options": ctx.frames === "framed" ? "SAMEORIGIN" : "DENY",
     // Links to other sites get only "1880.io", never the full address.
     "Referrer-Policy": "strict-origin-when-cross-origin",
     // The site uses none of these, so nothing embedded can ask for them.

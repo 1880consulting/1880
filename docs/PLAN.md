@@ -43,6 +43,7 @@ Last updated: 2026-11-09
 | D32 | **Inquiries inbox:** every contact-form message is saved first, then the alert email goes out in the background (Resend, plain text, Reply-To = the sender). Failed alerts retry automatically up to 5 times, then wait for **Send alert again**. **Until staff sign-in exists, 1880 Studio runs only under `npm run dev`**: production answers 404 for `/admin` | Nov 9, Drew |
 | D33 | **Staff sign-in is built:** email + password (scrypt) or an emailed one-time link, owner/editor roles, 14-day sessions in a host-only HttpOnly cookie, rate limits on every sign-in path, and an activity log. Emailed links open a confirm page first, because Microsoft 365's link scanner would otherwise use them up. Owners invite people from **People**; each invite also shows a copyable link, so invites work before email is set up. The first owner (and recovery if everyone is locked out) comes from `npm run studio:owner`. This replaces D32's "Studio only under `npm run dev`" | Nov 9, Drew |
 | D34 | **Security headers and health check.** Every response gets a Content Security Policy that allows only this site (no outside scripts, fonts or frames), plus HSTS on HTTPS, nosniff, no framing, a strict referrer policy and a Permissions-Policy. Studio and portal pages are also `private, no-store` and `noindex`. Scripts allow `'unsafe-inline'` because pages are prerendered and Next.js starts each one with small inline scripts; a nonce-based policy was tried for Studio and broke its prerendered pages. Revisit if Studio ever renders fully on demand. `/api/health` checks the database and that every migration is applied: 200 or 503, with no error details | Nov 9, Drew |
+| D35 | **CMS core is built.** Pages are made of blocks; every save is an immutable version; an entry points at its draft and its published version, with a guard against overwriting someone else's save. Studio's editor builds each block's form from the block's zod schema (labels via `.meta()`), so a new block needs no editor code. **Live preview** renders the draft with the real site blocks in a frame, updated as you type (only this site can frame it). **Publish** checks every visible section first and refreshes the page's cache tag, so the site updates at once while staying static. Moving a published page adds a 308 redirect from the old address. Unknown addresses answer a real 404 (`ensureStatic = "navigation"`). The home page was imported with `npm run cms:seed`; until a database has one, the built-in copy shows | Nov 9, Drew |
 
 ---
 
@@ -314,13 +315,14 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [ ] Hand off into `prototype/` + brand tokens into `design-system/`
 
 ### Phase 2: CMS core + public site (current focus)
-- [ ] Content engine (`src/cms/`, reusable): content types, blocks, entries, versions, drafts, publish
-- [ ] Block builder with live preview
+- [x] Content engine (`src/cms/`, reusable): content types, blocks, entries, versions, drafts, publish (D35)
+- [x] Block builder with live preview: add, reorder, hide, remove sections; forms from block schemas; desktop and phone preview; history and restore
 - [x] Admin shell in the 1880 OS look, with placeholder sections
 - [x] People + roles: invite, change role, remove access; your account (change password)
 - [x] Rebuild of 1880consulting.com (D31): home + Contact, as blocks (hero, statement, feature, namesake, services, contact band) with zod schemas, content in `src/site/content.ts` until the CMS stores it
 - [ ] Collections: case studies, services
-- [ ] Media library + pipeline, SEO panel, menus + footer, automatic slug redirects
+- [x] Automatic slug redirects
+- [ ] Media library + pipeline (image blocks need it), SEO panel (basic search title + description are in the editor), menus + footer
 - [x] Contact form → inquiries inbox + email alert via Resend, recipients in Settings (D32). Emails go out once Resend is set up (§4.1, Phase 5)
 - [ ] SEO (metadata, JSON-LD, sitemap, OG images, `llms.txt`), Plausible, accessibility, Lighthouse ≥ 95
 

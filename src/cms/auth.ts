@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
+import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { SESSION_COOKIE, STUDIO_PATH_HEADER } from "./staff/cookie";
@@ -13,6 +14,9 @@ export type { Staff } from "./staff/service";
  * sign-in page; this is the real check.
  */
 export const currentStaff = cache(async (): Promise<Staff | null> => {
+  // Studio data is private and always current: read it only for a real
+  // request, never while Next.js prepares a page ahead of time (prefetching).
+  await connection();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   return token ? getSessionStaff(token) : null;
 });

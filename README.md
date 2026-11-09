@@ -32,10 +32,14 @@ npm run db:migrate
 ```
 
 ```bash
+npm run cms:seed
+```
+
+```bash
 npm run dev
 ```
 
-`db:up` starts MySQL in Docker, `db:migrate` creates the tables.
+`db:up` starts MySQL in Docker, `db:migrate` creates the tables, and `cms:seed` puts the home page into the CMS so you can edit it in Studio (it does nothing if one is already there).
 
 To sign in to 1880 Studio, create the first owner. It prints a one-time link to set your password:
 
@@ -77,7 +81,8 @@ npm run build
 | `src/app/(portal)/portal/` | Client portal, served at `<PORTAL_SUBDOMAIN>.1880.io` |
 | `src/app/api/health/` | Uptime check: 200 when the site and database work, 503 when not |
 | `src/lib/security-headers.ts` | Security headers for every response, applied in `src/proxy.ts` |
-| `src/cms/` | The CMS engine: inquiries, settings, email, admin UI (`ui/`) |
+| `src/cms/` | The CMS engine: content (`content/`), the page editor (`editor/`), inquiries, settings, email, sign-in, admin UI (`ui/`) |
+| `src/site/cms.ts` | 1880's content types: which blocks a page can use, and reserved addresses |
 | `src/lib/db/` | Database connection and tables (`schema.ts`). `npm run db:generate` turns a schema change into a numbered migration in `drizzle/` |
 | `src/cms/ui/` | Admin building blocks in the 1880 OS look |
 | `design-system/tokens.css` | Public-site tokens: the 1880 Design System v0.3, as on 1880consulting.com |
