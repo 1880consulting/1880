@@ -13,7 +13,7 @@ const route = (hostname: string, pathname: string, role: SiteRole = "all") =>
 describe("routeRequest", () => {
   it("serves public pages on 1880.io", () => {
     expect(route("1880.io", "/about")).toEqual({ kind: "next" });
-    expect(route("1880.io", "/admin")).toEqual({ kind: "next" });
+    expect(route("1880.io", "/admin")).toEqual({ kind: "sign-in", next: "/admin" });
     expect(route("localhost", "/")).toEqual({ kind: "next" });
   });
 
@@ -73,14 +73,28 @@ describe("routeRequest", () => {
   });
 });
 
-describe("admin lock", () => {
-  it("404s Studio while it has no sign-in, and only Studio", () => {
-    const r = (pathname: string) =>
-      routeRequest({ hostname: "1880.io", pathname, role: "all", adminLocked: true });
-    expect(r("/admin")).toEqual({ kind: "not-found" });
-    expect(r("/admin/inquiries")).toEqual({ kind: "not-found" });
-    expect(r("/administrator-guide")).toEqual({ kind: "next" });
+describe("Studio sign-in gate", () => {
+  const r = (pathname: string, hasStaffCookie = false) =>
+    routeRequest({ hostname: "1880.io", pathname, role: "all", hasStaffCookie });
+
+  it("sends people without a session to sign in, remembering where they were going", () => {
+    expect(r("/admin")).toEqual({ kind: "sign-in", next: "/admin" });
+    expect(r("/admin/inquiries")).toEqual({ kind: "sign-in", next: "/admin/inquiries" });
+  });
+
+  it("lets everyone reach the sign-in pages", () => {
+    for (const p of ["/admin/login", "/admin/link", "/admin/set-password", "/admin/forgot"]) {
+      expect(r(p)).toEqual({ kind: "next" });
+    }
+  });
+
+  it("passes signed-in requests on (the page checks the session for real)", () => {
+    expect(r("/admin/inquiries", true)).toEqual({ kind: "next" });
+  });
+
+  it("leaves the public site alone", () => {
     expect(r("/contact")).toEqual({ kind: "next" });
+    expect(r("/administrator-guide")).toEqual({ kind: "next" });
   });
 });
 

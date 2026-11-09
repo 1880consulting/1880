@@ -16,8 +16,7 @@ export async function saveRecipients(
   _prev: RecipientsState,
   form: FormData,
 ): Promise<RecipientsState> {
-  const staff = await requireStaff();
-  if (staff.role !== "owner") return { status: "invalid", error: "Only owners can change this." };
+  await requireStaff({ owner: true });
 
   const value = String(form.get("recipients") ?? "");
   const list = [

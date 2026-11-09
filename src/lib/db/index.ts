@@ -19,6 +19,8 @@ const g = globalThis as unknown as { __db?: MySql2Database<typeof schema>; __poo
 export function db(): MySql2Database<typeof schema> {
   if (!g.__db) {
     g.__pool = mysql.createPool({ uri: databaseUrl(), connectionLimit: 5, timezone: "Z" });
+    // Times are UTC everywhere: in Node and in MySQL's now(), whatever the server's own zone.
+    g.__pool.pool.on("connection", (conn) => conn.query("SET time_zone = '+00:00'"));
     g.__db = drizzle(g.__pool, { schema, mode: "default" });
   }
   return g.__db;

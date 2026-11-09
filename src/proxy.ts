@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { SESSION_COOKIE, STUDIO_PATH_HEADER } from "@/cms/staff/cookie";
 import { parsePortalSubdomain, parseSiteRole, routeRequest, surfaceForHost } from "@/lib/routing";
 
 /**
@@ -18,8 +19,7 @@ export function proxy(request: NextRequest) {
     pathname: url.pathname,
     role,
     portalSubdomain,
-    // Studio has no sign-in yet, so it only runs under `npm run dev`.
-    adminLocked: process.env.NODE_ENV === "production",
+    hasStaffCookie: request.cookies.has(SESSION_COOKIE),
   });
 
   let response: NextResponse;
@@ -34,6 +34,12 @@ export function proxy(request: NextRequest) {
       const proto = request.headers.get("x-forwarded-proto");
       if (proto === "https" || proto === "http") target.protocol = `${proto}:`;
       return NextResponse.redirect(target, decision.status);
+    }
+    case "sign-in": {
+      const target = new URL("/admin/login", url);
+      if (decision.next !== "/admin") target.searchParams.set("next", decision.next + url.search);
+      response = NextResponse.redirect(target);
+      break;
     }
     case "robots-disallow":
       response = new NextResponse("User-agent: *\nDisallow: /\n", {
@@ -50,9 +56,18 @@ export function proxy(request: NextRequest) {
       response = NextResponse.rewrite(target);
       break;
     }
-    case "next":
-      response = NextResponse.next();
+    case "next": {
+      if (url.pathname.startsWith("/admin")) {
+        // Tell the page which address was asked for (see requireStaff). Set
+        // here, so a visitor can't supply their own value.
+        const headers = new Headers(request.headers);
+        headers.set(STUDIO_PATH_HEADER, url.pathname + url.search);
+        response = NextResponse.next({ request: { headers } });
+      } else {
+        response = NextResponse.next();
+      }
       break;
+    }
   }
 
   // Portal and admin pages are private: never indexed, never cached by a CDN.

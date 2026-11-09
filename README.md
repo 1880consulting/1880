@@ -35,12 +35,20 @@ npm run db:migrate
 npm run dev
 ```
 
-`db:up` starts MySQL in Docker, `db:migrate` creates the tables. Copy `.env.example` to `.env.local` for optional settings such as `RESEND_API_KEY` (email alerts). `npm test` uses a separate `studio_test` database, so it never touches your local data.
+`db:up` starts MySQL in Docker, `db:migrate` creates the tables.
+
+To sign in to 1880 Studio, create the first owner. It prints a one-time link to set your password:
+
+```bash
+npm run studio:owner -- --email you@1880consulting.com --name "Your Name"
+```
+
+Run the same command again to recover access if everyone is ever locked out. After that, owners invite everyone else from **People** in Studio. Copy `.env.example` to `.env.local` for optional settings such as `RESEND_API_KEY` (email alerts). `npm test` uses a separate `studio_test` database, so it never touches your local data.
 
 Then open:
 
 - http://localhost:3000: public site (`1880.io`)
-- http://localhost:3000/admin: 1880 Studio (the CMS). It works only under `npm run dev` until staff sign-in is built.
+- http://localhost:3000/admin: 1880 Studio (the CMS)
 - http://clients.localhost:3000/acme: client portal (works in Chrome and Edge with no setup)
 
 ## Checks

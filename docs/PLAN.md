@@ -41,6 +41,7 @@ Last updated: 2026-11-09
 | D30 | Admin look: **1880 OS**, the 1880 team's work-UI design system (Inter, charcoal sidebar, light + dark themes; [design system](https://claude.ai/artifact/3v3y6Zh7fSP6zQZXs744t7)). Tokens, font and logo live in `design-system/1880-os/`. The public site keeps the Bodoni 1880 Design System | Nov 9, Drew |
 | D31 | **The public site starts as a rebuild of today's 1880consulting.com** (WordPress + Elementor Pro): the one-page home and the Contact page, same words, design and motion, in Next.js. Its sections become the first CMS blocks (`src/blocks/`). This replaces the Claude Design prototype of the public site for now | Nov 9, Drew |
 | D32 | **Inquiries inbox:** every contact-form message is saved first, then the alert email goes out in the background (Resend, plain text, Reply-To = the sender). Failed alerts retry automatically up to 5 times, then wait for **Send alert again**. **Until staff sign-in exists, 1880 Studio runs only under `npm run dev`**: production answers 404 for `/admin` | Nov 9, Drew |
+| D33 | **Staff sign-in is built:** email + password (scrypt) or an emailed one-time link, owner/editor roles, 14-day sessions in a host-only HttpOnly cookie, rate limits on every sign-in path, and an activity log. Emailed links open a confirm page first, because Microsoft 365's link scanner would otherwise use them up. Owners invite people from **People**; each invite also shows a copyable link, so invites work before email is set up. The first owner (and recovery if everyone is locked out) comes from `npm run studio:owner`. This replaces D32's "Studio only under `npm run dev`" | Nov 9, Drew |
 
 ---
 
@@ -213,9 +214,13 @@ Every document (report, proposal, other) has a type, a title and a status, plus 
 
 ```
 -- staff & system
-staff_users        id, email, name, password_hash, role(owner|editor), status, created_at
-staff_login_tokens id, staff_user_id, token_hash, expires_at, used_at   -- magic links
-audit_log          id, actor_type(staff|client), actor_id, action, target, tenant_id NULL, created_at
+staff_users        id, email(unique), name, password_hash, role(owner|editor), status(invited|active|disabled),
+                   created_at, last_login_at
+staff_sessions     token_hash, user_id, created_at, expires_at          -- cookie holds the token, DB only its hash
+staff_tokens       token_hash, user_id, purpose(login|invite|reset), expires_at, used_at
+rate_limits        id, key, created_at
+audit_log          id, actor_type(staff|client|system), actor_id, action, target, detail JSON, created_at
+                   -- tenant_id gets added with the portal
 
 -- public site content
 entries            id, type(page|work|service), slug, status,
@@ -296,7 +301,8 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] Scaffold Next.js 16 at the repo root, TypeScript strict, ESLint, Prettier
 - [x] Docker MySQL for local dev, Drizzle schema + first migration (`inquiries`, `settings`)
 - [x] `proxy.ts` hostname routing (`1880.io` / `clients.1880.io`), reserved names, `SITE_ROLE`
-- [ ] Foundations: staff sign-in (password + magic link) and roles, activity log, security headers, health check with DB, mail via Resend
+- [x] Staff sign-in (password + emailed link), owner/editor roles, rate limits, activity log, mail via Resend (D33)
+- [ ] Security headers, health check that includes the database
 - [x] GitHub Actions CI: lint, typecheck, unit tests, build
 - [x] Placeholder pages for all three surfaces
 - [x] Portal subdomain as a setting (`PORTAL_SUBDOMAIN`, D18)
@@ -310,7 +316,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [ ] Content engine (`src/cms/`, reusable): content types, blocks, entries, versions, drafts, publish
 - [ ] Block builder with live preview
 - [x] Admin shell in the 1880 OS look, with placeholder sections
-- [ ] People + roles
+- [x] People + roles: invite, change role, remove access; your account (change password)
 - [x] Rebuild of 1880consulting.com (D31): home + Contact, as blocks (hero, statement, feature, namesake, services, contact band) with zod schemas, content in `src/site/content.ts` until the CMS stores it
 - [ ] Collections: case studies, services
 - [ ] Media library + pipeline, SEO panel, menus + footer, automatic slug redirects

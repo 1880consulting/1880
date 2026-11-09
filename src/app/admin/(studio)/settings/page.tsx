@@ -24,7 +24,8 @@ export default function SettingsPage() {
 }
 
 async function Recipients() {
-  await requireStaff();
+  const me = await requireStaff();
+  if (me.role !== "owner") return <p>Only owners can change who gets inquiry alerts.</p>;
   const recipients = await getSetting("inquiries.alertRecipients");
   return <RecipientsForm initial={recipients} />;
 }

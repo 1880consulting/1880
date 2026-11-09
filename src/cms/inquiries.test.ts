@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const send = vi.hoisted(() => vi.fn());
 vi.mock("./mail", () => ({ sendMail: send }));
 
-import { closeDb, db, schema } from "@/lib/db";
+import { db, schema } from "@/lib/db";
+import { setupTestDatabase } from "@/test/db";
 import {
   alertText,
   countInquiries,
@@ -23,21 +24,8 @@ import { setSetting } from "./settings";
  * Runs against the local MySQL (`npm run db:up && npm run db:migrate`) or the
  * CI database. Each test starts from empty tables.
  */
-let reachable = true;
-beforeAll(async () => {
-  try {
-    await db().select().from(schema.settings).limit(1);
-  } catch {
-    reachable = false;
-  }
-});
-afterAll(async () => {
-  await closeDb();
-});
-beforeEach(async (ctx) => {
-  if (!reachable) ctx.skip();
-  await db().delete(schema.inquiries);
-  await db().delete(schema.settings);
+setupTestDatabase();
+beforeEach(() => {
   send.mockReset();
 });
 

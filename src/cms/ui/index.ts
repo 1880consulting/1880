@@ -15,3 +15,4 @@ export {
   StatTile,
   type Tone,
 } from "./controls";
+export { AuthCard, AuthShell, authStyles } from "./AuthShell";

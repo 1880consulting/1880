@@ -82,7 +82,20 @@ export type RouteDecision =
   | { kind: "redirect"; hostname: string; status: 301 }
   | { kind: "rewrite"; pathname: string }
   | { kind: "not-found" }
-  | { kind: "robots-disallow" };
+  | { kind: "robots-disallow" }
+  | { kind: "sign-in"; next: string };
+
+/** Studio pages anyone can open: signing in, and the pages emailed links lead to. */
+export const STUDIO_PUBLIC_PATHS = [
+  "/admin/login",
+  "/admin/link",
+  "/admin/set-password",
+  "/admin/forgot",
+];
+
+function isStudioPath(pathname: string): boolean {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
 
 /** Paths every surface serves as-is (health checks, shared APIs). */
 function isSharedPath(pathname: string): boolean {
@@ -94,8 +107,11 @@ export function routeRequest(input: {
   pathname: string;
   role: SiteRole;
   portalSubdomain?: string;
-  /** Answer 404 for /admin. On in production until staff sign-in exists (see src/cms/auth.ts). */
-  adminLocked?: boolean;
+  /**
+   * Whether the request carries a Studio session cookie. Only a quick first
+   * check: `requireStaff()` in src/cms/auth.ts checks the session for real.
+   */
+  hasStaffCookie?: boolean;
 }): RouteDecision {
   const hostname = input.hostname.toLowerCase();
   const { pathname, role } = input;
@@ -124,8 +140,9 @@ export function routeRequest(input: {
     };
   }
 
-  if (input.adminLocked && (pathname === "/admin" || pathname.startsWith("/admin/"))) {
-    return { kind: "not-found" };
+  // Studio: no session cookie → the sign-in page, then back here.
+  if (isStudioPath(pathname) && !input.hasStaffCookie && !STUDIO_PUBLIC_PATHS.includes(pathname)) {
+    return { kind: "sign-in", next: pathname };
   }
 
   // Public host: the portal's internal routes don't exist here.
