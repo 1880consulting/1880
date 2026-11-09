@@ -1,11 +1,15 @@
-import styles from "../placeholder.module.css";
+import { IconLayoutDashboard } from "@tabler/icons-react";
+import { EmptyState, PageHeader } from "@/cms/ui";
 
 export default function AdminHomePage() {
   return (
-    <main className={styles.main}>
-      <p className={styles.label}>{"// 1880 Studio · placeholder"}</p>
-      <h1>1880 Studio</h1>
-      <p>The CMS lives here. Staff sign-in and the editor come next.</p>
-    </main>
+    <>
+      <PageHeader pretitle="1880 Studio" title="What's happening on 1880.io" />
+      <EmptyState
+        icon={<IconLayoutDashboard size={24} stroke={2} aria-hidden />}
+        title="Nothing to show yet"
+        text="Drafts waiting to publish, new inquiries and recent changes will appear here once the CMS is built."
+      />
+    </>
   );
 }

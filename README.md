@@ -53,4 +53,6 @@ npm run build
 | `src/app/admin/` | 1880 Studio, `1880.io/admin` |
 | `src/app/(portal)/portal/` | Client portal, served at `<PORTAL_SUBDOMAIN>.1880.io` |
 | `src/app/api/health/` | Uptime check |
-| `design-system/` | Design tokens (placeholders until the prototypes land) |
+| `src/cms/ui/` | Admin building blocks in the 1880 OS look |
+| `design-system/tokens.css` | Public-site tokens (placeholders until the prototypes land) |
+| `design-system/1880-os/` | 1880 OS tokens, font and logo for the admin (`npm run tokens:os` regenerates the CSS) |

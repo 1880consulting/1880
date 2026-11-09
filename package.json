@@ -10,9 +10,11 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "tokens:os": "node scripts/build-os-tokens.mjs"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.49.0",
     "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0"

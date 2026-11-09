@@ -2,7 +2,7 @@
 
 Two clickable prototypes get built before any production code: **A. the public site** (`1880.io`) and **B. the client portal** (`clients.1880.io/<client>`). Once approved, they become the visual and behavioral spec.
 
-The CMS admin doesn't need its own prototype. It follows the "1880 OS" look with light 1880 accents (PLAN D30).
+The CMS admin doesn't need its own prototype. It uses the 1880 OS design system (PLAN D30, `design-system/1880-os/`).
 
 `clients.1880.io` is a working name; the portal subdomain isn't decided yet (PLAN D18).
 

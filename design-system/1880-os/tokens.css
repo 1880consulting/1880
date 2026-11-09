@@ -1,0 +1,298 @@
+/* 1880 OS — generated from tokens.json by scripts/build-os-tokens.mjs. Do not edit by hand. */
+
+[data-os] {
+  color-scheme: light;
+  --os-canvas: #f9fafb;
+  --os-surface: #ffffff;
+  --os-surface-subtle: #f9fafb;
+  --os-surface-muted: #f2f4f7;
+  --os-border: #e4e7ec;
+  --os-border-subtle: #f2f4f7;
+  --os-border-strong: #d0d5dd;
+  --os-control-border: #868f9e;
+  --os-ink-strong: #101828;
+  --os-ink: #344054;
+  --os-ink-muted: #667085;
+  --os-ink-faint: #98a2b3;
+  --os-primary: #231f20;
+  --os-primary-hover: #000000;
+  --os-on-primary: #ffffff;
+  --os-focus: #231f20;
+  --os-sidebar: #231f20;
+  --os-sidebar-ink: #a7a5a6;
+  --os-sidebar-ink-active: #ffffff;
+  --os-sidebar-active: rgba(255,255,255,0.10);
+  --os-sidebar-border: #231f20;
+  --os-success: #12b76a;
+  --os-success-soft: #ecfdf3;
+  --os-success-text: #027a48;
+  --os-success-border: #abefc6;
+  --os-warning: #f79009;
+  --os-warning-soft: #fffaeb;
+  --os-warning-text: #b54708;
+  --os-warning-border: #fedf89;
+  --os-danger: #d92d20;
+  --os-danger-soft: #fef3f2;
+  --os-danger-text: #b42318;
+  --os-danger-border: #fecdca;
+  --os-info: #0ba5ec;
+  --os-info-soft: #f0f9ff;
+  --os-info-text: #026aa2;
+  --os-info-border: #b9e6fe;
+  --os-chart-1: #2a78d6;
+  --os-chart-2: #eb6834;
+  --os-chart-3: #1baf7a;
+  --os-chart-4: #eda100;
+  --os-chart-5: #e87ba4;
+  --os-chart-6: #008300;
+  --os-chart-7: #6250d6;
+  --os-chart-8: #e34948;
+  --os-chart-emphasis: #231f20;
+  --os-chart-context: #98a2b3;
+  --os-chart-grid: #f2f4f7;
+  --os-chart-axis: #d0d5dd;
+  --os-seq-100: #cde2fb;
+  --os-seq-200: #9ec5f4;
+  --os-seq-300: #6da7ec;
+  --os-seq-400: #3987e5;
+  --os-seq-500: #256abf;
+  --os-seq-600: #184f95;
+  --os-seq-700: #0d366b;
+  --os-div-negative: #e34948;
+  --os-div-neutral: #eef0f3;
+  --os-div-positive: #2a78d6;
+  --os-space-1: 4px;
+  --os-space-2: 8px;
+  --os-space-3: 12px;
+  --os-space-4: 16px;
+  --os-space-5: 20px;
+  --os-space-6: 24px;
+  --os-space-8: 32px;
+  --os-space-10: 40px;
+  --os-space-12: 48px;
+  --os-radius-sm: 6px;
+  --os-radius-md: 8px;
+  --os-radius-lg: 12px;
+  --os-radius-xl: 16px;
+  --os-radius-pill: 999px;
+  --os-shadow-xs: 0 1px 2px rgba(16,24,40,0.05);
+  --os-shadow-sm: 0 1px 3px rgba(16,24,40,0.10), 0 1px 2px rgba(16,24,40,0.06);
+  --os-shadow-lg: 0 12px 16px -4px rgba(16,24,40,0.08), 0 4px 6px -2px rgba(16,24,40,0.03);
+  --os-shadow-xl: 0 20px 24px -4px rgba(16,24,40,0.08), 0 8px 8px -4px rgba(16,24,40,0.03);
+  --os-sidebar-width: 256px;
+  --os-sidebar-collapsed: 72px;
+  --os-header-height: 64px;
+  --os-content-max: 1440px;
+  --os-bar-max: 24px;
+  --os-z-header: 1020;
+  --os-z-drawer: 1045;
+  --os-z-modal: 1055;
+  --os-z-toast: 1090;
+  --os-font-ui: var(--os-font-inter, Inter), var(--os-font-inter-ext, Inter), Inter, "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --os-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+[data-os][data-theme="dark"] {
+  color-scheme: dark;
+  --os-canvas: #121011;
+  --os-surface: #1c1a1b;
+  --os-surface-subtle: #221f20;
+  --os-surface-muted: #2a2627;
+  --os-border: #322e2f;
+  --os-border-subtle: #282425;
+  --os-border-strong: #4a4546;
+  --os-control-border: #757071;
+  --os-ink-strong: #fafafa;
+  --os-ink: #e4e2e2;
+  --os-ink-muted: #a8a3a4;
+  --os-ink-faint: #77716f;
+  --os-primary: #f5f4f4;
+  --os-primary-hover: #ffffff;
+  --os-on-primary: #231f20;
+  --os-focus: #f5f4f4;
+  --os-sidebar: #161314;
+  --os-sidebar-active: rgba(255,255,255,0.08);
+  --os-sidebar-border: #2a2627;
+  --os-success-soft: #053321;
+  --os-success-text: #47cd89;
+  --os-success-border: #085d3a;
+  --os-warning-soft: #4e1d09;
+  --os-warning-text: #fdb022;
+  --os-warning-border: #93370d;
+  --os-danger: #f04438;
+  --os-danger-soft: #55160c;
+  --os-danger-text: #f97066;
+  --os-danger-border: #912018;
+  --os-info-soft: #062c41;
+  --os-info-text: #36bffa;
+  --os-info-border: #065986;
+  --os-chart-1: #3987e5;
+  --os-chart-2: #d95926;
+  --os-chart-3: #199e70;
+  --os-chart-4: #c98500;
+  --os-chart-5: #d55181;
+  --os-chart-7: #9085e9;
+  --os-chart-8: #e66767;
+  --os-chart-emphasis: #f5f4f4;
+  --os-chart-context: #5a5455;
+  --os-chart-grid: #2a2627;
+  --os-chart-axis: #4a4546;
+  --os-seq-100: #0d366b;
+  --os-seq-200: #184f95;
+  --os-seq-300: #256abf;
+  --os-seq-500: #6da7ec;
+  --os-seq-600: #9ec5f4;
+  --os-seq-700: #cde2fb;
+  --os-div-negative: #e66767;
+  --os-div-neutral: #383435;
+  --os-div-positive: #3987e5;
+  --os-shadow-xs: 0 1px 2px rgba(0,0,0,0.30);
+  --os-shadow-sm: 0 1px 3px rgba(0,0,0,0.40), 0 1px 2px rgba(0,0,0,0.30);
+  --os-shadow-lg: 0 12px 16px -4px rgba(0,0,0,0.45), 0 4px 6px -2px rgba(0,0,0,0.30);
+  --os-shadow-xl: 0 20px 24px -4px rgba(0,0,0,0.55), 0 8px 8px -4px rgba(0,0,0,0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-os]:not([data-theme="light"]) {
+    color-scheme: dark;
+    --os-canvas: #121011;
+    --os-surface: #1c1a1b;
+    --os-surface-subtle: #221f20;
+    --os-surface-muted: #2a2627;
+    --os-border: #322e2f;
+    --os-border-subtle: #282425;
+    --os-border-strong: #4a4546;
+    --os-control-border: #757071;
+    --os-ink-strong: #fafafa;
+    --os-ink: #e4e2e2;
+    --os-ink-muted: #a8a3a4;
+    --os-ink-faint: #77716f;
+    --os-primary: #f5f4f4;
+    --os-primary-hover: #ffffff;
+    --os-on-primary: #231f20;
+    --os-focus: #f5f4f4;
+    --os-sidebar: #161314;
+    --os-sidebar-active: rgba(255,255,255,0.08);
+    --os-sidebar-border: #2a2627;
+    --os-success-soft: #053321;
+    --os-success-text: #47cd89;
+    --os-success-border: #085d3a;
+    --os-warning-soft: #4e1d09;
+    --os-warning-text: #fdb022;
+    --os-warning-border: #93370d;
+    --os-danger: #f04438;
+    --os-danger-soft: #55160c;
+    --os-danger-text: #f97066;
+    --os-danger-border: #912018;
+    --os-info-soft: #062c41;
+    --os-info-text: #36bffa;
+    --os-info-border: #065986;
+    --os-chart-1: #3987e5;
+    --os-chart-2: #d95926;
+    --os-chart-3: #199e70;
+    --os-chart-4: #c98500;
+    --os-chart-5: #d55181;
+    --os-chart-7: #9085e9;
+    --os-chart-8: #e66767;
+    --os-chart-emphasis: #f5f4f4;
+    --os-chart-context: #5a5455;
+    --os-chart-grid: #2a2627;
+    --os-chart-axis: #4a4546;
+    --os-seq-100: #0d366b;
+    --os-seq-200: #184f95;
+    --os-seq-300: #256abf;
+    --os-seq-500: #6da7ec;
+    --os-seq-600: #9ec5f4;
+    --os-seq-700: #cde2fb;
+    --os-div-negative: #e66767;
+    --os-div-neutral: #383435;
+    --os-div-positive: #3987e5;
+    --os-shadow-xs: 0 1px 2px rgba(0,0,0,0.30);
+    --os-shadow-sm: 0 1px 3px rgba(0,0,0,0.40), 0 1px 2px rgba(0,0,0,0.30);
+    --os-shadow-lg: 0 12px 16px -4px rgba(0,0,0,0.45), 0 4px 6px -2px rgba(0,0,0,0.30);
+    --os-shadow-xl: 0 20px 24px -4px rgba(0,0,0,0.55), 0 8px 8px -4px rgba(0,0,0,0.35);
+  }
+}
+
+[data-os] .os-type-figure-xl {
+  font-family: var(--os-font-ui);
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+[data-os] .os-type-figure {
+  font-family: var(--os-font-ui);
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+[data-os] .os-type-page-title {
+  font-family: var(--os-font-ui);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+[data-os] .os-type-section-title {
+  font-family: var(--os-font-ui);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+[data-os] .os-type-card-title {
+  font-family: var(--os-font-ui);
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+[data-os] .os-type-body {
+  font-family: var(--os-font-ui);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+[data-os] .os-type-body-medium {
+  font-family: var(--os-font-ui);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+[data-os] .os-type-small {
+  font-family: var(--os-font-ui);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+
+[data-os] .os-type-caption {
+  font-family: var(--os-font-ui);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+[data-os] .os-type-overline {
+  font-family: var(--os-font-ui);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+[data-os] .os-type-mono {
+  font-family: var(--os-font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}

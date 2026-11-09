@@ -38,7 +38,7 @@ Last updated: 2026-11-09
 | D27 | Contact form: **saved to a CMS inbox + email alert.** Alert recipients are set by an owner in CMS settings | Nov 9, Drew |
 | D28 | Editors manage **menus + footer** and **SEO per page** in the CMS. Redirects and contact details/social links stay in code for v1 | Nov 9, Drew |
 | D29 | The CMS is a **reusable engine** (`src/cms/`), separate from 1880's blocks and styling (`src/blocks/`), so it can run other sites later | Nov 9, Drew |
-| D30 | Admin look: **"1880 OS" with light 1880 accents** (details to confirm, see §6) | Nov 9, Drew |
+| D30 | Admin look: **1880 OS**, the 1880 team's work-UI design system (Inter, charcoal sidebar, light + dark themes; [design system](https://claude.ai/artifact/3v3y6Zh7fSP6zQZXs744t7)). Tokens, font and logo live in `design-system/1880-os/`. The public site keeps the Bodoni 1880 Design System | Nov 9, Drew |
 
 ---
 
@@ -180,7 +180,7 @@ All clients share one address, so the protection is in the code and the database
 - **Menus + footer, SEO per page (D28):** search title, description and share image, with a Google preview
 - **Inquiries inbox (D27):** every contact-form message is saved first, then emailed to the recipients an owner picks in Settings. If the email fails, it retries, and the message is still in the inbox
 - **People (D21):** owners invite editors, change roles and remove access. Sign in with a password or an emailed magic link (D24)
-- **Admin look (D30):** "1880 OS" with light 1880 accents. Sidebar on desktop, compact layout on phone, save bar, toasts
+- **Admin look (D30):** 1880 OS. Charcoal sidebar with the 1880 mark, sticky header, white cards on a gray canvas, light and dark themes, save bar, toasts
 
 ### 3.4 Portal management (same CMS)
 - **Clients:** create (name, URL name, logo, accent color), archive
@@ -306,7 +306,8 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 ### Phase 2: CMS core + public site (current focus)
 - [ ] Content engine (`src/cms/`, reusable): content types, blocks, entries, versions, drafts, publish
 - [ ] Block builder with live preview
-- [ ] Admin shell ("1880 OS" look), people + roles
+- [x] Admin shell in the 1880 OS look, with placeholder sections
+- [ ] People + roles
 - [ ] Block library built from the public prototype (`src/blocks/`)
 - [ ] Collections: case studies, services
 - [ ] Media library + pipeline, SEO panel, menus + footer, automatic slug redirects
@@ -345,7 +346,6 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 4. **Client URL names:** readable (`/acme`) is the default. Any clients whose name must stay discreet (e.g. a code name)?
 5. **Who on the 1880 team needs CMS access**, and who is the owner?
 6. **Portal subdomain:** which subdomain of `1880.io` should the client portal use? (D18)
-7. **"1880 OS":** what is it, and where can we see it, so the admin can match its look? (D30)
 
 **Parked for later:** buying a web license for *LTC Bodoni 175 Pro* (D17).
 

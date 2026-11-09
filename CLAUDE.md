@@ -12,6 +12,8 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
 - Database: **MySQL** (Hostinger's in production, Docker locally) via **Drizzle ORM**. Schema changes are generated, numbered migrations. Never edit a shipped one.
 - Never write files to disk at runtime (Hostinger wipes them on deploy). Use the storage adapter.
 - Styling: design tokens as CSS variables in `design-system/` + CSS Modules. No Tailwind.
+  - Public site: the 1880 Design System (Bodoni) in `design-system/tokens.css`.
+  - CMS admin: **1880 OS** (Inter, charcoal sidebar, light + dark) in `design-system/1880-os/`, as `--os-*` variables scoped to `[data-os]`. Build admin UI from `src/cms/ui/` and follow the 1880 OS README (sentence case, one primary button per view, Tabler icons). Never edit `tokens.css` there by hand; run `npm run tokens:os`.
 - CMS engine lives in `src/cms/` (reusable, no 1880 specifics). 1880's blocks live in `src/blocks/` (component + zod schema each).
 - **Client isolation:** the client comes from the URL and is checked against the signed-in person's memberships on the server. Portal pages read data only through `src/lib/portal/`, which filters every query by `tenant_id`. "Unknown client" and "not your client" return the same Not found page. Show no client names or logos before sign-in. Host-only cookies only (never `.1880.io`). Portal responses are `noindex` and `Cache-Control: private`.
 - Only 1880 staff create content. Clients can view and download, never edit. Proposals are view-only (no e-sign). Build the v1 column in PLAN §5; don't overbuild.
