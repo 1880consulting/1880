@@ -1,8 +1,10 @@
 # Prototype brief (for Claude Design)
 
-Two clickable prototypes get built before any production code: **A. the public site** (`1880.io`) and **B. the client portal** (`clients.1880.io/<client>`). Once approved, they become the visual and behavioral spec, the way the Metro RES prototype was.
+Two clickable prototypes get built before any production code: **A. the public site** (`1880.io`) and **B. the client portal** (`clients.1880.io/<client>`). Once approved, they become the visual and behavioral spec.
 
-The CMS admin doesn't need its own prototype. It follows Metro RES's Apple-style admin (`metrores-web/docs/admin-design.md`) with 1880's accent color.
+The CMS admin doesn't need its own prototype. It follows the "1880 OS" look with light 1880 accents (PLAN D30).
+
+`clients.1880.io` is a working name; the portal subdomain isn't decided yet (PLAN D18).
 
 ---
 
@@ -27,8 +29,8 @@ The CMS admin doesn't need its own prototype. It follows Metro RES's Apple-style
 | About | Story, approach, values |
 | Services | Overview + a template for a single service page |
 | Work / case studies | Listing (with filters if useful) + a case-study detail template |
-| Insights / news | Listing + an article template (long-form rich text, images, quotes) |
-| Team | Grid + optional bio |
+| Insights / news | *Optional.* Not a CMS collection in v1 (PLAN D23); design it only if you want it for later |
+| Team | *Optional.* Not a CMS collection in v1 (PLAN D23); can be a normal page built from blocks |
 | Contact | Form (name, email, company, message, maybe "what do you need help with"), success state, error state |
 | Client sign-in link | Small link in the header or footer to `clients.1880.io` |
 | Privacy | Plain legal text page |

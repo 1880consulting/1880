@@ -5,7 +5,8 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
 ## Ground rules
 - **One Next.js 16 app at the repo root** serving three surfaces, routed by hostname in `src/proxy.ts`:
   - `1880.io`: public site; `1880.io/admin`: the CMS (1880 Studio).
-  - `clients.1880.io/<client>`: client portal, one app for all clients (path-based, no per-client subdomains).
+  - `clients.1880.io/<client>`: client portal, one app for all clients (path-based, no per-client subdomains). The subdomain is **not decided**; `clients` is a working name read from `PORTAL_SUBDOMAIN`. Never hard-code it.
+- **Current focus: `1880.io`** (public site + CMS). The portal comes after.
   - `SITE_ROLE` (`public` | `portal` | `all`) limits what a deployment serves. Wrong-role routes must 404, enforced in `proxy.ts` **and** in each route group's layout.
 - **No deployments for now.** Hostinger is on hold until the client buys her own plan. Work happens in GitHub only. DNS will be at **GoDaddy**; never propose moving DNS to Hostinger.
 - Database: **MySQL** (Hostinger's in production, Docker locally) via **Drizzle ORM**. Schema changes are generated, numbered migrations. Never edit a shipped one.
@@ -17,7 +18,7 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
 - Portal documents come in three formats: CMS blocks, **interactive pages** (self-contained HTML, like letswork-jmg pages) and files. Interactive pages always render in a sandboxed iframe **without** `allow-same-origin`, behind the membership check.
 - Email: site emails send from `1880consulting.com` via Resend. That domain's mailboxes belong to 1880's IT: only **add** Resend's records; never change its existing MX/SPF/DKIM/DMARC records. Drew makes all GoDaddy DNS changes.
 - Brand: start from the existing 1880 design system (`letswork-jmg/public/1880/assets/brand/1880.css`): monochrome, Bodoni, square corners, hairlines. Ship **Libre Bodoni** only (self-hosted woff2). Keep *LTC Bodoni 175 Pro* first in the font stack for when a web license is bought.
-- Reuse patterns from `jmediagroup/metrores-web` (auth, roles, audit, versions, media, inquiries, health, security headers, admin design). Port the behavior; adapt storage to Drizzle.
+- We build our own CMS. `jmediagroup/metrores-web` (Metro RES) was only a reference; port nothing from it. The agreed CMS spec is PLAN §3 and decisions D21–D30.
 - Next.js 16 changed a lot. Read `node_modules/next/dist/docs/` before using an API you're unsure of.
 
 ## Working with Drew

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isValidClientName, parseSiteRole, routeRequest, type SiteRole } from "./routing";
+import {
+  isValidClientName,
+  parsePortalSubdomain,
+  parseSiteRole,
+  routeRequest,
+  type SiteRole,
+} from "./routing";
 
 const route = (hostname: string, pathname: string, role: SiteRole = "all") =>
   routeRequest({ hostname, pathname, role });
@@ -64,6 +70,23 @@ describe("routeRequest", () => {
     expect(route("1880.io", "/about", "portal")).toEqual({ kind: "not-found" });
     expect(route("clients.1880.io", "/acme", "public")).toEqual({ kind: "not-found" });
     expect(route("1880.io", "/about", "public")).toEqual({ kind: "next" });
+  });
+});
+
+describe("portal subdomain setting", () => {
+  it("routes whichever subdomain is configured to the portal", () => {
+    const r = (hostname: string) =>
+      routeRequest({ hostname, pathname: "/acme", role: "all", portalSubdomain: "portal" });
+    expect(r("portal.1880.io")).toEqual({ kind: "rewrite", pathname: "/portal/acme" });
+    expect(r("clients.1880.io")).toEqual({ kind: "next" });
+  });
+
+  it("falls back to clients for missing or invalid values", () => {
+    expect(parsePortalSubdomain(undefined)).toBe("clients");
+    expect(parsePortalSubdomain("")).toBe("clients");
+    expect(parsePortalSubdomain("www")).toBe("clients");
+    expect(parsePortalSubdomain("bad.value")).toBe("clients");
+    expect(parsePortalSubdomain(" Hub ")).toBe("hub");
   });
 });
 

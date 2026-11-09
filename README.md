@@ -1,6 +1,6 @@
 # 1880
 
-Source for **1880.io** (public website + the 1880 Studio CMS) and **clients.1880.io** (private client portal for reports and proposals).
+Source for **1880.io** (public website + the 1880 Studio CMS) and a private client portal for reports and proposals (subdomain to be decided; `clients.1880.io` for now).
 
 > 🚧 Early build: the app is scaffolded with placeholder pages. Real pages come after the prototypes.
 > - Plan: **[docs/PLAN.md](docs/PLAN.md)**
@@ -12,7 +12,7 @@ Source for **1880.io** (public website + the 1880 Studio CMS) and **clients.1880
   - `1880.io`: public site, CMS at `/admin`
   - `clients.1880.io/<client>`: gated client portal
 - MySQL + Drizzle ORM
-- Custom CMS building on the Metro RES admin (`jmediagroup/metrores-web`)
+- Our own CMS (1880 Studio), built as a reusable engine
 - Hosting (Hostinger, on the client's plan) is on hold. GitHub only for now
 
 ## Run it locally
@@ -51,6 +51,6 @@ npm run build
 | `src/proxy.ts` | Routes each request by hostname. Logic in `src/lib/routing.ts` (tested) |
 | `src/app/(site)/` | Public pages, `1880.io` |
 | `src/app/admin/` | 1880 Studio, `1880.io/admin` |
-| `src/app/(portal)/portal/` | Client portal, served at `clients.1880.io` |
+| `src/app/(portal)/portal/` | Client portal, served at `<PORTAL_SUBDOMAIN>.1880.io` |
 | `src/app/api/health/` | Uptime check |
 | `design-system/` | Design tokens (placeholders until the prototypes land) |

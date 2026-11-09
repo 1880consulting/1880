@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { parseSiteRole, routeRequest, surfaceForHost } from "@/lib/routing";
+import { parsePortalSubdomain, parseSiteRole, routeRequest, surfaceForHost } from "@/lib/routing";
 
 /**
  * Runs before every page. Decides which surface a request belongs to by its
@@ -10,8 +10,10 @@ export function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? url.host;
   const [hostname, port] = host.split(":");
   const role = parseSiteRole(process.env.SITE_ROLE);
+  const portalSubdomain = parsePortalSubdomain(process.env.PORTAL_SUBDOMAIN);
+  const isPortal = surfaceForHost(hostname, portalSubdomain) === "portal";
 
-  const decision = routeRequest({ hostname, pathname: url.pathname, role });
+  const decision = routeRequest({ hostname, pathname: url.pathname, role, portalSubdomain });
 
   let response: NextResponse;
   switch (decision.kind) {
@@ -47,10 +49,10 @@ export function proxy(request: NextRequest) {
   }
 
   // Portal and admin pages are private: never indexed, never cached by a CDN.
-  if (surfaceForHost(hostname) === "portal" || url.pathname.startsWith("/admin")) {
+  if (isPortal || url.pathname.startsWith("/admin")) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
   }
-  if (surfaceForHost(hostname) === "portal") {
+  if (isPortal) {
     response.headers.set("Cache-Control", "private, no-store");
   }
   return response;

@@ -1,6 +1,6 @@
 # 1880: Website, CMS & Client Portal Plan
 
-Status: **Draft v0.5** (planning only, no code yet)
+Status: **Draft v0.6** (app scaffolded; CMS spec agreed, see §3)
 Last updated: 2026-11-09
 
 ---
@@ -14,9 +14,9 @@ Last updated: 2026-11-09
 | D3 | DNS stays at **GoDaddy**. Hostinger is **not** used for DNS | Nov 9, Drew |
 | D4 | Portal content = **reports, proposals and similar documents** | Nov 9, Drew |
 | D5 | **Only the 1880 team** creates and edits content. Clients view and download | Nov 9, Drew |
-| D6 | Public site gets a **custom, modern CMS** (WordPress-easy, much better), building on what JMG did for Metro RES. "Best infrastructure for a modern CMS" is the goal (see §3) | Nov 9, Drew |
+| D6 | Public site gets a **custom, modern CMS** (WordPress-easy, much better). "Best infrastructure for a modern CMS" is the goal (see §3) | Nov 9, Drew |
 | D7 | **Nothing is live on `1880.io` today.** The business currently uses **`1880consulting.com`** | Nov 9, Drew |
-| D8 | Client portal is **one app at one address**: **`clients.1880.io/<client-name>`**. No per-client subdomains | Nov 9, Drew |
+| D8 | Client portal is **one app at one address**: **`<portal subdomain>.1880.io/<client-name>`**. No per-client subdomains. The subdomain itself is **not decided yet** (D18) | Nov 9, Drew |
 | D9 | Drew builds **both prototypes (public site + client portal) in Claude Design first** and hands them off. The build follows the approved prototypes (see `docs/prototype-brief.md`) | Nov 9, Drew |
 | D10 | Every client's area is **gated**: sign-in required, and each person sees only the clients they've been invited to | Nov 9, Drew |
 | D11 | **`1880consulting.com` redirects to `1880.io`** at launch. **Email stays on `1880consulting.com`** and belongs to 1880's IT team: we never touch its mail records | Nov 9, Drew |
@@ -26,6 +26,19 @@ Last updated: 2026-11-09
 | D15 | Site emails (magic links, contact alerts, "new report" notices) **send from `1880consulting.com`** for now | Nov 9, Drew |
 | D16 | **`1880consulting.com` DNS is at GoDaddy, and Drew makes the changes** (web records at launch, Resend sending records) | Nov 9, Drew |
 | D17 | Font: ship the free **Libre Bodoni** only. **Later:** *LTC Bodoni 175 Pro*, the system's preferred face, once a web license is bought (the font stack already lists it first, so adding it is a drop-in) | Nov 9, Drew |
+| D18 | **Portal subdomain not decided.** `clients.1880.io` is a working name only. The app reads it from the `PORTAL_SUBDOMAIN` setting (default `clients`), so changing it later is a config change. **Focus now is `1880.io`** (public site + CMS); the portal follows | Nov 9, Drew |
+| D19 | **We build our own CMS.** Metro RES (`jmediagroup/metrores-web`) was only a reference; nothing is ported from it | Nov 9, Drew |
+| D20 | **Repo:** `1880consulting/1880` on GitHub | Nov 9, Drew |
+| D21 | CMS roles: **owner + editors.** Owners manage people and settings; editors write and publish | Nov 9, Drew |
+| D22 | Editing: **block builder + live preview.** Editors stack pre-designed blocks and see the real page update beside the editor | Nov 9, Drew |
+| D23 | v1 content types: **pages, case studies (work), services.** Insights and team are not CMS collections in v1 | Nov 9, Drew |
+| D24 | Staff sign-in: **email + password, with a magic link as an option** at sign-in. No 2FA for now; sign-in is rate-limited and logged | Nov 9, Drew |
+| D25 | Publishing: **drafts + version history** (undo, roll back). No scheduled publishing in v1 | Nov 9, Drew |
+| D26 | Media: **shared media library**, images auto-resized, alt text required, focal point | Nov 9, Drew |
+| D27 | Contact form: **saved to a CMS inbox + email alert.** Alert recipients are set by an owner in CMS settings | Nov 9, Drew |
+| D28 | Editors manage **menus + footer** and **SEO per page** in the CMS. Redirects and contact details/social links stay in code for v1 | Nov 9, Drew |
+| D29 | The CMS is a **reusable engine** (`src/cms/`), separate from 1880's blocks and styling (`src/blocks/`), so it can run other sites later | Nov 9, Drew |
+| D30 | Admin look: **"1880 OS" with light 1880 accents** (details to confirm, see §6) | Nov 9, Drew |
 
 ---
 
@@ -35,9 +48,11 @@ Last updated: 2026-11-09
 |---|---|---|
 | **Public site** | `1880.io` (`www.1880.io` redirects here) | Everyone |
 | **1880 Studio** (the CMS) | `1880.io/admin` | 1880 team only |
-| **Client portal** | `clients.1880.io/<client>` (e.g. `clients.1880.io/acme`) | Each client's invited people |
+| **Client portal** | `clients.1880.io/<client>` (e.g. `clients.1880.io/acme`). Subdomain not decided (D18) | Each client's invited people |
 
 One CMS runs everything. The 1880 team edits the public site **and** publishes each client's reports and proposals from the same `/admin`. Clients sign in at `clients.1880.io` and see only their own area.
+
+> **Note:** `clients.1880.io` throughout this plan is a working name for the portal address (D18).
 
 **The golden rule:** someone signed in to `clients.1880.io/acme` can never see another client's data, whatever URL they type.
 
@@ -111,20 +126,20 @@ All clients share one address, so the protection is in the code and the database
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | **Next.js 16**, App Router, TypeScript (strict), `npm` | Same as Metro RES. Cache Components + `updateTag` give instant publishing |
-| Database | **MySQL** (Hostinger's, at `127.0.0.1:3306` in production; Docker locally) | Included with Hostinger, proven on Metro RES |
-| Data layer | **Drizzle ORM** + `drizzle-kit` migrations | Type-safe queries and generated, numbered migrations. An upgrade on Metro RES's hand-written SQL, same behavior |
+| Framework | **Next.js 16**, App Router, TypeScript (strict), `npm` | Cache Components + `updateTag` give instant publishing |
+| Database | **MySQL** (Hostinger's, at `127.0.0.1:3306` in production; Docker locally) | Included with Hostinger |
+| Data layer | **Drizzle ORM** + `drizzle-kit` migrations | Type-safe queries and generated, numbered migrations |
 | Validation | **zod** | One schema per block drives the editor form, validation and TypeScript types |
-| Styling | Design tokens as CSS variables (`design-system/`) + CSS Modules | Same as Metro RES and SHK. Starts from the existing 1880 design system (D14), refined by the prototypes |
+| Styling | Design tokens as CSS variables (`design-system/`) + CSS Modules | Starts from the existing 1880 design system (D14), refined by the prototypes |
 | Rich text | **Tiptap** (stores JSON, brand-safe marks only) | A real editor (headings, links, lists) that can't break the brand |
 | Images | **sharp** → responsive WebP/AVIF variants, focal point, required alt text | Fast pages, good SEO |
-| File storage | Behind a **storage adapter**: MySQL to start (Metro RES pattern), switchable to S3-compatible object storage (e.g. Cloudflare R2) by config | Hostinger wipes runtime files on deploy. Large PDFs may eventually outgrow the database |
-| Staff sign-in | Email + password, owner/editor roles, rate limits, recovery mode | Ported from Metro RES |
+| File storage | Behind a **storage adapter**: MySQL to start, switchable to S3-compatible object storage (e.g. Cloudflare R2) by config | Hostinger wipes runtime files on deploy. Large PDFs may eventually outgrow the database |
+| Staff sign-in | Email + password, or a magic link if preferred (D24). Owner/editor roles, rate limits, activity log | Built in-house |
 | Client sign-in | **Magic link** (one-time emailed link) | Nothing for clients to remember |
-| Email | **Resend** (contact alerts, magic links, "new report" notices), sending from **`1880consulting.com`** (D15), e.g. `notifications@1880consulting.com` | Same as Metro RES. Needs a few **added** Resend records on `1880consulting.com` (see §4.1); existing mail records stay exactly as they are |
-| Forms | zod + honeypot + **Cloudflare Turnstile** | Same as Metro RES |
+| Email | **Resend** (contact alerts, magic links, "new report" notices), sending from **`1880consulting.com`** (D15), e.g. `notifications@1880consulting.com` | Needs a few **added** Resend records on `1880consulting.com` (see §4.1); existing mail records stay exactly as they are |
+| Forms | zod + honeypot + **Cloudflare Turnstile** | Stops spam without annoying people |
 | Analytics | **Plausible** via a `track()` helper | Cookieless, works on any host |
-| Tests | **Vitest** + **Playwright** | Same as Metro RES. Playwright covers editing, publishing and client isolation |
+| Tests | **Vitest** + **Playwright** | Playwright covers editing, publishing and client isolation |
 | CI | GitHub Actions: lint, typecheck, tests, build on every PR | Keeps `main` always deployable |
 
 ---
@@ -137,34 +152,35 @@ All clients share one address, so the protection is in the code and the database
 
 | Option | Verdict |
 |---|---|
-| **Custom CMS inside the Next.js app** (chosen) | Fully tailored to 1880, runs on Hostinger with its MySQL, no extra services or fees. Reuses Metro RES's proven parts (sign-in, roles, audit, versions, media, inquiries, health). One app for site, CMS and portal |
+| **Custom CMS inside the Next.js app** (chosen) | Fully tailored to 1880, runs on Hostinger with its MySQL, no extra services or fees. One app for site, CMS and portal |
 | Payload CMS (open-source CMS inside Next.js) | The strongest off-the-shelf choice, but its database adapters are Postgres/MongoDB/SQLite, not MySQL. It would need an outside database and file storage, and it's generic rather than 1880-shaped |
 | Sanity / Contentful (hosted) | Excellent editors, but a separate paid service holding the content, and the portal's private documents would live with a third party |
 | WordPress (headless or classic) | The thing we're trying to beat: plugins, patching, slower, harder to keep on-brand |
 
-**Built to be reused.** The CMS engine (`src/cms/`) is kept separate from 1880's blocks (`src/blocks/`), so it can later become a shared JMG package for SHK Phase 2 and other sites.
+**Built to be reused (D29).** The CMS engine (`src/cms/`) knows nothing about 1880: content types, blocks, styling and site settings are passed in by the site. 1880's blocks live in `src/blocks/` and its theme in `design-system/`. The same engine could later run another site (for example a client's) with its own blocks and theme.
 
 ### 3.2 The content engine (how it works under the hood)
 
-1. **Blocks defined in code.** Each block (hero, text, image + text, quote, logo wall, stats, case-study grid, team, FAQ, call to action…) is a folder with a React component and a zod schema. The schema generates the editor form, validates saves and gives TypeScript types. Add a block once and it's available everywhere.
-2. **Content types.** Pages, plus collections like *Work / case studies*, *Insights / news*, *Team*, *Services*. Each has fields and a block area.
+1. **Blocks defined in code.** Each block (hero, text, image + text, quote, logo wall, stats, case-study grid, services list, FAQ, call to action…) is a folder with a React component and a zod schema. The schema generates the editor form, validates saves and gives TypeScript types. Add a block once and it's available everywhere.
+2. **Content types (D23).** Pages, plus two collections: *Case studies (work)* and *Services*. Each has its own fields and a block area. More types (insights, team) can be added later as configuration.
 3. **Immutable versions.** Every save is a new version (a JSON document). An entry points to its current **draft** and its **published** version. Undo, roll back and "compare to published" all come for free. Stale-write protection stops two editors overwriting each other.
 4. **Instant publishing at static speed.** Public pages are cached (`'use cache'` + a tag per entry). Publish calls `updateTag`, so the live page updates within a second and still loads like a static page.
 5. **Live preview.** The editor shows the real page, rendered with the draft (Next.js draft mode), side by side as you type.
-6. **Scheduled publishing.** Set a date and time; a small scheduler inside the app publishes it.
+6. **Scheduled publishing (later, D25).** Not in v1. The data model keeps room for it.
 7. **Media pipeline.** Upload → automatic resizing to responsive WebP/AVIF → stored via the storage adapter. Alt text is required and the focal point is set by clicking, so crops never cut off faces.
 8. **SEO built in.** Per-entry title, description and share image, with a Google/social preview. Auto-generated share images (`next/og`), `sitemap.xml`, JSON-LD per content type, `llms.txt`, canonical URLs, and **automatic redirects when a slug changes**.
 9. **Headless-ready.** A read-only content API, so content could also feed an app or another site later.
-10. **Safety.** Roles (owner/editor), activity log, rate-limited sign-in, strict security headers, health check, database backups.
+10. **Safety.** Roles (owner/editor), activity log, rate-limited sign-in (password or magic link, D24), strict security headers, health check, database backups.
 
 ### 3.3 What editors get (the WordPress-like experience)
-- **Pages:** create, duplicate, delete. Add, reorder (drag), hide and remove blocks. Change URLs safely
-- **Collections:** case studies, insights, team, services, with categories/tags and listing pages that update automatically
-- **Draft → Preview → Publish → Schedule**, autosave, Undo, version history with Roll back
-- **Media library:** search, reuse, replace an image everywhere at once
-- **Menus, footer and site settings** (contact details, social links)
-- **Redirects manager** and an **inquiries inbox** for the contact form (with Metro RES's "never lose a lead" email retry)
-- **Apple-style admin**: sidebar on desktop, tab bar on phone, save bar, toasts (Metro RES `docs/admin-design.md`, re-tinted for 1880)
+- **Pages (D22):** create, duplicate, delete. Add, reorder (drag), hide and remove blocks in a side panel while the real page updates beside it (live preview). Change URLs safely
+- **Collections (D23):** case studies and services, with categories/tags and listing pages that update automatically
+- **Draft → Preview → Publish (D25):** autosave, Undo, version history with Roll back
+- **Media library (D26):** upload once and reuse anywhere, search, replace an image everywhere at once. Alt text required, focal point by clicking
+- **Menus + footer, SEO per page (D28):** search title, description and share image, with a Google preview
+- **Inquiries inbox (D27):** every contact-form message is saved first, then emailed to the recipients an owner picks in Settings. If the email fails, it retries, and the message is still in the inbox
+- **People (D21):** owners invite editors, change roles and remove access. Sign in with a password or an emailed magic link (D24)
+- **Admin look (D30):** "1880 OS" with light 1880 accents. Sidebar on desktop, compact layout on phone, save bar, toasts
 
 ### 3.4 Portal management (same CMS)
 - **Clients:** create (name, URL name, logo, accent color), archive
@@ -196,17 +212,19 @@ Every document (report, proposal, other) has a type, a title and a status, plus 
 ```
 -- staff & system
 staff_users        id, email, name, password_hash, role(owner|editor), status, created_at
+staff_login_tokens id, staff_user_id, token_hash, expires_at, used_at   -- magic links
 audit_log          id, actor_type(staff|client), actor_id, action, target, tenant_id NULL, created_at
 
 -- public site content
-entries            id, type(page|work|insight|team|service…), slug, status,
-                   draft_version_id, published_version_id, scheduled_at, created_at, updated_at
+entries            id, type(page|work|service), slug, status,
+                   draft_version_id, published_version_id, created_at, updated_at
 entry_versions     id, entry_id, doc JSON (fields + blocks + SEO), author_id, created_at
 media              id, storage_key, filename, mime, width, height, focal_x, focal_y, alt, bytes, created_at
 media_blobs        media_id, variant, data LONGBLOB        -- only while storage = MySQL
-redirects          id, from_path, to_path, code, created_at
-settings           key, value JSON                       -- menus, footer, contact details
-inquiries          (ported from Metro RES)
+redirects          id, from_path, to_path, code, created_at   -- automatic on slug change
+settings           key, value JSON                       -- menus, footer, inquiry alert recipients
+inquiries          id, name, email, company, message, status(new|read|archived),
+                   email_status(pending|sent|failed), email_attempts, created_at
 
 -- portal
 tenants            id, slug, name, logo_media_id, accent_color, status, created_at
@@ -242,9 +260,9 @@ Path-based client URLs (D8) mean **no wildcard DNS or wildcard certificates**: o
 ### 4.2 What the client's Hostinger plan needs (for when we resume)
 - A plan that includes **Node.js web apps** (Business or Cloud; check the plan page lists Node.js) with room for **2 Node.js sites** (or 1, see §2.1) and **MySQL**
 - Drew given access to manage it
-- GitHub connected in hPanel, with access to `jmediagroup/1880` (or the repo transferred to the client's GitHub later)
+- GitHub connected in hPanel, with access to `1880consulting/1880`
 
-Hostinger lessons carried from Metro RES (`metrores-web/docs/research/hostinger-deploy.md`): env vars are a full replace and can't be read back; `NEXT_PUBLIC_*` needs a rebuild; create the DB with our own password; builds are async (poll, never re-send); `output: "standalone"` is forced; `next.config` must export an object; add `sharp` to dependencies.
+Known Hostinger quirks: env vars are a full replace and can't be read back; `NEXT_PUBLIC_*` needs a rebuild; create the DB with our own password; builds are async (poll, never re-send); `output: "standalone"` is forced; `next.config` must export an object; add `sharp` to dependencies.
 
 ### 4.3 Environments (until hosting resumes)
 | Env | Where |
@@ -261,10 +279,11 @@ Hostinger lessons carried from Metro RES (`metrores-web/docs/research/hostinger-
 
 | In v1 | Later, when there's a real need |
 |---|---|
-| Pages from blocks, collections (work, insights, team), drafts, live preview, publish, versions + undo | Scheduled publishing, side-by-side version compare |
-| Media library with resizing + alt text, SEO panel, sitemap, redirects, menus/settings | Auto-generated share images, headless content API |
-| Contact form → inquiries inbox | |
-| Clients, people, invites, magic-link sign-in | Password or Google/Microsoft sign-in |
+| Pages from blocks, collections (case studies, services), drafts, live preview, publish, versions + undo | Scheduled publishing, side-by-side version compare, insights and team collections |
+| Media library with resizing + alt text, SEO panel, sitemap, automatic slug redirects, menus + footer | Redirects manager, editable contact details/social links, auto-generated share images, headless content API |
+| Contact form → inquiries inbox + email alert | |
+| Staff sign-in: password or magic link | Two-factor sign-in, Microsoft 365 sign-in |
+| Clients, people, invites, magic-link sign-in | Password or Google/Microsoft sign-in for clients |
 | Documents in all three formats, publish, optional "new report" email | Multi-file interactive bundles (`.zip`) |
 | Basic portal blocks: text, stats, image, video, files, timeline | Chart blocks (interactive pages cover charts meanwhile) |
 | "Last viewed" receipts | Detailed view/download analytics |
@@ -274,20 +293,24 @@ Hostinger lessons carried from Metro RES (`metrores-web/docs/research/hostinger-
 - [x] Scaffold Next.js 16 at the repo root, TypeScript strict, ESLint, Prettier
 - [ ] Docker MySQL for local dev, Drizzle schema + first migration
 - [x] `proxy.ts` hostname routing (`1880.io` / `clients.1880.io`), reserved names, `SITE_ROLE`
-- [ ] Port Metro RES foundations: staff auth + roles, audit log, security headers, health check, mail
+- [ ] Foundations: staff sign-in (password + magic link) and roles, activity log, security headers, health check with DB, mail via Resend
 - [x] GitHub Actions CI: lint, typecheck, unit tests, build
 - [x] Placeholder pages for all three surfaces
+- [x] Portal subdomain as a setting (`PORTAL_SUBDOMAIN`, D18)
 
 ### Phase 1: Prototypes (Drew, in Claude Design)
 - [ ] Public site prototype (`docs/prototype-brief.md` §A)
 - [ ] Client portal prototype (`docs/prototype-brief.md` §B)
 - [ ] Hand off into `prototype/` + brand tokens into `design-system/`
 
-### Phase 2: CMS core + public site
-- [ ] Content engine: blocks, entries, versions, drafts, live preview, publish, schedule
-- [ ] Block library built from the public prototype
-- [ ] Media library + pipeline, SEO panel, menus/settings, redirects
-- [ ] Contact form → inquiries inbox + Resend
+### Phase 2: CMS core + public site (current focus)
+- [ ] Content engine (`src/cms/`, reusable): content types, blocks, entries, versions, drafts, publish
+- [ ] Block builder with live preview
+- [ ] Admin shell ("1880 OS" look), people + roles
+- [ ] Block library built from the public prototype (`src/blocks/`)
+- [ ] Collections: case studies, services
+- [ ] Media library + pipeline, SEO panel, menus + footer, automatic slug redirects
+- [ ] Contact form → inquiries inbox + email alert via Resend, recipients in Settings
 - [ ] SEO (metadata, JSON-LD, sitemap, OG images, `llms.txt`), Plausible, accessibility, Lighthouse ≥ 95
 
 ### Phase 3: Portal foundation
@@ -321,7 +344,8 @@ Hostinger lessons carried from Metro RES (`metrores-web/docs/research/hostinger-
 3. **Client sign-in:** is a magic link fine for everyone at launch?
 4. **Client URL names:** readable (`/acme`) is the default. Any clients whose name must stay discreet (e.g. a code name)?
 5. **Who on the 1880 team needs CMS access**, and who is the owner?
-6. **Repo ownership:** stays under `jmediagroup`, or transfers to the client at launch?
+6. **Portal subdomain:** which subdomain of `1880.io` should the client portal use? (D18)
+7. **"1880 OS":** what is it, and where can we see it, so the admin can match its look? (D30)
 
 **Parked for later:** buying a web license for *LTC Bodoni 175 Pro* (D17).
 

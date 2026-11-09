@@ -9,8 +9,9 @@
  * - `clients.1880.io/*` → client portal. Rewritten internally to `/portal/*`,
  *                         which is where the portal routes live in `src/app`.
  *
- * Any host starting with `clients.` is the portal, so `clients.localhost:3000`
- * works locally with no extra setup.
+ * The portal subdomain isn't decided yet (PLAN D18). It comes from the
+ * PORTAL_SUBDOMAIN setting, default `clients`. Any host starting with
+ * `<subdomain>.` is the portal, so `clients.localhost:3000` works locally.
  */
 
 export type SiteRole = "public" | "portal" | "all";
@@ -55,8 +56,21 @@ export function parseSiteRole(value: string | undefined): SiteRole {
   return value === "public" || value === "portal" ? value : "all";
 }
 
-export function surfaceForHost(hostname: string): Surface {
-  return hostname.toLowerCase().startsWith("clients.") ? "portal" : "public";
+export const DEFAULT_PORTAL_SUBDOMAIN = "clients";
+
+/** Reads PORTAL_SUBDOMAIN. Falls back to `clients` if unset or not a valid DNS label. */
+export function parsePortalSubdomain(value: string | undefined): string {
+  const v = value?.trim().toLowerCase();
+  return v && /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(v) && v !== "www"
+    ? v
+    : DEFAULT_PORTAL_SUBDOMAIN;
+}
+
+export function surfaceForHost(
+  hostname: string,
+  portalSubdomain: string = DEFAULT_PORTAL_SUBDOMAIN,
+): Surface {
+  return hostname.toLowerCase().startsWith(portalSubdomain + ".") ? "portal" : "public";
 }
 
 export function roleServes(role: SiteRole, surface: Surface): boolean {
@@ -79,6 +93,7 @@ export function routeRequest(input: {
   hostname: string;
   pathname: string;
   role: SiteRole;
+  portalSubdomain?: string;
 }): RouteDecision {
   const hostname = input.hostname.toLowerCase();
   const { pathname, role } = input;
@@ -88,7 +103,7 @@ export function routeRequest(input: {
     return { kind: "redirect", hostname: hostname.slice(4), status: 301 };
   }
 
-  const surface = surfaceForHost(hostname);
+  const surface = surfaceForHost(hostname, input.portalSubdomain);
   if (!roleServes(role, surface)) return { kind: "not-found" };
 
   if (surface === "portal") {
