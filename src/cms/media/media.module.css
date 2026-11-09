@@ -1,0 +1,219 @@
+/* Media library, detail page and picker, in the 1880 OS look. */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--os-space-3);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--os-space-4);
+}
+
+.search {
+  max-width: 320px;
+}
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--os-space-2);
+  margin-bottom: var(--os-space-4);
+  padding: var(--os-space-6);
+  border: 1px dashed var(--os-border-strong);
+  border-radius: var(--os-radius-lg);
+  background: var(--os-surface);
+  color: var(--os-ink-muted);
+  text-align: center;
+}
+
+.dragging {
+  border-color: var(--os-focus);
+  background: var(--os-surface-subtle);
+}
+
+.uploads {
+  list-style: none;
+  margin: 0 0 var(--os-space-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--os-space-4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--os-border);
+  border-radius: var(--os-radius-lg);
+  background: var(--os-surface);
+  box-shadow: var(--os-shadow-xs);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    box-shadow 150ms,
+    border-color 150ms;
+}
+
+.card:hover {
+  box-shadow: var(--os-shadow-lg);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--os-focus);
+  outline-offset: 2px;
+}
+
+.selected {
+  border-color: var(--os-focus);
+  box-shadow: 0 0 0 2px var(--os-focus);
+}
+
+.thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--os-surface-muted);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--os-space-2) var(--os-space-3) var(--os-space-3);
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--os-ink-strong);
+  font-weight: 500;
+}
+
+/* ---- Detail ---- */
+.focal {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  cursor: crosshair;
+  line-height: 0;
+  border-radius: var(--os-radius-md);
+  overflow: hidden;
+}
+
+.focal img {
+  display: block;
+  max-width: 100%;
+  max-height: 60vh;
+  height: auto;
+}
+
+.dot {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.crops {
+  display: flex;
+  gap: var(--os-space-2);
+  margin-top: var(--os-space-3);
+}
+
+.crops img {
+  display: block;
+  object-fit: cover;
+  border-radius: var(--os-radius-sm);
+  border: 1px solid var(--os-border);
+}
+
+/* ---- Picker dialog ---- */
+.dialog {
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  padding: 0;
+  border: 1px solid var(--os-border);
+  border-radius: var(--os-radius-xl);
+  background: var(--os-canvas);
+  color: var(--os-ink);
+  box-shadow: var(--os-shadow-xl);
+}
+
+.dialog::backdrop {
+  background: rgba(16, 24, 40, 0.5);
+}
+
+.dialogHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--os-space-3);
+  padding: var(--os-space-4) var(--os-space-6);
+  border-bottom: 1px solid var(--os-border);
+  background: var(--os-surface);
+}
+
+.dialogBody {
+  padding: var(--os-space-4) var(--os-space-6) var(--os-space-6);
+  overflow: auto;
+  max-height: calc(100vh - 160px);
+}
+
+/* ---- Image field in the editor ---- */
+.field {
+  display: flex;
+  gap: var(--os-space-3);
+  align-items: center;
+  padding: var(--os-space-2);
+  border: 1px solid var(--os-control-border);
+  border-radius: var(--os-radius-md);
+  background: var(--os-surface);
+}
+
+.fieldThumb {
+  flex: none;
+  width: 72px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: var(--os-radius-sm);
+  background: var(--os-surface-muted);
+}
+
+.fieldInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

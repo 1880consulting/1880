@@ -4,6 +4,9 @@ import { z } from "zod";
 import { requireStaff } from "@/cms/auth";
 import { blockFields } from "@/cms/content/fields";
 import { getEntry } from "@/cms/content/store";
+import { mediaRefs } from "@/cms/media/refs";
+import { getMediaMany } from "@/cms/media/store";
+import { listMediaForPicker } from "../../media/actions";
 import { PageEditor } from "@/cms/editor/PageEditor";
 import { Panel, Skeleton } from "@/cms/ui";
 import { pageType } from "@/site/cms";
@@ -39,6 +42,7 @@ async function Editor({ params }: Pick<PageProps<"/admin/pages/[id]">, "params">
   const found = z.uuid().safeParse(id).success ? await getEntry(id) : null;
   if (!found) notFound();
   const { entry, draft } = found;
+  const initialMedia = await getMediaMany(mediaRefs(pageType, draft).map((r) => r.id));
 
   return (
     <PageEditor
@@ -53,6 +57,7 @@ async function Editor({ params }: Pick<PageProps<"/admin/pages/[id]">, "params">
           (entry.draftVersionId !== entry.publishedVersionId || entry.slug !== entry.publishedSlug),
         isHome: entry.slug === "",
       }}
+      initialMedia={initialMedia}
       blockTypes={BLOCK_TYPES}
       addressPrefix="1880.io/"
       basePath="/"
@@ -65,6 +70,7 @@ async function Editor({ params }: Pick<PageProps<"/admin/pages/[id]">, "params">
         discard: discardPageChanges.bind(null, entry.id),
         unpublish: unpublishPage.bind(null, entry.id),
         remove: deletePage.bind(null, entry.id),
+        listMedia: listMediaForPicker,
       }}
     />
   );

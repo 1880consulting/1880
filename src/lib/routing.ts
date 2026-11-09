@@ -42,6 +42,7 @@ export const RESERVED_CLIENT_NAMES: ReadonlySet<string> = new Set([
   "robots.txt",
   "sitemap.xml",
   "favicon.ico",
+  "media",
   "portal",
 ]);
 

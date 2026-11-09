@@ -30,6 +30,8 @@ export function setupTestDatabase() {
       schema.entries,
       schema.entryVersions,
       schema.redirects,
+      schema.media,
+      schema.mediaBlobs,
     ]) {
       await db().delete(table);
     }

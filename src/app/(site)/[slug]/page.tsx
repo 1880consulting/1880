@@ -30,11 +30,11 @@ async function load(slug: string) {
 
 export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const doc = await load(slug);
-  if (!doc) return {};
+  const page = await load(slug);
+  if (!page) return {};
   return {
-    title: doc.seo.title || doc.title,
-    description: doc.seo.description,
+    title: page.doc.seo.title || page.doc.title,
+    description: page.doc.seo.description,
     alternates: { canonical: `/${slug}` },
   };
 }
@@ -42,12 +42,17 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">): Promis
 export default async function CmsPage({ params }: PageProps<"/[slug]">) {
   const { slug } = await params;
   if (slug === PLACEHOLDER) notFound();
-  const doc = await load(slug);
-  if (!doc) {
+  const page = await load(slug);
+  if (!page) {
     // A page that moved: send visitors (and search engines) to its new address.
     const moved = await getRedirect(`/${slug}`);
     if (moved) permanentRedirect(moved.toPath);
     notFound();
   }
-  return <RenderBlocks blocks={visibleBlocks(doc)} context={{ email: site.email }} />;
+  return (
+    <RenderBlocks
+      blocks={visibleBlocks(page.doc)}
+      context={{ email: site.email, media: page.media }}
+    />
+  );
 }

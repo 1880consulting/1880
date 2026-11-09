@@ -9,12 +9,13 @@ import { getPublishedPage, visibleBlocks } from "@/site/pages";
  */
 async function homeContent() {
   try {
-    const doc = await getPublishedPage("");
-    if (doc)
+    const page = await getPublishedPage("");
+    if (page)
       return {
-        title: doc.seo.title || doc.title,
-        description: doc.seo.description,
-        blocks: visibleBlocks(doc),
+        title: page.doc.seo.title || page.doc.title,
+        description: page.doc.seo.description,
+        blocks: visibleBlocks(page.doc),
+        media: page.media,
       };
   } catch (err) {
     console.error(
@@ -22,7 +23,7 @@ async function homeContent() {
       err instanceof Error ? err.message : err,
     );
   }
-  return home;
+  return { ...home, media: {} };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -36,5 +37,5 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const page = await homeContent();
-  return <RenderBlocks blocks={page.blocks} context={{ email: site.email }} />;
+  return <RenderBlocks blocks={page.blocks} context={{ email: site.email, media: page.media }} />;
 }

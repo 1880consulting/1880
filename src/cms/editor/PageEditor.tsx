@@ -20,6 +20,7 @@ import type { EntryDoc, Issue, StoredBlock } from "../content/types";
 import { Badge, Button, buttonClass, controls as c } from "../ui/client";
 import {
   blockSummary,
+  getAt,
   issueMap,
   newBlock,
   pathKey,
@@ -29,6 +30,9 @@ import {
   type Path,
 } from "./doc";
 import { FieldInput } from "./FieldInput";
+import { MediaFieldContext } from "./mediaField";
+import { MediaPicker } from "../media/MediaPicker";
+import type { MediaInfo } from "../media/types";
 import { PREVIEW_DOC, PREVIEW_READY } from "./protocol";
 import s from "./editor.module.css";
 
@@ -41,6 +45,8 @@ export type DiscardResult =
 
 export interface PageEditorProps {
   initial: { doc: EntryDoc; slug: string; versionId: string | null };
+  /** Images the draft already uses, by id. */
+  initialMedia: Record<string, MediaInfo>;
   status: { published: boolean; hasChanges: boolean; isHome: boolean };
   blockTypes: BlockType[];
   /** Shown before the address field, e.g. "1880.io/". */
@@ -60,6 +66,8 @@ export interface PageEditorProps {
     discard: () => Promise<DiscardResult>;
     unpublish: () => Promise<ActionResult>;
     remove: () => Promise<ActionResult>;
+    /** The media library, for the image picker. */
+    listMedia: () => Promise<MediaInfo[]>;
   };
 }
 
@@ -68,6 +76,8 @@ type Notice = { tone: "success" | "danger" | "warning"; text: string } | null;
 export function PageEditor(props: PageEditorProps) {
   const { blockTypes, actions } = props;
   const [doc, setDoc] = useState(props.initial.doc);
+  const [media, setMedia] = useState(props.initialMedia);
+  const [picking, setPicking] = useState<Path | null>(null);
   const [slug, setSlug] = useState(props.initial.slug);
   const [versionId, setVersionId] = useState(props.initial.versionId);
   const [saved, setSaved] = useState(() =>
@@ -105,10 +115,10 @@ export function PageEditor(props: PageEditorProps) {
   // ---- Live preview ----
   const sendPreview = useCallback(() => {
     frame.current?.contentWindow?.postMessage(
-      { type: PREVIEW_DOC, doc: tidyDoc(doc, blockTypes) },
+      { type: PREVIEW_DOC, doc: tidyDoc(doc, blockTypes), media },
       window.location.origin,
     );
-  }, [doc, blockTypes]);
+  }, [doc, blockTypes, media]);
 
   useEffect(() => {
     const t = setTimeout(sendPreview, 120);
@@ -269,361 +279,374 @@ export function PageEditor(props: PageEditorProps) {
   const livePath = props.basePath + slug;
 
   return (
-    <div className={s.editor}>
-      <div className={s.toolbar}>
-        <div className={s.titleArea}>
-          <Link href={props.backUrl} className={s.back}>
-            Pages
-          </Link>
-          <h1 className={s.title}>{doc.title.trim() || "Untitled page"}</h1>
-          <div className={s.meta}>
-            {statusBadge}
-            <span className={c.meta} role="status">
-              {pending ? "Working…" : dirty ? "Unsaved changes" : "All changes saved"}
-            </span>
+    <MediaFieldContext.Provider value={{ media, choose: setPicking }}>
+      <div className={s.editor}>
+        <MediaPicker
+          open={picking !== null}
+          onClose={() => setPicking(null)}
+          load={actions.listMedia}
+          selectedId={picking ? (getAt(doc, picking) as string | undefined) : undefined}
+          onPick={(m) => {
+            setMedia((all) => ({ ...all, [m.id]: m }));
+            if (picking) change(picking, m.id);
+            setPicking(null);
+          }}
+        />
+        <div className={s.toolbar}>
+          <div className={s.titleArea}>
+            <Link href={props.backUrl} className={s.back}>
+              Pages
+            </Link>
+            <h1 className={s.title}>{doc.title.trim() || "Untitled page"}</h1>
+            <div className={s.meta}>
+              {statusBadge}
+              <span className={c.meta} role="status">
+                {pending ? "Working…" : dirty ? "Unsaved changes" : "All changes saved"}
+              </span>
+            </div>
           </div>
-        </div>
-        <div className={c.actions}>
-          <Link href={props.historyUrl} className={buttonClass("ghost")}>
-            <IconHistory size={18} stroke={2} aria-hidden />
-            History
-          </Link>
-          {status.published && (
-            <a href={livePath} target="_blank" rel="noreferrer" className={buttonClass("ghost")}>
-              <IconExternalLink size={18} stroke={2} aria-hidden />
-              View live
-            </a>
-          )}
-          <Button onClick={onSave} disabled={pending || !dirty}>
-            Save draft
-          </Button>
-          <Button
-            variant="primary"
-            onClick={onPublish}
-            disabled={pending || (status.published && !status.hasChanges && !dirty)}
-          >
-            {status.published ? "Publish changes" : "Publish"}
-          </Button>
-        </div>
-      </div>
-
-      {notice && (
-        <div
-          className={`${c.alert} ${c[notice.tone]}`}
-          role={notice.tone === "danger" ? "alert" : "status"}
-        >
-          <div>
-            <p className={c.alertTitle}>{notice.text}</p>
-            {issues.length > 0 && (
-              <ul className={s.issues}>
-                {issues.slice(0, 6).map((i) => (
-                  <li key={pathKey(i.path)}>
-                    {describePath(i.path, doc, blockTypes)}: {i.message}
-                  </li>
-                ))}
-              </ul>
+          <div className={c.actions}>
+            <Link href={props.historyUrl} className={buttonClass("ghost")}>
+              <IconHistory size={18} stroke={2} aria-hidden />
+              History
+            </Link>
+            {status.published && (
+              <a href={livePath} target="_blank" rel="noreferrer" className={buttonClass("ghost")}>
+                <IconExternalLink size={18} stroke={2} aria-hidden />
+                View live
+              </a>
             )}
+            <Button onClick={onSave} disabled={pending || !dirty}>
+              Save draft
+            </Button>
+            <Button
+              variant="primary"
+              onClick={onPublish}
+              disabled={pending || (status.published && !status.hasChanges && !dirty)}
+            >
+              {status.published ? "Publish changes" : "Publish"}
+            </Button>
           </div>
         </div>
-      )}
 
-      <div className={s.columns}>
-        <div className={s.form}>
-          <section className={c.panel}>
-            <div className={c.panelBody}>
-              <div className={c.field}>
-                <label htmlFor="page-title" className={c.label}>
-                  Title
-                </label>
-                <input
-                  id="page-title"
-                  className={c.input}
-                  value={doc.title}
-                  maxLength={200}
-                  aria-invalid={errors.has("title") || undefined}
-                  onChange={(e) => change(["title"], e.target.value)}
-                />
-                {errors.get("title") && <p className={c.error}>{errors.get("title")}</p>}
-              </div>
-              <div className={c.field}>
-                <label htmlFor="page-slug" className={c.label}>
-                  Address
-                </label>
-                {status.isHome ? (
-                  <p className={c.hint}>
-                    This is the home page, at {props.addressPrefix.replace(/\/$/, "")}.
-                  </p>
-                ) : (
-                  <div className={s.address}>
-                    <span className={s.prefix}>{props.addressPrefix}</span>
-                    <input
-                      id="page-slug"
-                      className={c.input}
-                      value={slug}
-                      maxLength={80}
-                      aria-invalid={errors.has("slug") || undefined}
-                      onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                    />
-                  </div>
-                )}
-                {errors.get("slug") && <p className={c.error}>{errors.get("slug")}</p>}
-                {status.published && !status.isHome && slug !== props.initial.slug && (
-                  <p className={c.hint}>
-                    When you publish, the old address will forward here automatically.
-                  </p>
-                )}
-              </div>
-              <details className={s.seo}>
-                <summary>Search engines and sharing</summary>
+        {notice && (
+          <div
+            className={`${c.alert} ${c[notice.tone]}`}
+            role={notice.tone === "danger" ? "alert" : "status"}
+          >
+            <div>
+              <p className={c.alertTitle}>{notice.text}</p>
+              {issues.length > 0 && (
+                <ul className={s.issues}>
+                  {issues.slice(0, 6).map((i) => (
+                    <li key={pathKey(i.path)}>
+                      {describePath(i.path, doc, blockTypes)}: {i.message}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className={s.columns}>
+          <div className={s.form}>
+            <section className={c.panel}>
+              <div className={c.panelBody}>
                 <div className={c.field}>
-                  <label htmlFor="seo-title" className={c.label}>
-                    Search title <span className={s.optional}>Optional</span>
+                  <label htmlFor="page-title" className={c.label}>
+                    Title
                   </label>
                   <input
-                    id="seo-title"
+                    id="page-title"
                     className={c.input}
-                    value={doc.seo.title ?? ""}
-                    maxLength={120}
-                    placeholder={doc.title}
-                    onChange={(e) => change(["seo", "title"], e.target.value)}
+                    value={doc.title}
+                    maxLength={200}
+                    aria-invalid={errors.has("title") || undefined}
+                    onChange={(e) => change(["title"], e.target.value)}
                   />
-                  <p className={c.hint}>
-                    Shown in Google and when the page is shared. Around 60 characters reads best.
-                  </p>
+                  {errors.get("title") && <p className={c.error}>{errors.get("title")}</p>}
                 </div>
                 <div className={c.field}>
-                  <label htmlFor="seo-description" className={c.label}>
-                    Description <span className={s.optional}>Optional</span>
+                  <label htmlFor="page-slug" className={c.label}>
+                    Address
                   </label>
-                  <textarea
-                    id="seo-description"
-                    rows={3}
-                    className={c.input}
-                    value={doc.seo.description ?? ""}
-                    maxLength={200}
-                    onChange={(e) => change(["seo", "description"], e.target.value)}
-                  />
-                </div>
-              </details>
-            </div>
-          </section>
-
-          <h2 className={s.sectionsTitle}>Sections</h2>
-          {errors.get("blocks") && <p className={c.error}>{errors.get("blocks")}</p>}
-          <ol className={s.blocks}>
-            {doc.blocks.map((block, i) => {
-              const t = typeOf(block.type);
-              const isOpen = open.has(block.id);
-              const hasError = [...errors.keys()].some((k) => k.startsWith(`blocks.${i}.`));
-              return (
-                <li
-                  key={block.id}
-                  id={`block-${block.id}`}
-                  className={`${s.block} ${block.hidden ? s.hidden : ""} ${hasError ? s.blockError : ""}`}
-                >
-                  <div className={s.blockHead}>
-                    <button
-                      type="button"
-                      className={s.blockToggle}
-                      aria-expanded={isOpen}
-                      onClick={() => toggle(block.id)}
-                    >
-                      {isOpen ? (
-                        <IconChevronDown size={18} stroke={2} aria-hidden />
-                      ) : (
-                        <IconChevronRight size={18} stroke={2} aria-hidden />
-                      )}
-                      <span className={s.blockLabel}>{t?.label ?? block.type}</span>
-                      {block.hidden && <Badge>Hidden</Badge>}
-                      {hasError && <Badge tone="danger">Needs attention</Badge>}
-                      <span className={s.summary}>{blockSummary(block, t)}</span>
-                    </button>
-                    <div className={s.blockTools}>
-                      <button
-                        type="button"
-                        className={s.iconButton}
-                        aria-label="Move up"
-                        disabled={i === 0}
-                        onClick={() => move(i, -1)}
-                      >
-                        <IconArrowUp size={16} stroke={2} aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className={s.iconButton}
-                        aria-label="Move down"
-                        disabled={i === doc.blocks.length - 1}
-                        onClick={() => move(i, 1)}
-                      >
-                        <IconArrowDown size={16} stroke={2} aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className={s.iconButton}
-                        aria-label={block.hidden ? "Show on the page" : "Hide from the page"}
-                        title={block.hidden ? "Show on the page" : "Hide from the page"}
-                        onClick={() =>
-                          change(["blocks", i, "hidden"], block.hidden ? undefined : true)
-                        }
-                      >
-                        {block.hidden ? (
-                          <IconEyeOff size={16} stroke={2} aria-hidden />
-                        ) : (
-                          <IconEye size={16} stroke={2} aria-hidden />
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className={s.iconButton}
-                        aria-label="Remove section"
-                        onClick={() => updateBlocks((bs) => bs.filter((b) => b.id !== block.id))}
-                      >
-                        <IconTrash size={16} stroke={2} aria-hidden />
-                      </button>
-                    </div>
-                  </div>
-                  {isOpen && (
-                    <div className={s.blockBody}>
-                      {t ? (
-                        t.fields.map((f) => (
-                          <FieldInput
-                            key={f.key}
-                            field={f}
-                            value={block[f.key]}
-                            path={["blocks", i, f.key]}
-                            errors={errors}
-                            onChange={change}
-                          />
-                        ))
-                      ) : (
-                        <p className={c.hint}>
-                          This kind of section no longer exists. Remove it, or ask a developer.
-                        </p>
-                      )}
+                  {status.isHome ? (
+                    <p className={c.hint}>
+                      This is the home page, at {props.addressPrefix.replace(/\/$/, "")}.
+                    </p>
+                  ) : (
+                    <div className={s.address}>
+                      <span className={s.prefix}>{props.addressPrefix}</span>
+                      <input
+                        id="page-slug"
+                        className={c.input}
+                        value={slug}
+                        maxLength={80}
+                        aria-invalid={errors.has("slug") || undefined}
+                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+                      />
                     </div>
                   )}
-                </li>
-              );
-            })}
-          </ol>
-
-          <section className={s.addPanel} aria-labelledby="add-title">
-            <h3 id="add-title" className={c.label}>
-              Add a section
-            </h3>
-            <div className={s.addGrid}>
-              {blockTypes.map((t) => (
-                <button key={t.type} type="button" className={s.addButton} onClick={() => add(t)}>
-                  <span className={s.addLabel}>
-                    <IconPlus size={16} stroke={2} aria-hidden />
-                    {t.label}
-                  </span>
-                  {t.description && <span className={c.meta}>{t.description}</span>}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className={s.danger}>
-            {confirming ? (
-              <div className={s.confirm} role="alertdialog" aria-labelledby="confirm-text">
-                <p id="confirm-text">
-                  {confirming === "delete"
-                    ? "Delete this page and its history? This can't be undone."
-                    : confirming === "unpublish"
-                      ? "Take this page off the site? The draft is kept."
-                      : "Throw away every change since the last publish?"}
-                </p>
-                <div className={c.actions}>
-                  <Button onClick={() => runConfirmed(confirming)} disabled={pending}>
-                    {confirming === "delete"
-                      ? "Delete page"
-                      : confirming === "unpublish"
-                        ? "Unpublish"
-                        : "Discard changes"}
-                  </Button>
-                  <Button variant="ghost" onClick={() => setConfirming(null)}>
-                    Cancel
-                  </Button>
+                  {errors.get("slug") && <p className={c.error}>{errors.get("slug")}</p>}
+                  {status.published && !status.isHome && slug !== props.initial.slug && (
+                    <p className={c.hint}>
+                      When you publish, the old address will forward here automatically.
+                    </p>
+                  )}
                 </div>
+                <details className={s.seo}>
+                  <summary>Search engines and sharing</summary>
+                  <div className={c.field}>
+                    <label htmlFor="seo-title" className={c.label}>
+                      Search title <span className={s.optional}>Optional</span>
+                    </label>
+                    <input
+                      id="seo-title"
+                      className={c.input}
+                      value={doc.seo.title ?? ""}
+                      maxLength={120}
+                      placeholder={doc.title}
+                      onChange={(e) => change(["seo", "title"], e.target.value)}
+                    />
+                    <p className={c.hint}>
+                      Shown in Google and when the page is shared. Around 60 characters reads best.
+                    </p>
+                  </div>
+                  <div className={c.field}>
+                    <label htmlFor="seo-description" className={c.label}>
+                      Description <span className={s.optional}>Optional</span>
+                    </label>
+                    <textarea
+                      id="seo-description"
+                      rows={3}
+                      className={c.input}
+                      value={doc.seo.description ?? ""}
+                      maxLength={200}
+                      onChange={(e) => change(["seo", "description"], e.target.value)}
+                    />
+                  </div>
+                </details>
               </div>
-            ) : (
-              <div className={c.actions}>
-                {status.published && (status.hasChanges || dirty) && (
-                  <Button variant="ghost" size="sm" onClick={() => setConfirming("discard")}>
-                    Discard unpublished changes
-                  </Button>
-                )}
-                {status.published && !status.isHome && (
-                  <Button variant="ghost" size="sm" onClick={() => setConfirming("unpublish")}>
-                    Unpublish
-                  </Button>
-                )}
-                {!status.isHome && (
-                  <Button variant="ghost" size="sm" onClick={() => setConfirming("delete")}>
-                    Delete page
-                  </Button>
-                )}
-              </div>
-            )}
-          </section>
-        </div>
+            </section>
 
-        <div className={s.previewColumn}>
-          <div className={s.previewBar}>
-            <span className={c.meta}>
-              Preview{dirty ? " (includes unsaved changes)" : ""}
-              {device === "desktop" && scale < 1 ? ` · ${Math.round(scale * 100)}%` : ""}
-            </span>
-            <div
-              className={c.segments}
-              role="group"
-              aria-label="Preview size"
-              style={{ marginBottom: 0 }}
-            >
-              <button
-                type="button"
-                className={c.segment}
-                aria-pressed={device === "desktop"}
-                aria-current={device === "desktop" ? "page" : undefined}
-                onClick={() => setDevice("desktop")}
-              >
-                <IconDeviceDesktop size={16} stroke={2} aria-hidden />
-                Desktop
-              </button>
-              <button
-                type="button"
-                className={c.segment}
-                aria-pressed={device === "phone"}
-                aria-current={device === "phone" ? "page" : undefined}
-                onClick={() => setDevice("phone")}
-              >
-                <IconDeviceMobile size={16} stroke={2} aria-hidden />
-                Phone
-              </button>
-            </div>
+            <h2 className={s.sectionsTitle}>Sections</h2>
+            {errors.get("blocks") && <p className={c.error}>{errors.get("blocks")}</p>}
+            <ol className={s.blocks}>
+              {doc.blocks.map((block, i) => {
+                const t = typeOf(block.type);
+                const isOpen = open.has(block.id);
+                const hasError = [...errors.keys()].some((k) => k.startsWith(`blocks.${i}.`));
+                return (
+                  <li
+                    key={block.id}
+                    id={`block-${block.id}`}
+                    className={`${s.block} ${block.hidden ? s.hidden : ""} ${hasError ? s.blockError : ""}`}
+                  >
+                    <div className={s.blockHead}>
+                      <button
+                        type="button"
+                        className={s.blockToggle}
+                        aria-expanded={isOpen}
+                        onClick={() => toggle(block.id)}
+                      >
+                        {isOpen ? (
+                          <IconChevronDown size={18} stroke={2} aria-hidden />
+                        ) : (
+                          <IconChevronRight size={18} stroke={2} aria-hidden />
+                        )}
+                        <span className={s.blockLabel}>{t?.label ?? block.type}</span>
+                        {block.hidden && <Badge>Hidden</Badge>}
+                        {hasError && <Badge tone="danger">Needs attention</Badge>}
+                        <span className={s.summary}>{blockSummary(block, t)}</span>
+                      </button>
+                      <div className={s.blockTools}>
+                        <button
+                          type="button"
+                          className={s.iconButton}
+                          aria-label="Move up"
+                          disabled={i === 0}
+                          onClick={() => move(i, -1)}
+                        >
+                          <IconArrowUp size={16} stroke={2} aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          className={s.iconButton}
+                          aria-label="Move down"
+                          disabled={i === doc.blocks.length - 1}
+                          onClick={() => move(i, 1)}
+                        >
+                          <IconArrowDown size={16} stroke={2} aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          className={s.iconButton}
+                          aria-label={block.hidden ? "Show on the page" : "Hide from the page"}
+                          title={block.hidden ? "Show on the page" : "Hide from the page"}
+                          onClick={() =>
+                            change(["blocks", i, "hidden"], block.hidden ? undefined : true)
+                          }
+                        >
+                          {block.hidden ? (
+                            <IconEyeOff size={16} stroke={2} aria-hidden />
+                          ) : (
+                            <IconEye size={16} stroke={2} aria-hidden />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          className={s.iconButton}
+                          aria-label="Remove section"
+                          onClick={() => updateBlocks((bs) => bs.filter((b) => b.id !== block.id))}
+                        >
+                          <IconTrash size={16} stroke={2} aria-hidden />
+                        </button>
+                      </div>
+                    </div>
+                    {isOpen && (
+                      <div className={s.blockBody}>
+                        {t ? (
+                          t.fields.map((f) => (
+                            <FieldInput
+                              key={f.key}
+                              field={f}
+                              value={block[f.key]}
+                              path={["blocks", i, f.key]}
+                              errors={errors}
+                              onChange={change}
+                            />
+                          ))
+                        ) : (
+                          <p className={c.hint}>
+                            This kind of section no longer exists. Remove it, or ask a developer.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+
+            <section className={s.addPanel} aria-labelledby="add-title">
+              <h3 id="add-title" className={c.label}>
+                Add a section
+              </h3>
+              <div className={s.addGrid}>
+                {blockTypes.map((t) => (
+                  <button key={t.type} type="button" className={s.addButton} onClick={() => add(t)}>
+                    <span className={s.addLabel}>
+                      <IconPlus size={16} stroke={2} aria-hidden />
+                      {t.label}
+                    </span>
+                    {t.description && <span className={c.meta}>{t.description}</span>}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className={s.danger}>
+              {confirming ? (
+                <div className={s.confirm} role="alertdialog" aria-labelledby="confirm-text">
+                  <p id="confirm-text">
+                    {confirming === "delete"
+                      ? "Delete this page and its history? This can't be undone."
+                      : confirming === "unpublish"
+                        ? "Take this page off the site? The draft is kept."
+                        : "Throw away every change since the last publish?"}
+                  </p>
+                  <div className={c.actions}>
+                    <Button onClick={() => runConfirmed(confirming)} disabled={pending}>
+                      {confirming === "delete"
+                        ? "Delete page"
+                        : confirming === "unpublish"
+                          ? "Unpublish"
+                          : "Discard changes"}
+                    </Button>
+                    <Button variant="ghost" onClick={() => setConfirming(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className={c.actions}>
+                  {status.published && (status.hasChanges || dirty) && (
+                    <Button variant="ghost" size="sm" onClick={() => setConfirming("discard")}>
+                      Discard unpublished changes
+                    </Button>
+                  )}
+                  {status.published && !status.isHome && (
+                    <Button variant="ghost" size="sm" onClick={() => setConfirming("unpublish")}>
+                      Unpublish
+                    </Button>
+                  )}
+                  {!status.isHome && (
+                    <Button variant="ghost" size="sm" onClick={() => setConfirming("delete")}>
+                      Delete page
+                    </Button>
+                  )}
+                </div>
+              )}
+            </section>
           </div>
-          <div className={s.previewStage} ref={stage}>
-            <iframe
-              ref={frame}
-              src={props.previewUrl}
-              title="Live preview"
-              className={`${s.preview} ${device === "phone" ? s.phone : ""}`}
-              style={
-                device === "desktop" && scale < 1
-                  ? {
-                      width: DESKTOP,
-                      height: stageSize.height / scale,
-                      transform: `scale(${scale})`,
-                      transformOrigin: "top left",
-                    }
-                  : undefined
-              }
-            />
+
+          <div className={s.previewColumn}>
+            <div className={s.previewBar}>
+              <span className={c.meta}>
+                Preview{dirty ? " (includes unsaved changes)" : ""}
+                {device === "desktop" && scale < 1 ? ` · ${Math.round(scale * 100)}%` : ""}
+              </span>
+              <div
+                className={c.segments}
+                role="group"
+                aria-label="Preview size"
+                style={{ marginBottom: 0 }}
+              >
+                <button
+                  type="button"
+                  className={c.segment}
+                  aria-pressed={device === "desktop"}
+                  aria-current={device === "desktop" ? "page" : undefined}
+                  onClick={() => setDevice("desktop")}
+                >
+                  <IconDeviceDesktop size={16} stroke={2} aria-hidden />
+                  Desktop
+                </button>
+                <button
+                  type="button"
+                  className={c.segment}
+                  aria-pressed={device === "phone"}
+                  aria-current={device === "phone" ? "page" : undefined}
+                  onClick={() => setDevice("phone")}
+                >
+                  <IconDeviceMobile size={16} stroke={2} aria-hidden />
+                  Phone
+                </button>
+              </div>
+            </div>
+            <div className={s.previewStage} ref={stage}>
+              <iframe
+                ref={frame}
+                src={props.previewUrl}
+                title="Live preview"
+                className={`${s.preview} ${device === "phone" ? s.phone : ""}`}
+                style={
+                  device === "desktop" && scale < 1
+                    ? {
+                        width: DESKTOP,
+                        height: stageSize.height / scale,
+                        transform: `scale(${scale})`,
+                        transformOrigin: "top left",
+                      }
+                    : undefined
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </MediaFieldContext.Provider>
   );
 }
 

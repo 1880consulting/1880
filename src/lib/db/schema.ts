@@ -1,4 +1,5 @@
 import {
+  customType,
   index,
   int,
   json,
@@ -185,5 +186,50 @@ export const redirects = mysqlTable("redirects", {
   fromPath: varchar("from_path", { length: 300 }).notNull().unique(),
   toPath: varchar("to_path", { length: 300 }).notNull(),
   code: int("code").notNull().default(308),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------------------
+// Media library (PLAN D26)
+// ---------------------------------------------------------------------------
+
+/** One image in the library. Its files live in the storage adapter, keyed by id and rev. */
+export const media = mysqlTable(
+  "media",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    filename: varchar("filename", { length: 255 }).notNull(),
+    mime: varchar("mime", { length: 50 }).notNull(),
+    width: int("width").notNull(),
+    height: int("height").notNull(),
+    bytes: int("bytes").notNull(),
+    /** Fingerprint of the original, so the same file uploaded twice is stored once. */
+    sha256: varchar("sha256", { length: 64 }).notNull(),
+    alt: varchar("alt", { length: 300 }).notNull().default(""),
+    /** Where crops center, 0–1000 from the left/top. */
+    focalX: int("focal_x").notNull().default(500),
+    focalY: int("focal_y").notNull().default(500),
+    /** Bumped when the file is replaced, so addresses change and caches refresh. */
+    rev: int("rev").notNull().default(1),
+    /** Widths made for this revision, e.g. [320, 640, 960]. */
+    widths: json("widths").notNull(),
+    createdBy: varchar("created_by", { length: 36 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+  },
+  (t) => [index("media_sha256").on(t.sha256), index("media_created").on(t.createdAt)],
+);
+
+export type MediaRow = typeof media.$inferSelect;
+
+/**
+ * The MySQL storage adapter's files (PLAN §2.4: MySQL first, S3-compatible
+ * storage later by config). Never written to disk: Hostinger wipes it.
+ */
+export const mediaBlobs = mysqlTable("media_blobs", {
+  key: varchar("key", { length: 200 }).primaryKey(),
+  contentType: varchar("content_type", { length: 50 }).notNull(),
+  bytes: int("bytes").notNull(),
+  data: customType<{ data: Buffer }>({ dataType: () => "longblob" })("data").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

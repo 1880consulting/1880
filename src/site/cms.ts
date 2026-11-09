@@ -1,6 +1,7 @@
 import { contactBandBlock } from "@/blocks/contact-band/schema";
 import { featureBlock } from "@/blocks/feature/schema";
 import { heroBlock } from "@/blocks/hero/schema";
+import { imageBlock } from "@/blocks/image/schema";
 import { namesakeBlock } from "@/blocks/namesake/schema";
 import { servicesBlock } from "@/blocks/services/schema";
 import { statementBlock } from "@/blocks/statement/schema";
@@ -42,7 +43,15 @@ export const pageType: ContentType = {
     "llms",
     "favicon",
   ],
-  blocks: [heroBlock, statementBlock, featureBlock, namesakeBlock, servicesBlock, contactBandBlock],
+  blocks: [
+    heroBlock,
+    statementBlock,
+    featureBlock,
+    imageBlock,
+    namesakeBlock,
+    servicesBlock,
+    contactBandBlock,
+  ],
 };
 
 export const CONTENT_TYPES = { page: pageType } as const;

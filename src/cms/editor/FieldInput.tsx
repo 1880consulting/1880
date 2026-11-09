@@ -1,7 +1,10 @@
 "use client";
 
-import { IconPlus, IconX } from "@tabler/icons-react";
-import { controls as c } from "../ui/client";
+import { IconPhoto, IconPlus, IconX } from "@tabler/icons-react";
+import { Badge, Button, controls as c } from "../ui/client";
+import { mediaUrl, pickWidth } from "../media/types";
+import mediaStyles from "../media/media.module.css";
+import { useMediaField } from "./mediaField";
 import type { Field } from "../content/fields";
 import { pathKey, type Path } from "./doc";
 import s from "./editor.module.css";
@@ -82,6 +85,19 @@ export function FieldInput({ field, value, path, errors, onChange }: Props) {
         </div>
       );
     }
+
+    case "image":
+      return (
+        <ImageField
+          field={field}
+          value={value}
+          path={path}
+          error={error}
+          id={id}
+          help={help}
+          onChange={onChange}
+        />
+      );
 
     case "boolean":
       return (
@@ -199,4 +215,86 @@ export function FieldInput({ field, value, path, errors, onChange }: Props) {
       );
     }
   }
+}
+
+/** An image from the media library: a thumbnail, its alt-text status, and buttons to choose or remove. */
+function ImageField({
+  field,
+  value,
+  path,
+  error,
+  id,
+  help,
+  onChange,
+}: {
+  field: Extract<Field, { kind: "image" }>;
+  value: unknown;
+  path: Path;
+  error?: string;
+  id: string;
+  help: React.ReactNode;
+  onChange: (path: Path, value: unknown) => void;
+}) {
+  const { media, choose } = useMediaField();
+  const chosen = typeof value === "string" && value ? media[value] : undefined;
+  return (
+    <div className={c.field}>
+      <span className={c.label} id={`${id}-label`}>
+        {field.label}
+        {!field.required && <span className={s.optional}> Optional</span>}
+      </span>
+      <div className={mediaStyles.field} aria-labelledby={`${id}-label`} role="group">
+        {chosen ? (
+          // eslint-disable-next-line @next/next/no-img-element -- library thumbnail
+          <img
+            className={mediaStyles.fieldThumb}
+            src={mediaUrl(chosen, pickWidth(chosen, 160), "webp")}
+            alt=""
+          />
+        ) : (
+          <span
+            className={mediaStyles.fieldThumb}
+            style={{ display: "grid", placeItems: "center" }}
+          >
+            <IconPhoto size={20} stroke={2} aria-hidden />
+          </span>
+        )}
+        <span className={mediaStyles.fieldInfo}>
+          {chosen ? (
+            <>
+              <span className={mediaStyles.name}>{chosen.filename}</span>
+              {chosen.alt.trim() ? (
+                <span className={c.meta}>{chosen.alt}</span>
+              ) : (
+                <Badge tone="warning">Needs alt text</Badge>
+              )}
+            </>
+          ) : (
+            <span className={c.meta}>
+              {value ? "This image was deleted from the library." : "No image chosen"}
+            </span>
+          )}
+        </span>
+        <Button size="sm" onClick={() => choose(path)}>
+          {chosen ? "Change" : "Choose image"}
+        </Button>
+        {Boolean(value) && (
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-label={`Remove ${field.label.toLowerCase()}`}
+            onClick={() => onChange(path, "")}
+          >
+            <IconX size={16} stroke={2} aria-hidden />
+          </Button>
+        )}
+      </div>
+      {help}
+      {error && (
+        <p id={`${id}-error`} className={c.error}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }

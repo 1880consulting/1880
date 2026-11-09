@@ -17,6 +17,7 @@ export type Field =
       multiline: boolean;
     }
   | { kind: "boolean"; key: string; label: string; help?: string }
+  | { kind: "image"; key: string; label: string; help?: string; required: boolean }
   | {
       kind: "select";
       key: string;
@@ -48,6 +49,8 @@ interface JsonSchema {
   title?: string;
   description?: string;
   multiline?: boolean;
+  /** Marks a string field as an image from the media library (its value is the image's id). */
+  media?: boolean;
   maxLength?: number;
   minLength?: number;
   minItems?: number;
@@ -74,6 +77,10 @@ function toFields(schema: JsonSchema): Field[] {
       return [{ kind: "select", ...base, required: required.has(key), options: prop.enum }];
     switch (prop.type) {
       case "string":
+        if (prop.media)
+          return [
+            { kind: "image", ...base, required: required.has(key) && (prop.minLength ?? 0) > 0 },
+          ];
         return [
           {
             kind: "text",

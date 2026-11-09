@@ -20,6 +20,8 @@ import {
 } from "@/cms/content/store";
 import { docSchema, slugify } from "@/cms/content/types";
 import type { ActionResult, DiscardResult, SaveResult } from "@/cms/editor/PageEditor";
+import { mediaIssues, mediaRefs } from "@/cms/media/refs";
+import { getMediaMany } from "@/cms/media/store";
 import { pageType } from "@/site/cms";
 import { pageTag, REDIRECTS_TAG } from "@/site/pages";
 
@@ -99,6 +101,13 @@ export async function savePage(entryId: string, input: unknown): Promise<SaveRes
 export async function publishPage(entryId: string): Promise<ActionResult> {
   const me = await requireStaff();
   try {
+    // Every image must still exist and have alt text (PLAN D26).
+    const found = await getEntry(id.parse(entryId));
+    if (found) {
+      const refs = mediaRefs(pageType, found.draft);
+      const issues = mediaIssues(refs, await getMediaMany(refs.map((r) => r.id)));
+      if (issues.length) throw new InvalidError(issues);
+    }
     const { slugs } = await publish(pageType, id.parse(entryId), me.id);
     refreshPublic(slugs);
     await audit({

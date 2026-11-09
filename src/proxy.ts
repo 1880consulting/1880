@@ -92,6 +92,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip Next's own static files and the image optimizer.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Skip Next's own static files and the image optimizer, and Studio's upload
+  // endpoint (it checks the session itself, and large uploads shouldn't be
+  // buffered by the proxy).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|admin/media/upload$).*)"],
 };

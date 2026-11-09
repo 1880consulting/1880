@@ -3,11 +3,20 @@
 import { RenderBlocks, visibleBlocks } from "@/blocks";
 import type { EntryDoc } from "@/cms/content/types";
 import { usePreviewDoc } from "@/cms/editor/usePreviewDoc";
+import type { MediaInfo } from "@/cms/media/types";
 import section from "./section.module.css";
 
 /** The page as the editor currently has it, rendered with the real site blocks. */
-export function PreviewBlocks({ initial, email }: { initial: EntryDoc; email: string }) {
-  const doc = usePreviewDoc(initial);
+export function PreviewBlocks({
+  initial,
+  initialMedia,
+  email,
+}: {
+  initial: EntryDoc;
+  initialMedia: Record<string, MediaInfo>;
+  email: string;
+}) {
+  const { doc, media } = usePreviewDoc(initial, initialMedia);
   const blocks = visibleBlocks(doc);
   if (blocks.length === 0) {
     return (
@@ -18,5 +27,5 @@ export function PreviewBlocks({ initial, email }: { initial: EntryDoc; email: st
       </section>
     );
   }
-  return <RenderBlocks blocks={blocks} context={{ email }} />;
+  return <RenderBlocks blocks={blocks} context={{ email, media }} />;
 }
