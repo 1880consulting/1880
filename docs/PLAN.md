@@ -42,6 +42,7 @@ Last updated: 2026-11-09
 | D31 | **The public site starts as a rebuild of today's 1880consulting.com** (WordPress + Elementor Pro): the one-page home and the Contact page, same words, design and motion, in Next.js. Its sections become the first CMS blocks (`src/blocks/`). This replaces the Claude Design prototype of the public site for now | Nov 9, Drew |
 | D32 | **Inquiries inbox:** every contact-form message is saved first, then the alert email goes out in the background (Resend, plain text, Reply-To = the sender). Failed alerts retry automatically up to 5 times, then wait for **Send alert again**. **Until staff sign-in exists, 1880 Studio runs only under `npm run dev`**: production answers 404 for `/admin` | Nov 9, Drew |
 | D33 | **Staff sign-in is built:** email + password (scrypt) or an emailed one-time link, owner/editor roles, 14-day sessions in a host-only HttpOnly cookie, rate limits on every sign-in path, and an activity log. Emailed links open a confirm page first, because Microsoft 365's link scanner would otherwise use them up. Owners invite people from **People**; each invite also shows a copyable link, so invites work before email is set up. The first owner (and recovery if everyone is locked out) comes from `npm run studio:owner`. This replaces D32's "Studio only under `npm run dev`" | Nov 9, Drew |
+| D34 | **Security headers and health check.** Every response gets a Content Security Policy that allows only this site (no outside scripts, fonts or frames), plus HSTS on HTTPS, nosniff, no framing, a strict referrer policy and a Permissions-Policy. Studio and portal pages are also `private, no-store` and `noindex`. Scripts allow `'unsafe-inline'` because pages are prerendered and Next.js starts each one with small inline scripts; a nonce-based policy was tried for Studio and broke its prerendered pages. Revisit if Studio ever renders fully on demand. `/api/health` checks the database and that every migration is applied: 200 or 503, with no error details | Nov 9, Drew |
 
 ---
 
@@ -302,7 +303,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] Docker MySQL for local dev, Drizzle schema + first migration (`inquiries`, `settings`)
 - [x] `proxy.ts` hostname routing (`1880.io` / `clients.1880.io`), reserved names, `SITE_ROLE`
 - [x] Staff sign-in (password + emailed link), owner/editor roles, rate limits, activity log, mail via Resend (D33)
-- [ ] Security headers, health check that includes the database
+- [x] Security headers, health check that includes the database (D34)
 - [x] GitHub Actions CI: lint, typecheck, unit tests, build
 - [x] Placeholder pages for all three surfaces
 - [x] Portal subdomain as a setting (`PORTAL_SUBDOMAIN`, D18)

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, STUDIO_PATH_HEADER } from "@/cms/staff/cookie";
 import { parsePortalSubdomain, parseSiteRole, routeRequest, surfaceForHost } from "@/lib/routing";
+import { securityHeaders } from "@/lib/security-headers";
 
 /**
  * Runs before every page. Decides which surface a request belongs to by its
@@ -13,6 +14,19 @@ export function proxy(request: NextRequest) {
   const role = parseSiteRole(process.env.SITE_ROLE);
   const portalSubdomain = parsePortalSubdomain(process.env.PORTAL_SUBDOMAIN);
   const isPortal = surfaceForHost(hostname, portalSubdomain) === "portal";
+  const proto = request.headers.get("x-forwarded-proto");
+
+  // Security headers on every response, redirects included (src/lib/security-headers.ts).
+  // Studio and portal pages are private: never indexed, never stored by a browser or CDN.
+  const headers = securityHeaders({
+    https: proto === "https" || url.protocol === "https:",
+    dev: process.env.NODE_ENV === "development",
+    private: isPortal || url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
+  });
+  const finish = (response: NextResponse) => {
+    for (const [key, value] of Object.entries(headers)) response.headers.set(key, value);
+    return response;
+  };
 
   const decision = routeRequest({
     hostname,
@@ -31,9 +45,8 @@ export function proxy(request: NextRequest) {
       target.hostname = decision.hostname;
       target.port = port ?? "";
       // Behind the host's HTTPS front end the app itself sees plain http.
-      const proto = request.headers.get("x-forwarded-proto");
       if (proto === "https" || proto === "http") target.protocol = `${proto}:`;
-      return NextResponse.redirect(target, decision.status);
+      return finish(NextResponse.redirect(target, decision.status));
     }
     case "sign-in": {
       const target = new URL("/admin/login", url);
@@ -70,14 +83,7 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // Portal and admin pages are private: never indexed, never cached by a CDN.
-  if (isPortal || url.pathname.startsWith("/admin")) {
-    response.headers.set("X-Robots-Tag", "noindex, nofollow");
-  }
-  if (isPortal) {
-    response.headers.set("Cache-Control", "private, no-store");
-  }
-  return response;
+  return finish(response);
 }
 
 export const config = {
