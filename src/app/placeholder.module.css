@@ -1,0 +1,15 @@
+.main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-2);
+}
+
+.label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border-bottom: var(--hairline);
+  padding-bottom: var(--space-1);
+  margin-bottom: var(--space-3);
+}

@@ -1,0 +1,25 @@
+/*
+ * 1880 design tokens: placeholder.
+ *
+ * These are neutral stand-ins so the scaffold has something to render.
+ * The real tokens come from the existing 1880 design system
+ * (letswork-jmg/public/1880/assets/brand/1880.css, tokens v2) and the
+ * approved prototypes (PLAN Phase 1). Replace this file then.
+ */
+:root {
+  --color-ink: #1a1a1a;
+  --color-paper: #ffffff;
+  --color-muted: #6b6b6b;
+  --color-rule: #d9d9d9;
+
+  /* LTC Bodoni 175 Pro stays first for when a web license is bought (D17). */
+  --font-serif: "LTC Bodoni 175 Pro", "Libre Bodoni", Georgia, "Times New Roman", serif;
+
+  --radius: 0;
+  --hairline: 1px solid var(--color-rule);
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 2rem;
+  --space-4: 4rem;
+}

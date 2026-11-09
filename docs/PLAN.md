@@ -89,7 +89,9 @@ Both deploy from `main`. No long-lived per-site branches: they drift apart and e
 | `clients.1880.io/unknown` **or** a client you're not invited to | The same plain "Not found" page, so nobody can tell which clients exist |
 | A portal URL on `1880.io`, or a public/admin URL on `clients.1880.io` | 404 |
 
-**Reserved names** that can't be a client's URL name: `login`, `logout`, `auth`, `api`, `admin`, `account`, `settings`, `help`, `support`, `assets`, `static`, `images`, `files`, `health`, `robots.txt`, `sitemap.xml`, `favicon.ico`, anything starting with `_`.
+**Reserved names** that can't be a client's URL name: `login`, `logout`, `auth`, `api`, `admin`, `account`, `settings`, `help`, `support`, `assets`, `static`, `images`, `files`, `health`, `robots.txt`, `sitemap.xml`, `favicon.ico`, `portal`, anything starting with `_`.
+
+**How it's built:** portal pages live under an internal `/portal` folder in `src/app/(portal)/`. `proxy.ts` rewrites `clients.1880.io/acme` to `/portal/acme`, and 404s `/portal` on `1880.io` (which is why `portal` is reserved). Checks that decide between a page and "Not found" (reserved names now, client membership in Phase 3) must finish **before** the page starts streaming, because a streamed page has already sent a `200` status. The proxy is the safest place for them.
 
 ### 2.3 Keeping clients' data separate
 
@@ -269,12 +271,12 @@ Hostinger lessons carried from Metro RES (`metrores-web/docs/research/hostinger-
 | Proposals view-only | Accept / approve, e-sign |
 
 ### Phase 0: Repo foundation (no design or hosting needed, can start now)
-- [ ] Scaffold Next.js 16 at the repo root, TypeScript strict, ESLint, Prettier
+- [x] Scaffold Next.js 16 at the repo root, TypeScript strict, ESLint, Prettier
 - [ ] Docker MySQL for local dev, Drizzle schema + first migration
-- [ ] `proxy.ts` hostname routing (`1880.io` / `clients.1880.io`), reserved names, `SITE_ROLE`
+- [x] `proxy.ts` hostname routing (`1880.io` / `clients.1880.io`), reserved names, `SITE_ROLE`
 - [ ] Port Metro RES foundations: staff auth + roles, audit log, security headers, health check, mail
-- [ ] GitHub Actions CI: lint, typecheck, unit tests, build
-- [ ] Placeholder pages for all three surfaces
+- [x] GitHub Actions CI: lint, typecheck, unit tests, build
+- [x] Placeholder pages for all three surfaces
 
 ### Phase 1: Prototypes (Drew, in Claude Design)
 - [ ] Public site prototype (`docs/prototype-brief.md` §A)

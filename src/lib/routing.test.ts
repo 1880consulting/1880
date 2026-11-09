@@ -1,0 +1,89 @@
+import { describe, expect, it } from "vitest";
+import { isValidClientName, parseSiteRole, routeRequest, type SiteRole } from "./routing";
+
+const route = (hostname: string, pathname: string, role: SiteRole = "all") =>
+  routeRequest({ hostname, pathname, role });
+
+describe("routeRequest", () => {
+  it("serves public pages on 1880.io", () => {
+    expect(route("1880.io", "/about")).toEqual({ kind: "next" });
+    expect(route("1880.io", "/admin")).toEqual({ kind: "next" });
+    expect(route("localhost", "/")).toEqual({ kind: "next" });
+  });
+
+  it("redirects www to the bare domain", () => {
+    expect(route("www.1880.io", "/about")).toEqual({
+      kind: "redirect",
+      hostname: "1880.io",
+      status: 301,
+    });
+  });
+
+  it("rewrites portal requests under /portal", () => {
+    expect(route("clients.1880.io", "/")).toEqual({ kind: "rewrite", pathname: "/portal" });
+    expect(route("clients.1880.io", "/acme/d/x1")).toEqual({
+      kind: "rewrite",
+      pathname: "/portal/acme/d/x1",
+    });
+    expect(route("clients.localhost", "/acme")).toEqual({
+      kind: "rewrite",
+      pathname: "/portal/acme",
+    });
+  });
+
+  it("hides the portal's internal routes on the public host", () => {
+    expect(route("1880.io", "/portal")).toEqual({ kind: "not-found" });
+    expect(route("1880.io", "/portal/acme")).toEqual({ kind: "not-found" });
+    expect(route("1880.io", "/portals-are-fine")).toEqual({ kind: "next" });
+  });
+
+  it("can't reach public or admin pages through the portal host", () => {
+    expect(route("clients.1880.io", "/admin")).toEqual({ kind: "not-found" });
+    expect(route("clients.1880.io", "/about")).toEqual({
+      kind: "rewrite",
+      pathname: "/portal/about",
+    });
+  });
+
+  it("404s reserved and malformed client names before rendering", () => {
+    for (const path of ["/login", "/portal/acme", "/_secret", "/Acme", "/acme--co/d/1"]) {
+      expect(route("clients.1880.io", path)).toEqual({ kind: "not-found" });
+    }
+  });
+
+  it("passes shared API routes through on both hosts", () => {
+    expect(route("clients.1880.io", "/api/health")).toEqual({ kind: "next" });
+    expect(route("1880.io", "/api/health")).toEqual({ kind: "next" });
+  });
+
+  it("blocks crawlers on the portal", () => {
+    expect(route("clients.1880.io", "/robots.txt")).toEqual({ kind: "robots-disallow" });
+  });
+
+  it("404s whichever surface SITE_ROLE excludes", () => {
+    expect(route("1880.io", "/about", "portal")).toEqual({ kind: "not-found" });
+    expect(route("clients.1880.io", "/acme", "public")).toEqual({ kind: "not-found" });
+    expect(route("1880.io", "/about", "public")).toEqual({ kind: "next" });
+  });
+});
+
+describe("isValidClientName", () => {
+  it("accepts readable names", () => {
+    expect(isValidClientName("acme")).toBe(true);
+    expect(isValidClientName("acme-co-2")).toBe(true);
+  });
+
+  it("rejects reserved, underscored and malformed names", () => {
+    for (const name of ["login", "api", "portal", "_next", "Acme", "acme--co", "-acme", ""]) {
+      expect(isValidClientName(name)).toBe(false);
+    }
+  });
+});
+
+describe("parseSiteRole", () => {
+  it("defaults to all", () => {
+    expect(parseSiteRole(undefined)).toBe("all");
+    expect(parseSiteRole("nonsense")).toBe("all");
+    expect(parseSiteRole("portal")).toBe("portal");
+  });
+});
