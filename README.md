@@ -49,10 +49,13 @@ npm run build
 | Path | What |
 |---|---|
 | `src/proxy.ts` | Routes each request by hostname. Logic in `src/lib/routing.ts` (tested) |
-| `src/app/(site)/` | Public pages, `1880.io` |
+| `src/app/(site)/` | Public pages, `1880.io`: home and Contact |
+| `src/blocks/` | Page sections (component + zod schema each), e.g. hero, services |
+| `src/site/` | Public-site chrome (nav, footer), shared UI, and `content.ts` (the site's words, until the CMS stores them) |
 | `src/app/admin/` | 1880 Studio, `1880.io/admin` |
 | `src/app/(portal)/portal/` | Client portal, served at `<PORTAL_SUBDOMAIN>.1880.io` |
 | `src/app/api/health/` | Uptime check |
 | `src/cms/ui/` | Admin building blocks in the 1880 OS look |
-| `design-system/tokens.css` | Public-site tokens (placeholders until the prototypes land) |
+| `design-system/tokens.css` | Public-site tokens: the 1880 Design System v0.3, as on 1880consulting.com |
+| `design-system/fonts/` | Libre Bodoni (OFL), self-hosted |
 | `design-system/1880-os/` | 1880 OS tokens, font and logo for the admin (`npm run tokens:os` regenerates the CSS) |

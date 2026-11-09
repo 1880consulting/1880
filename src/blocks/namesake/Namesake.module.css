@@ -1,0 +1,54 @@
+.inner {
+  --wrap-gap: 64px;
+}
+
+.year {
+  overflow: hidden;
+  line-height: 0;
+}
+
+.year svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: var(--color-ink);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 48px 32px;
+}
+
+.lead {
+  flex: 1.4 1 0;
+  min-width: 0;
+}
+
+.close {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.closeLine {
+  font-size: 48px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .lead,
+  .close {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .closeLine {
+    font-size: 36px;
+    line-height: 40px;
+  }
+}

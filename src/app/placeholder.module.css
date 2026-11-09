@@ -1,7 +1,7 @@
 .main {
   max-width: 40rem;
   margin: 0 auto;
-  padding: var(--space-4) var(--space-2);
+  padding: 96px var(--gutter);
 }
 
 .label {
@@ -9,7 +9,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted);
-  border-bottom: var(--hairline);
-  padding-bottom: var(--space-1);
-  margin-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-rule);
+  padding-bottom: 8px;
+  margin-bottom: 32px;
 }

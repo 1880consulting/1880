@@ -1,25 +1,57 @@
 /*
- * 1880 design tokens: placeholder.
+ * 1880 Design System (v0.3): public-site tokens.
  *
- * These are neutral stand-ins so the scaffold has something to render.
- * The real tokens come from the existing 1880 design system
- * (letswork-jmg/public/1880/assets/brand/1880.css, tokens v2) and the
- * approved prototypes (PLAN Phase 1). Replace this file then.
+ * Ported from the current 1880consulting.com stylesheet. Monochrome,
+ * one Bodoni serif, square corners, hairlines instead of shadows.
+ * Sections with data-tone="ink" flip to the dark palette.
  */
 :root {
-  --color-ink: #1a1a1a;
-  --color-paper: #ffffff;
-  --color-muted: #6b6b6b;
+  --color-charcoal: #231f20;
+  --color-white: #ffffff;
+
+  --color-surface: #ffffff;
+  --color-sunken: #f2f2f2;
+  --color-ink: #231f20;
+  --color-muted: #595959;
+  --color-faint: rgba(35, 31, 32, 0.22);
   --color-rule: #d9d9d9;
+  --color-rule-strong: #767676;
 
-  /* LTC Bodoni 175 Pro stays first for when a web license is bought (D17). */
-  --font-serif: "LTC Bodoni 175 Pro", "Libre Bodoni", Georgia, "Times New Roman", serif;
+  /* LTC Bodoni 175 stays first for when a web license is in place (PLAN D17). */
+  --font-serif:
+    "ltc-bodoni-175", "LTC Bodoni 175 Pro", "LTC Bodoni 175",
+    var(--font-libre-bodoni, "Libre Bodoni"), var(--font-libre-bodoni-ext, "Libre Bodoni"), Georgia,
+    "Times New Roman", serif;
 
-  --radius: 0;
-  --hairline: 1px solid var(--color-rule);
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-slow: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --space-1: 0.5rem;
-  --space-2: 1rem;
-  --space-3: 2rem;
-  --space-4: 4rem;
+  --max-width: 1200px;
+  --measure: 680px;
+  --gutter: 32px;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --gutter: 16px;
+  }
+}
+
+/* Re-declared where next/font sets the Libre Bodoni variables, so they resolve. */
+[data-site] {
+  --font-serif:
+    "ltc-bodoni-175", "LTC Bodoni 175 Pro", "LTC Bodoni 175",
+    var(--font-libre-bodoni, "Libre Bodoni"), var(--font-libre-bodoni-ext, "Libre Bodoni"), Georgia,
+    "Times New Roman", serif;
+  font-family: var(--font-serif);
+}
+
+[data-tone="ink"] {
+  --color-surface: #231f20;
+  --color-sunken: #1a1718;
+  --color-ink: #ffffff;
+  --color-muted: #b5b2b3;
+  --color-faint: rgba(255, 255, 255, 0.22);
+  --color-rule: #403b3c;
+  --color-rule-strong: #8c8889;
 }

@@ -1,11 +1,13 @@
-import styles from "../placeholder.module.css";
+import type { Metadata } from "next";
+import { RenderBlocks } from "@/blocks";
+import { home, site } from "@/site/content";
+
+export const metadata: Metadata = {
+  title: { absolute: home.title },
+  description: home.description,
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
-  return (
-    <main className={styles.main}>
-      <p className={styles.label}>{"// Public site · placeholder"}</p>
-      <h1>1880</h1>
-      <p>The public site will be built from the approved prototype (PLAN Phase 2).</p>
-    </main>
-  );
+  return <RenderBlocks blocks={home.blocks} context={{ email: site.email }} />;
 }

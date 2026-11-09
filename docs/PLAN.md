@@ -39,6 +39,7 @@ Last updated: 2026-11-09
 | D28 | Editors manage **menus + footer** and **SEO per page** in the CMS. Redirects and contact details/social links stay in code for v1 | Nov 9, Drew |
 | D29 | The CMS is a **reusable engine** (`src/cms/`), separate from 1880's blocks and styling (`src/blocks/`), so it can run other sites later | Nov 9, Drew |
 | D30 | Admin look: **1880 OS**, the 1880 team's work-UI design system (Inter, charcoal sidebar, light + dark themes; [design system](https://claude.ai/artifact/3v3y6Zh7fSP6zQZXs744t7)). Tokens, font and logo live in `design-system/1880-os/`. The public site keeps the Bodoni 1880 Design System | Nov 9, Drew |
+| D31 | **The public site starts as a rebuild of today's 1880consulting.com** (WordPress + Elementor Pro): the one-page home and the Contact page, same words, design and motion, in Next.js. Its sections become the first CMS blocks (`src/blocks/`). This replaces the Claude Design prototype of the public site for now | Nov 9, Drew |
 
 ---
 
@@ -299,7 +300,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] Portal subdomain as a setting (`PORTAL_SUBDOMAIN`, D18)
 
 ### Phase 1: Prototypes (Drew, in Claude Design)
-- [ ] Public site prototype (`docs/prototype-brief.md` §A)
+- [x] ~~Public site prototype~~: replaced by the 1880consulting.com rebuild (D31)
 - [ ] Client portal prototype (`docs/prototype-brief.md` §B)
 - [ ] Hand off into `prototype/` + brand tokens into `design-system/`
 
@@ -308,7 +309,8 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [ ] Block builder with live preview
 - [x] Admin shell in the 1880 OS look, with placeholder sections
 - [ ] People + roles
-- [ ] Block library built from the public prototype (`src/blocks/`)
+- [x] Rebuild of 1880consulting.com (D31): home + Contact, as blocks (hero, statement, feature, namesake, services, contact band) with zod schemas, content in `src/site/content.ts` until the CMS stores it
+- [ ] Contact form delivery: the form validates and has a honeypot; saving + emailing waits for the inquiries inbox below
 - [ ] Collections: case studies, services
 - [ ] Media library + pipeline, SEO panel, menus + footer, automatic slug redirects
 - [ ] Contact form → inquiries inbox + email alert via Resend, recipients in Settings
@@ -346,6 +348,8 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 4. **Client URL names:** readable (`/acme`) is the default. Any clients whose name must stay discreet (e.g. a code name)?
 5. **Who on the 1880 team needs CMS access**, and who is the owner?
 6. **Portal subdomain:** which subdomain of `1880.io` should the client portal use? (D18)
+7. **LTC Bodoni 175 on the web:** today's site loads it from an Adobe Fonts kit (`exu1qnt`). If 1880's Adobe Creative Cloud plan includes it, adding `1880.io` to that kit's web project would let the new site use it instead of Libre Bodoni (D17). Who owns that Adobe account?
+8. **Analytics:** today's site uses Google Analytics 4 (`G-FNXWW6CRNM`) with a cookie banner. The plan says Plausible (cookieless, no banner). Keep GA4, switch to Plausible, or both for a while?
 
 **Parked for later:** buying a web license for *LTC Bodoni 175 Pro* (D17).
 

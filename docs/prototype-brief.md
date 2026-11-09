@@ -22,6 +22,8 @@ The CMS admin doesn't need its own prototype. It uses the 1880 OS design system 
 
 ## A. Public site (`1880.io`)
 
+> **On hold (PLAN D31).** The public site starts as a rebuild of today's 1880consulting.com. Use this section later, for new pages or a redesign.
+
 ### Pages
 | Page | Notes |
 |---|---|

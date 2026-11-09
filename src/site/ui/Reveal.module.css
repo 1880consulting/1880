@@ -1,0 +1,24 @@
+.reveal {
+  transition:
+    opacity 1.1s var(--ease-slow),
+    transform 1.1s var(--ease-slow),
+    filter 1.1s var(--ease-slow);
+}
+
+.pending {
+  opacity: 0;
+  transform: translateY(32px);
+  filter: blur(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none;
+  }
+
+  .pending {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}

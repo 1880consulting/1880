@@ -1,0 +1,19 @@
+.word {
+  transition: color 0.9s var(--ease);
+}
+
+/* Only dimmed once the script is running, so the text is never stuck faint. */
+.ready .word {
+  color: var(--color-faint);
+}
+
+.ready .on {
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ready .word {
+    color: var(--color-ink);
+    transition: none;
+  }
+}

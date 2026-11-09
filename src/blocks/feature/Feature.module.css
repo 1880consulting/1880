@@ -1,0 +1,16 @@
+.inner {
+  --wrap-gap: 64px;
+}
+
+.detail {
+  align-self: flex-end;
+  width: min(100%, 58%);
+  padding-top: 24px;
+  border-top: 2px solid var(--color-ink);
+}
+
+@media (max-width: 900px) {
+  .detail {
+    width: 100%;
+  }
+}
