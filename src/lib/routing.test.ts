@@ -30,11 +30,27 @@ describe("routeRequest", () => {
     expect(route("clients.1880.io", "/acme/d/x1")).toEqual({
       kind: "rewrite",
       pathname: "/portal/acme/d/x1",
+      client: "acme",
     });
     expect(route("clients.localhost", "/acme")).toEqual({
       kind: "rewrite",
       pathname: "/portal/acme",
+      client: "acme",
     });
+  });
+
+  it("serves the portal's own pages and library images outside any client", () => {
+    expect(route("clients.1880.io", "/auth")).toEqual({
+      kind: "rewrite",
+      pathname: "/portal/auth",
+    });
+    expect(route("clients.1880.io", "/account")).toEqual({
+      kind: "rewrite",
+      pathname: "/portal/account",
+    });
+    expect(route("clients.1880.io", "/media/abc/1/320.webp")).toEqual({ kind: "next" });
+    // Only those exact pages: anything under them is Not found.
+    expect(route("clients.1880.io", "/account/x")).toEqual({ kind: "not-found" });
   });
 
   it("hides the portal's internal routes on the public host", () => {
@@ -48,6 +64,7 @@ describe("routeRequest", () => {
     expect(route("clients.1880.io", "/about")).toEqual({
       kind: "rewrite",
       pathname: "/portal/about",
+      client: "about",
     });
   });
 
@@ -102,7 +119,11 @@ describe("portal subdomain setting", () => {
   it("routes whichever subdomain is configured to the portal", () => {
     const r = (hostname: string) =>
       routeRequest({ hostname, pathname: "/acme", role: "all", portalSubdomain: "portal" });
-    expect(r("portal.1880.io")).toEqual({ kind: "rewrite", pathname: "/portal/acme" });
+    expect(r("portal.1880.io")).toEqual({
+      kind: "rewrite",
+      pathname: "/portal/acme",
+      client: "acme",
+    });
     expect(r("clients.1880.io")).toEqual({ kind: "next" });
   });
 

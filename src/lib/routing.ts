@@ -81,7 +81,8 @@ export function roleServes(role: SiteRole, surface: Surface): boolean {
 export type RouteDecision =
   | { kind: "next" }
   | { kind: "redirect"; hostname: string; status: 301 }
-  | { kind: "rewrite"; pathname: string }
+  /** `client`: the client URL name, when the page is under one (proxy.ts checks access). */
+  | { kind: "rewrite"; pathname: string; client?: string }
   | { kind: "not-found" }
   | { kind: "robots-disallow" }
   | { kind: "sign-in"; next: string };
@@ -97,6 +98,13 @@ export const STUDIO_PUBLIC_PATHS = [
 function isStudioPath(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
+
+/**
+ * The portal's own pages, outside any client: the page an emailed sign-in
+ * link opens, and the signed-in person's account. Their names are reserved,
+ * so no client can have them.
+ */
+export const PORTAL_PAGES = ["/auth", "/account"];
 
 /** Paths every surface serves as-is (health checks, shared APIs). */
 function isSharedPath(pathname: string): boolean {
@@ -129,16 +137,19 @@ export function routeRequest(input: {
     // The portal is never indexed.
     if (pathname === "/robots.txt") return { kind: "robots-disallow" };
     if (isSharedPath(pathname)) return { kind: "next" };
+    // Library images (a client's logo). Public on 1880.io too: random ids, images only.
+    if (pathname.startsWith("/media/")) return { kind: "next" };
+    if (PORTAL_PAGES.includes(pathname))
+      return { kind: "rewrite", pathname: PORTAL_PREFIX + pathname };
     // Reject reserved or malformed client names here, before rendering starts:
     // once a page begins streaming, its status code can no longer become 404.
     // (This also 404s /admin, /login and /portal/... on the portal host.)
     const clientName = pathname.split("/")[1];
     if (clientName && !isValidClientName(clientName)) return { kind: "not-found" };
-    // clients.1880.io/acme → /portal/acme
-    return {
-      kind: "rewrite",
-      pathname: pathname === "/" ? PORTAL_PREFIX : PORTAL_PREFIX + pathname,
-    };
+    // clients.1880.io/ → /portal (sign in, or choose a client)
+    if (!clientName) return { kind: "rewrite", pathname: PORTAL_PREFIX };
+    // clients.1880.io/acme/... → /portal/acme/..., once proxy.ts has checked access.
+    return { kind: "rewrite", pathname: PORTAL_PREFIX + pathname, client: clientName };
   }
 
   // Studio: no session cookie → the sign-in page, then back here.

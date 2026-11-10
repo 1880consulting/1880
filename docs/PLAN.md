@@ -49,6 +49,7 @@ Last updated: 2026-11-09
 | D38 | **Case studies and services are built** (D23). Case studies live at `/work/<address>` (client, summary, cover image, services, results), services at `/services/<address>` (summary, cover image, order); both can add sections. `/work` lists case studies newest first with service filters (in the browser, so the page stays static); `/services` lists services in their set order; each service page shows the case studies that use it. The engine now supports a content type's own fields (`ContentType.fields`, forms built from the schema like blocks), number fields and references to other entries (`.meta({ ref: "service" })`). Studio's Pages, Case studies and Services share one list, editor (with live preview) and history. Publishing a service refreshes the case studies that name it, and the other way round | Nov 10, Drew |
 | D39 | **SEO is built.** Each page, case study and service has a search title and description (with length guidance), a share image (falls back to the cover) and "hide from search engines", with Google and share previews in the editor. Share images are 1200×630 JPEGs cropped at the focal point, made on first request and stored. Every page gets canonical, Open Graph and Twitter tags; the home page carries Organization structured data, case studies Article and services Service. `/sitemap.xml`, `/robots.txt` and `/llms.txt` list live, indexable pages and refresh on publish. Absolute URLs come from `SITE_URL` at build time. Icons are generated from the 1880 mark | Nov 10, Drew |
 | D40 | **Analytics and the quality bar.** Plausible is wired in and switched on by `PLAUSIBLE_DOMAIN` (off until the account exists and open question 8 is settled); its origin joins the Content Security Policy only when it is on. Events: "Contact form sent", "Email copied". `npm run audit` checks every public page and Studio sign-in with axe (WCAG 2.2 AA, light and dark) and Lighthouse (mobile and desktop, every category ≥ 95). First run: all pages pass, scores 96–100. The statement block's scroll-lit words are faint below the reading line on purpose (screen readers get the full sentence), so the contrast check skips that copy | Nov 10, Drew |
+| D41 | **Portal foundation is built.** Staff add clients in Studio (name, URL name, logo, accent color; archive and restore) and invite their people by email; any staff member can. Clients sign in with an emailed link only (15 minutes; invites last 7 days), confirmed with one click so email scanners can't use it up. `proxy.ts` checks the session and membership **before** a client page renders, so "unknown", "archived" and "not yours" all get the same real 404; every page checks again through `src/lib/portal/`. One client goes straight in; several get a picker. The portal session cookie is host-only on the portal host, separate from Studio's. The isolation suite (`src/lib/portal/isolation.test.ts`) runs in CI. `npm run portal:seed` adds a demo client. The portal look is built on the 1880 Design System and gets restyled when the portal prototype lands | Nov 10, Drew |
 
 ---
 
@@ -227,7 +228,7 @@ staff_sessions     token_hash, user_id, created_at, expires_at          -- cooki
 staff_tokens       token_hash, user_id, purpose(login|invite|reset), expires_at, used_at
 rate_limits        id, key, created_at
 audit_log          id, actor_type(staff|client|system), actor_id, action, target, detail JSON, created_at
-                   -- tenant_id gets added with the portal
+                   + tenant_id for portal events
 
 -- public site content
 entries            id, type(page|work|service), slug, status,
@@ -242,10 +243,11 @@ inquiries          id(random), name, email, message, status(new|read|archived),
                    alert_claimed_at, alerted_at, created_at, read_at
 
 -- portal
-tenants            id, slug, name, logo_media_id, accent_color, status, created_at
-client_users       id, email, name, status, last_login_at
-memberships        client_user_id, tenant_id, role(viewer)
-login_tokens       id, client_user_id, token_hash, expires_at, used_at
+tenants            id, slug, name, logo_media_id, accent_color, status(active|archived), created_at
+client_users       id, email(unique), name, status(active|disabled), created_at, last_login_at
+memberships        client_user_id, tenant_id, invited_by, created_at        -- everyone is a viewer in v1
+client_sessions    token_hash, user_id, created_at, expires_at          -- portal cookie, hash only
+client_tokens      token_hash, user_id, purpose(login|invite), expires_at, used_at
 documents          id(random), tenant_id, type(report|proposal|other), format(blocks|interactive|file),
                    title, status, draft_version_id, published_version_id, published_at
 document_versions  id, document_id, doc JSON (blocks) | media_id (interactive HTML or file), author_id, created_at
@@ -335,11 +337,11 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] Plausible (switched on by env), accessibility, Lighthouse ≥ 95 (D40)
 
 ### Phase 3: Portal foundation
-- [ ] Clients and client people in the CMS, invites
-- [ ] Magic-link sign-in, client picker, sign-out, "Not found" handling
-- [ ] Portal shell from the portal prototype, per-client logo/accent after sign-in
-- [ ] Demo client with sample data
-- [ ] **Isolation test suite passing** (gate for real data)
+- [x] Clients and client people in the CMS, invites (D41)
+- [x] Magic-link sign-in, client picker, sign-out, "Not found" handling
+- [x] Portal shell, per-client logo/accent after sign-in (on the 1880 Design System; restyle from the portal prototype when it lands)
+- [x] Demo client with sample data (`npm run portal:seed`; sample documents come with Phase 4)
+- [x] **Isolation test suite passing** (gate for real data)
 
 ### Phase 4: Reports & proposals
 - [ ] Document editor: format 1 (portal blocks), format 2 (interactive page upload), format 3 (file upload)

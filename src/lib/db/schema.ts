@@ -5,6 +5,7 @@ import {
   json,
   mysqlEnum,
   mysqlTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -122,9 +123,15 @@ export const auditLog = mysqlTable(
     action: varchar("action", { length: 64 }).notNull(),
     target: varchar("target", { length: 400 }),
     detail: json("detail"),
+    /** The client this was about, for portal events (sign-ins, views, downloads). */
+    tenantId: varchar("tenant_id", { length: 36 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("audit_log_time").on(t.createdAt), index("audit_log_actor").on(t.actorId)],
+  (t) => [
+    index("audit_log_time").on(t.createdAt),
+    index("audit_log_actor").on(t.actorId),
+    index("audit_log_tenant").on(t.tenantId, t.createdAt),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -233,3 +240,85 @@ export const mediaBlobs = mysqlTable("media_blobs", {
   data: customType<{ data: Buffer }>({ dataType: () => "longblob" })("data").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// Client portal (PLAN §2.3, §3.4). Portal pages read these only through
+// src/lib/portal/, which checks membership and filters by tenant_id.
+// ---------------------------------------------------------------------------
+
+/** A client of 1880, at <portal>/<slug>. "archived" hides it from everyone. */
+export const tenants = mysqlTable(
+  "tenants",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    /** The URL name: clients.1880.io/<slug>. */
+    slug: varchar("slug", { length: 63 }).notNull(),
+    name: varchar("name", { length: 200 }).notNull(),
+    /** A media-library image, shown only after sign-in. */
+    logoMediaId: varchar("logo_media_id", { length: 36 }),
+    /** One brand color, "#rrggbb", used as an accent on 1880's design. */
+    accentColor: varchar("accent_color", { length: 7 }),
+    status: mysqlEnum("status", ["active", "archived"]).notNull().default("active"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("tenants_slug").on(t.slug)],
+);
+
+export type TenantRow = typeof tenants.$inferSelect;
+
+/** A person at a client. One person can belong to several clients. */
+export const clientUsers = mysqlTable(
+  "client_users",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    email: varchar("email", { length: 320 }).notNull(),
+    name: varchar("name", { length: 200 }).notNull(),
+    status: mysqlEnum("status", ["active", "disabled"]).notNull().default("active"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    lastLoginAt: timestamp("last_login_at"),
+  },
+  (t) => [uniqueIndex("client_users_email").on(t.email)],
+);
+
+export type ClientUserRow = typeof clientUsers.$inferSelect;
+
+/** Who can see which client. Removing the row removes access at once. */
+export const memberships = mysqlTable(
+  "memberships",
+  {
+    clientUserId: varchar("client_user_id", { length: 36 }).notNull(),
+    tenantId: varchar("tenant_id", { length: 36 }).notNull(),
+    invitedBy: varchar("invited_by", { length: 36 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.clientUserId, t.tenantId] }),
+    index("memberships_tenant").on(t.tenantId),
+  ],
+);
+
+/** Signed-in portal browsers. A separate cookie, on the portal's host only. */
+export const clientSessions = mysqlTable(
+  "client_sessions",
+  {
+    tokenHash: varchar("token_hash", { length: 64 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    expiresAt: timestamp("expires_at").notNull(),
+  },
+  (t) => [index("client_sessions_user").on(t.userId)],
+);
+
+/** Emailed sign-in links for clients: "login" (15 minutes) or "invite" (7 days). Hash only. */
+export const clientTokens = mysqlTable(
+  "client_tokens",
+  {
+    tokenHash: varchar("token_hash", { length: 64 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull(),
+    purpose: mysqlEnum("purpose", ["login", "invite"]).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+  },
+  (t) => [index("client_tokens_user").on(t.userId, t.purpose)],
+);

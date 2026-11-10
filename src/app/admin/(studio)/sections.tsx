@@ -1,5 +1,6 @@
 import {
   IconBriefcase,
+  IconBuilding,
   IconFileText,
   IconInbox,
   IconLayoutDashboard,
@@ -39,6 +40,10 @@ export const SECTIONS = {
     label: "Menus and footer",
     icon: <IconMenu2 {...icon} />,
   },
+  clients: {
+    label: "Clients",
+    icon: <IconBuilding {...icon} />,
+  },
   people: {
     label: "People",
     icon: <IconUsers {...icon} />,
@@ -69,5 +74,6 @@ export const NAV: NavSection[] = [
     ],
   },
   { label: "Site", items: [link("menus")] },
+  { label: "Client portal", items: [link("clients")] },
   { label: "Team", items: [link("people"), link("settings")] },
 ];

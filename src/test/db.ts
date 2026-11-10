@@ -32,6 +32,11 @@ export function setupTestDatabase() {
       schema.redirects,
       schema.media,
       schema.mediaBlobs,
+      schema.tenants,
+      schema.clientUsers,
+      schema.memberships,
+      schema.clientSessions,
+      schema.clientTokens,
     ]) {
       await db().delete(table);
     }

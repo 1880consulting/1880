@@ -7,6 +7,8 @@ export async function audit(entry: {
   action: string;
   target?: string;
   detail?: Record<string, unknown>;
+  /** The client it was about (portal events). */
+  tenantId?: string | null;
 }): Promise<void> {
   try {
     await db()
@@ -17,6 +19,7 @@ export async function audit(entry: {
         action: entry.action,
         target: entry.target?.slice(0, 400),
         detail: entry.detail,
+        tenantId: entry.tenantId ?? null,
       });
   } catch (err) {
     console.error("[audit] could not record", entry.action, err);

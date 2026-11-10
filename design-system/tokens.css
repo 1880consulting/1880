@@ -38,7 +38,8 @@
 }
 
 /* Re-declared where next/font sets the Libre Bodoni variables, so they resolve. */
-[data-site] {
+[data-site],
+[data-portal] {
   --font-serif:
     "ltc-bodoni-175", "LTC Bodoni 175 Pro", "LTC Bodoni 175",
     var(--font-libre-bodoni, "Libre Bodoni"), var(--font-libre-bodoni-ext, "Libre Bodoni"), Georgia,

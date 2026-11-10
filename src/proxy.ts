@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, STUDIO_PATH_HEADER } from "@/cms/staff/cookie";
 import { parsePortalSubdomain, parseSiteRole, routeRequest, surfaceForHost } from "@/lib/routing";
+import { PORTAL_COOKIE } from "@/lib/portal/cookie";
+import { portalGate } from "@/lib/portal/gate";
 import { securityHeaders } from "@/lib/security-headers";
 import { analyticsOrigin } from "@/site/analytics";
 
@@ -8,7 +10,7 @@ import { analyticsOrigin } from "@/site/analytics";
  * Runs before every page. Decides which surface a request belongs to by its
  * hostname (see `src/lib/routing.ts` and PLAN §2.2).
  */
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const host = request.headers.get("host") ?? url.host;
   const [hostname, port] = host.split(":");
@@ -30,6 +32,17 @@ export function proxy(request: NextRequest) {
         ? "host"
         : "none",
   });
+  // An address on the host the visitor asked for. Built from the Host header so
+  // an internal server address never leaks into a redirect (and the portal
+  // host stays the portal host). Behind Hostinger's HTTPS front end the app
+  // itself sees plain http, so the forwarded protocol wins.
+  const here = (path: string) => {
+    const target = new URL(path, url);
+    target.hostname = hostname;
+    target.port = port ?? "";
+    if (proto === "https" || proto === "http") target.protocol = `${proto}:`;
+    return target;
+  };
   const finish = (response: NextResponse) => {
     for (const [key, value] of Object.entries(headers)) response.headers.set(key, value);
     return response;
@@ -46,17 +59,13 @@ export function proxy(request: NextRequest) {
   let response: NextResponse;
   switch (decision.kind) {
     case "redirect": {
-      // Build from the Host header so an internal server port never leaks
-      // into the redirect (www.1880.io → 1880.io, www.localhost:3000 → localhost:3000).
-      const target = new URL(url.pathname + url.search, url);
+      // www.1880.io → 1880.io, www.localhost:3000 → localhost:3000.
+      const target = here(url.pathname + url.search);
       target.hostname = decision.hostname;
-      target.port = port ?? "";
-      // Behind the host's HTTPS front end the app itself sees plain http.
-      if (proto === "https" || proto === "http") target.protocol = `${proto}:`;
       return finish(NextResponse.redirect(target, decision.status));
     }
     case "sign-in": {
-      const target = new URL("/admin/login", url);
+      const target = here("/admin/login");
       if (decision.next !== "/admin") target.searchParams.set("next", decision.next + url.search);
       response = NextResponse.redirect(target);
       break;
@@ -71,6 +80,20 @@ export function proxy(request: NextRequest) {
       response = NextResponse.rewrite(new URL("/_not-found", url));
       break;
     case "rewrite": {
+      if (decision.client) {
+        // A page under a client: check access before it renders (PLAN §2.3).
+        const gate = await portalGate(request.cookies.get(PORTAL_COOKIE)?.value, decision.client);
+        if (gate === "sign-in") {
+          const target = here("/");
+          target.searchParams.set("next", url.pathname + url.search);
+          response = NextResponse.redirect(target);
+          break;
+        }
+        if (gate === "not-found") {
+          response = NextResponse.rewrite(new URL("/_not-found", url));
+          break;
+        }
+      }
       const target = url.clone();
       target.pathname = decision.pathname;
       response = NextResponse.rewrite(target);

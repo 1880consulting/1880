@@ -18,7 +18,8 @@
     "db:studio": "drizzle-kit studio",
     "studio:owner": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/studio-owner.mts",
     "cms:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/cms-seed.mts",
-    "audit": "node scripts/audit.mjs"
+    "audit": "node scripts/audit.mjs",
+    "portal:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/portal-seed.mts"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.49.0",
