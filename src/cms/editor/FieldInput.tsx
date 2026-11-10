@@ -99,6 +99,43 @@ export function FieldInput({ field, value, path, errors, onChange }: Props) {
         />
       );
 
+    case "number":
+      return (
+        <div className={c.field}>
+          <Label field={field} htmlFor={id} optional={!field.required} />
+          <input
+            id={id}
+            type="number"
+            inputMode="numeric"
+            className={c.input}
+            style={{ maxWidth: 160 }}
+            min={field.min}
+            max={field.max}
+            value={typeof value === "number" ? value : ""}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+            onChange={(e) =>
+              onChange(path, e.target.value === "" ? undefined : Number(e.target.value))
+            }
+          />
+          {help}
+          <ErrorText id={id} message={error} />
+        </div>
+      );
+
+    case "refs":
+      return (
+        <RefsField
+          field={field}
+          value={value}
+          path={path}
+          error={error}
+          id={id}
+          help={help}
+          onChange={onChange}
+        />
+      );
+
     case "boolean":
       return (
         <div className={c.field}>
@@ -296,5 +333,64 @@ function ImageField({
         </p>
       )}
     </div>
+  );
+}
+
+/** Pick entries of another type (e.g. a case study's services), as a list of checkboxes. */
+function RefsField({
+  field,
+  value,
+  path,
+  error,
+  id,
+  help,
+  onChange,
+}: {
+  field: Extract<Field, { kind: "refs" }>;
+  value: unknown;
+  path: Path;
+  error?: string;
+  id: string;
+  help: React.ReactNode;
+  onChange: (path: Path, value: unknown) => void;
+}) {
+  const { refOptions } = useMediaField();
+  const options = refOptions[field.ref] ?? [];
+  const chosen = Array.isArray(value) ? (value as string[]) : [];
+  const full = field.max !== undefined && chosen.length >= field.max;
+  return (
+    <fieldset className={s.fieldset} aria-describedby={error ? `${id}-error` : undefined}>
+      <legend className={c.label}>
+        {field.label} <span className={s.optional}>Optional</span>
+      </legend>
+      {help}
+      {options.length === 0 ? (
+        <p className={c.hint}>Nothing to choose yet. Create and publish some first.</p>
+      ) : (
+        <div className={s.list} style={{ marginBottom: 12 }}>
+          {options.map((o) => {
+            const on = chosen.includes(o.id);
+            return (
+              <label key={o.id} className={s.check}>
+                <input
+                  type="checkbox"
+                  checked={on}
+                  disabled={!on && full}
+                  onChange={() =>
+                    onChange(path, on ? chosen.filter((x) => x !== o.id) : [...chosen, o.id])
+                  }
+                />
+                {o.title}
+              </label>
+            );
+          })}
+        </div>
+      )}
+      {error && (
+        <p id={`${id}-error`} className={c.error}>
+          {error}
+        </p>
+      )}
+    </fieldset>
   );
 }

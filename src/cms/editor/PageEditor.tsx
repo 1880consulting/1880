@@ -33,6 +33,7 @@ import { FieldInput } from "./FieldInput";
 import { MediaFieldContext } from "./mediaField";
 import { MediaPicker } from "../media/MediaPicker";
 import type { MediaInfo } from "../media/types";
+import type { Field } from "../content/fields";
 import { PREVIEW_DOC, PREVIEW_READY } from "./protocol";
 import s from "./editor.module.css";
 
@@ -47,6 +48,12 @@ export interface PageEditorProps {
   initial: { doc: EntryDoc; slug: string; versionId: string | null };
   /** Images the draft already uses, by id. */
   initialMedia: Record<string, MediaInfo>;
+  /** What to call an entry, e.g. { singular: "case study", plural: "Case studies" }. */
+  labels: { singular: string; plural: string };
+  /** The content type's own fields (e.g. a case study's client), shown above the sections. */
+  entryFields: Field[];
+  /** Entries that reference fields can pick, by content type id. */
+  refOptions: Record<string, { id: string; title: string }[]>;
   status: { published: boolean; hasChanges: boolean; isHome: boolean };
   blockTypes: BlockType[];
   /** Shown before the address field, e.g. "1880.io/". */
@@ -74,7 +81,8 @@ export interface PageEditorProps {
 type Notice = { tone: "success" | "danger" | "warning"; text: string } | null;
 
 export function PageEditor(props: PageEditorProps) {
-  const { blockTypes, actions } = props;
+  const { blockTypes, actions, entryFields } = props;
+  const L = props.labels;
   const [doc, setDoc] = useState(props.initial.doc);
   const [media, setMedia] = useState(props.initialMedia);
   const [picking, setPicking] = useState<Path | null>(null);
@@ -115,10 +123,10 @@ export function PageEditor(props: PageEditorProps) {
   // ---- Live preview ----
   const sendPreview = useCallback(() => {
     frame.current?.contentWindow?.postMessage(
-      { type: PREVIEW_DOC, doc: tidyDoc(doc, blockTypes), media },
+      { type: PREVIEW_DOC, doc: tidyDoc(doc, blockTypes, entryFields), media },
       window.location.origin,
     );
-  }, [doc, blockTypes, media]);
+  }, [doc, blockTypes, entryFields, media]);
 
   useEffect(() => {
     const t = setTimeout(sendPreview, 120);
@@ -141,7 +149,7 @@ export function PageEditor(props: PageEditorProps) {
 
   // ---- Saving ----
   const save = useCallback(async (): Promise<boolean> => {
-    const clean = tidyDoc(doc, blockTypes);
+    const clean = tidyDoc(doc, blockTypes, entryFields);
     const result = await actions.save({ doc: clean, slug, baseVersionId: versionId });
     if (!result.ok) {
       setIssues(result.issues ?? []);
@@ -152,7 +160,7 @@ export function PageEditor(props: PageEditorProps) {
     setSaved(JSON.stringify({ doc, slug }));
     setStatus((st) => ({ ...st, hasChanges: st.published }));
     return true;
-  }, [actions, blockTypes, doc, slug, versionId]);
+  }, [actions, blockTypes, entryFields, doc, slug, versionId]);
 
   // Old messages go the moment a new action starts (outside the transition,
   // which would otherwise hold the update until the action finishes).
@@ -183,7 +191,7 @@ export function PageEditor(props: PageEditorProps) {
       }
       setIssues([]);
       setStatus((st) => ({ ...st, published: true, hasChanges: false }));
-      setNotice({ tone: "success", text: "Published. The page is live." });
+      setNotice({ tone: "success", text: `Published. The ${L.singular} is live.` });
     });
   };
 
@@ -202,7 +210,7 @@ export function PageEditor(props: PageEditorProps) {
         setStatus((st) => ({ ...st, hasChanges: false }));
         setNotice({
           tone: "success",
-          text: "Changes discarded. The draft matches the live page again.",
+          text: `Changes discarded. The draft matches the live ${L.singular} again.`,
         });
       } else if (kind === "unpublish") {
         const r = await actions.unpublish();
@@ -210,7 +218,7 @@ export function PageEditor(props: PageEditorProps) {
         setStatus((st) => ({ ...st, published: false, hasChanges: false }));
         setNotice({
           tone: "success",
-          text: "Unpublished. The page is no longer on the site; the draft is kept.",
+          text: `Unpublished. The ${L.singular} is no longer on the site; the draft is kept.`,
         });
       } else {
         const r = await actions.remove();
@@ -279,7 +287,7 @@ export function PageEditor(props: PageEditorProps) {
   const livePath = props.basePath + slug;
 
   return (
-    <MediaFieldContext.Provider value={{ media, choose: setPicking }}>
+    <MediaFieldContext.Provider value={{ media, choose: setPicking, refOptions: props.refOptions }}>
       <div className={s.editor}>
         <MediaPicker
           open={picking !== null}
@@ -295,9 +303,9 @@ export function PageEditor(props: PageEditorProps) {
         <div className={s.toolbar}>
           <div className={s.titleArea}>
             <Link href={props.backUrl} className={s.back}>
-              Pages
+              {L.plural}
             </Link>
-            <h1 className={s.title}>{doc.title.trim() || "Untitled page"}</h1>
+            <h1 className={s.title}>{doc.title.trim() || `Untitled ${L.singular}`}</h1>
             <div className={s.meta}>
               {statusBadge}
               <span className={c.meta} role="status">
@@ -340,7 +348,7 @@ export function PageEditor(props: PageEditorProps) {
                 <ul className={s.issues}>
                   {issues.slice(0, 6).map((i) => (
                     <li key={pathKey(i.path)}>
-                      {describePath(i.path, doc, blockTypes)}: {i.message}
+                      {describePath(i.path, doc, blockTypes, entryFields)}: {i.message}
                     </li>
                   ))}
                 </ul>
@@ -410,7 +418,7 @@ export function PageEditor(props: PageEditorProps) {
                       onChange={(e) => change(["seo", "title"], e.target.value)}
                     />
                     <p className={c.hint}>
-                      Shown in Google and when the page is shared. Around 60 characters reads best.
+                      Shown in Google and when it&apos;s shared. Around 60 characters reads best.
                     </p>
                   </div>
                   <div className={c.field}>
@@ -429,6 +437,26 @@ export function PageEditor(props: PageEditorProps) {
                 </details>
               </div>
             </section>
+
+            {entryFields.length > 0 && (
+              <section className={c.panel}>
+                <div className={c.panelHead}>
+                  <h2 className={c.panelTitle}>Details</h2>
+                </div>
+                <div className={c.panelBody}>
+                  {entryFields.map((f) => (
+                    <FieldInput
+                      key={f.key}
+                      field={f}
+                      value={doc.fields?.[f.key]}
+                      path={["fields", f.key]}
+                      errors={errors}
+                      onChange={change}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
             <h2 className={s.sectionsTitle}>Sections</h2>
             {errors.get("blocks") && <p className={c.error}>{errors.get("blocks")}</p>}
@@ -551,15 +579,15 @@ export function PageEditor(props: PageEditorProps) {
                 <div className={s.confirm} role="alertdialog" aria-labelledby="confirm-text">
                   <p id="confirm-text">
                     {confirming === "delete"
-                      ? "Delete this page and its history? This can't be undone."
+                      ? `Delete this ${L.singular} and its history? This can't be undone.`
                       : confirming === "unpublish"
-                        ? "Take this page off the site? The draft is kept."
+                        ? `Take this ${L.singular} off the site? The draft is kept.`
                         : "Throw away every change since the last publish?"}
                   </p>
                   <div className={c.actions}>
                     <Button onClick={() => runConfirmed(confirming)} disabled={pending}>
                       {confirming === "delete"
-                        ? "Delete page"
+                        ? `Delete ${L.singular}`
                         : confirming === "unpublish"
                           ? "Unpublish"
                           : "Discard changes"}
@@ -583,7 +611,7 @@ export function PageEditor(props: PageEditorProps) {
                   )}
                   {!status.isHome && (
                     <Button variant="ghost" size="sm" onClick={() => setConfirming("delete")}>
-                      Delete page
+                      Delete {L.singular}
                     </Button>
                   )}
                 </div>
@@ -651,9 +679,17 @@ export function PageEditor(props: PageEditorProps) {
 }
 
 /** "Hero › Headline" for an issue path, so the summary says where to look. */
-function describePath(path: Path, doc: EntryDoc, types: BlockType[]): string {
+function describePath(
+  path: Path,
+  doc: EntryDoc,
+  types: BlockType[],
+  entryFields: Field[] = [],
+): string {
   if (path[0] === "title") return "Title";
   if (path[0] === "slug") return "Address";
+  if (path[0] === "fields") {
+    return `Details › ${entryFields.find((f) => f.key === path[1])?.label ?? String(path[1])}`;
+  }
   if (path[0] !== "blocks") return "Page";
   const block = doc.blocks[path[1] as number];
   const t = types.find((x) => x.type === block?.type);

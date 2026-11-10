@@ -8,6 +8,8 @@ import type { Path } from "./doc";
 export const MediaFieldContext = createContext<{
   media: Record<string, MediaInfo>;
   choose: (path: Path) => void;
+  /** Entries reference fields can pick, by content type id. */
+  refOptions: Record<string, { id: string; title: string }[]>;
 } | null>(null);
 
 export function useMediaField() {

@@ -1,7 +1,7 @@
-import { SectionPlaceholder, sectionMetadata } from "../SectionPlaceholder";
+import { EntryListPage } from "../_entries/EntryList";
 
-export const metadata = sectionMetadata("services");
+export const metadata = { title: "Services" };
 
 export default function Page() {
-  return <SectionPlaceholder id="services" />;
+  return <EntryListPage typeId="service" />;
 }

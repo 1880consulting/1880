@@ -19,6 +19,17 @@ export type Field =
   | { kind: "boolean"; key: string; label: string; help?: string }
   | { kind: "image"; key: string; label: string; help?: string; required: boolean }
   | {
+      kind: "number";
+      key: string;
+      label: string;
+      help?: string;
+      required: boolean;
+      min?: number;
+      max?: number;
+    }
+  /** Pick other entries (e.g. a case study's services). Stores their ids. */
+  | { kind: "refs"; key: string; label: string; help?: string; ref: string; max?: number }
+  | {
       kind: "select";
       key: string;
       label: string;
@@ -51,6 +62,10 @@ interface JsonSchema {
   multiline?: boolean;
   /** Marks a string field as an image from the media library (its value is the image's id). */
   media?: boolean;
+  /** Marks an array of ids as references to entries of this content type. */
+  ref?: string;
+  minimum?: number;
+  maximum?: number;
   maxLength?: number;
   minLength?: number;
   minItems?: number;
@@ -92,7 +107,19 @@ function toFields(schema: JsonSchema): Field[] {
         ];
       case "boolean":
         return [{ kind: "boolean", ...base }];
+      case "number":
+      case "integer":
+        return [
+          {
+            kind: "number",
+            ...base,
+            required: required.has(key),
+            min: prop.minimum,
+            max: prop.maximum,
+          },
+        ];
       case "array":
+        if (prop.ref) return [{ kind: "refs", ...base, ref: prop.ref, max: prop.maxItems }];
         return [
           {
             kind: "list",
@@ -110,8 +137,11 @@ function toFields(schema: JsonSchema): Field[] {
   });
 }
 
+/** The edit form for any labeled zod object (a block, or a content type's own fields). */
+export function schemaFields(schema: z.ZodObject): Field[] {
+  return toFields(z.toJSONSchema(schema, { io: "input", unrepresentable: "any" }) as JsonSchema);
+}
+
 export function blockFields(def: BlockDefinition): Field[] {
-  return toFields(
-    z.toJSONSchema(def.schema, { io: "input", unrepresentable: "any" }) as JsonSchema,
-  );
+  return schemaFields(def.schema);
 }

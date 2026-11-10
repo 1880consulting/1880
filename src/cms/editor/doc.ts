@@ -61,13 +61,14 @@ function tidyFields(fields: Field[], value: Record<string, unknown>): Record<str
   return out;
 }
 
-export function tidyDoc(doc: EntryDoc, types: BlockType[]): EntryDoc {
+export function tidyDoc(doc: EntryDoc, types: BlockType[], entryFields: Field[] = []): EntryDoc {
   const seo = { ...doc.seo };
   if (isEmpty(seo.title)) delete seo.title;
   if (isEmpty(seo.description)) delete seo.description;
   return {
     title: doc.title,
     seo,
+    ...(doc.fields ? { fields: tidyFields(entryFields, doc.fields) } : {}),
     blocks: doc.blocks.map((b) => {
       const t = types.find((x) => x.type === b.type);
       return t ? (tidyFields(t.fields, b) as StoredBlock) : b;

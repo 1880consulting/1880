@@ -123,6 +123,28 @@ export async function getPublishedBySlug(type: string, slug: string): Promise<En
   return row ? parseDoc(row.doc) : null;
 }
 
+/** Every live entry of a type, with its published document (for listing pages). */
+export async function listPublished(
+  type: string,
+): Promise<{ id: string; slug: string; publishedAt: Date | null; doc: EntryDoc }[]> {
+  const rows = await db()
+    .select({
+      id: entries.id,
+      slug: entries.publishedSlug,
+      publishedAt: entries.publishedAt,
+      doc: versions.doc,
+    })
+    .from(entries)
+    .innerJoin(versions, eq(versions.id, entries.publishedVersionId))
+    .where(and(eq(entries.type, type), eq(entries.status, "published")));
+  return rows.map((r) => ({
+    id: r.id,
+    slug: r.slug ?? "",
+    publishedAt: r.publishedAt,
+    doc: parseDoc(r.doc),
+  }));
+}
+
 export async function listPublishedSlugs(type: string): Promise<string[]> {
   const rows = await db()
     .select({ slug: entries.publishedSlug })
@@ -169,7 +191,7 @@ export async function createEntry(
       await tx.insert(versions).values({
         id: versionId,
         entryId: id,
-        doc: emptyDoc(input.title.trim()),
+        doc: emptyDoc(input.title.trim(), type.fieldDefaults ?? {}),
         authorId,
         note: "Created",
       });
@@ -193,7 +215,7 @@ export async function saveDraft(
   authorId: string | null,
 ): Promise<string> {
   const doc = docSchema.parse(input.doc);
-  const slugError = checkSlug(type, input.slug, { allowHome: true });
+  const slugError = checkSlug(type, input.slug, { allowHome: type.allowHome });
   if (slugError) throw new InvalidError([{ path: ["slug"], message: slugError }]);
   const versionId = randomUUID();
   try {

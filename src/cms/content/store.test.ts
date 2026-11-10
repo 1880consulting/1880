@@ -42,6 +42,7 @@ const T: ContentType = {
   path: (s) => (s ? `/${s}` : "/"),
   reservedSlugs: ["admin"],
   blocks: [note],
+  allowHome: true,
 };
 
 const doc = (title: string, text = "Hi"): EntryDoc => ({
@@ -66,7 +67,7 @@ describe("creating pages", () => {
     const id = await createEntry(T, { title: "About", slug: "about" }, "u1");
     const e = await getEntry(id);
     expect(e?.entry).toMatchObject({ slug: "about", status: "draft", publishedVersionId: null });
-    expect(e?.draft).toEqual({ title: "About", seo: {}, blocks: [] });
+    expect(e?.draft).toEqual({ title: "About", seo: {}, blocks: [], fields: {} });
     expect(await listEntries("page")).toEqual([
       expect.objectContaining({ id, title: "About", hasChanges: false }),
     ]);
@@ -198,7 +199,12 @@ describe("publishing", () => {
     const versions = await listVersions(id);
     const created = versions[versions.length - 1];
     await restoreVersion(id, created.id, "u1");
-    expect((await getEntry(id))?.draft).toEqual({ title: "About", seo: {}, blocks: [] });
+    expect((await getEntry(id))?.draft).toEqual({
+      title: "About",
+      seo: {},
+      blocks: [],
+      fields: {},
+    });
     expect((await listVersions(id))[0].note).toMatch(/^Restored from/);
 
     expect(await unpublish(id, null)).toEqual({ slugs: ["about"] });

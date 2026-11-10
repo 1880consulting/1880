@@ -3,12 +3,23 @@
 import { useActionState, useState } from "react";
 import { slugify } from "@/cms/content/types";
 import { Button, controls as c } from "@/cms/ui/client";
-import { createPage, type NewPageState } from "./actions";
+import { createEntryAction, type NewEntryState } from "./actions";
 
-export function NewPageForm({ addressPrefix }: { addressPrefix: string }) {
-  const [state, action, pending] = useActionState<NewPageState, FormData>(createPage, {
-    status: "idle",
-  });
+export function NewEntryForm({
+  typeId,
+  addressPrefix,
+  cta,
+}: {
+  typeId: string;
+  addressPrefix: string;
+  cta: string;
+}) {
+  const [state, action, pending] = useActionState<NewEntryState, FormData>(
+    createEntryAction.bind(null, typeId),
+    {
+      status: "idle",
+    },
+  );
   const [title, setTitle] = useState(state.values?.title ?? "");
   const [slug, setSlug] = useState<string | null>(state.values?.slug ?? null);
   const shown = slug ?? slugify(title);
@@ -53,7 +64,7 @@ export function NewPageForm({ addressPrefix }: { addressPrefix: string }) {
         </p>
       </div>
       <Button type="submit" variant="primary" disabled={pending}>
-        {pending ? "Creating…" : "Create page"}
+        {pending ? "Creating…" : cta}
       </Button>
     </form>
   );

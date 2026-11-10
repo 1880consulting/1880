@@ -1,4 +1,4 @@
-import { blockFields, type Field } from "../content/fields";
+import { blockFields, schemaFields, type Field } from "../content/fields";
 import type { ContentType, EntryDoc, Issue } from "../content/types";
 import type { MediaInfo } from "./types";
 
@@ -17,6 +17,7 @@ export function mediaRefs(
         walk(f.fields, v as Record<string, unknown>, [...path, f.key]);
     }
   };
+  if (type.fields && doc.fields) walk(schemaFields(type.fields), doc.fields, ["fields"]);
   doc.blocks.forEach((block, i) => {
     if (block.hidden) return;
     const def = type.blocks.find((b) => b.type === block.type);

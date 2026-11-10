@@ -36,6 +36,17 @@ export interface ContentType {
   /** Addresses that belong to the app and can't be used. */
   reservedSlugs: string[];
   blocks: BlockDefinition[];
+  /**
+   * The type's own fields (e.g. a case study's client and summary): a zod
+   * object labeled with `.meta()`, like a block. Studio builds their form.
+   */
+  fields?: z.ZodObject;
+  /** Starting values for those fields on a new entry. */
+  fieldDefaults?: Record<string, unknown>;
+  /** Must an entry have at least one section to go live? Default true. */
+  requiresBlocks?: boolean;
+  /** May an entry live at the type's root address (slug "")? Only pages' home. */
+  allowHome?: boolean;
 }
 
 /** A block as stored in a version: its fields, plus an id and a hidden switch. */
@@ -59,10 +70,17 @@ export const docSchema = z.object({
     })
     .default({}),
   blocks: z.array(storedBlockSchema).max(100),
+  /** The content type's own fields (see ContentType.fields). */
+  fields: z.record(z.string(), z.unknown()).optional(),
 });
 export type EntryDoc = z.infer<typeof docSchema>;
 
-export const emptyDoc = (title: string): EntryDoc => ({ title, seo: {}, blocks: [] });
+export const emptyDoc = (title: string, fields: Record<string, unknown> = {}): EntryDoc => ({
+  title,
+  seo: {},
+  blocks: [],
+  fields,
+});
 
 /** Lowercase words joined by single hyphens. */
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -88,9 +106,20 @@ export interface Issue {
 export function validateForPublish(type: ContentType, doc: EntryDoc, slug: string): Issue[] {
   const issues: Issue[] = [];
   if (!doc.title.trim()) issues.push({ path: ["title"], message: "Give the page a title." });
-  const slugError = checkSlug(type, slug, { allowHome: true });
+  const slugError = checkSlug(type, slug, { allowHome: type.allowHome });
   if (slugError) issues.push({ path: ["slug"], message: slugError });
-  if (doc.blocks.filter((b) => !b.hidden).length === 0) {
+  if (type.fields) {
+    const result = type.fields.safeParse(doc.fields ?? {});
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        issues.push({
+          path: ["fields", ...issue.path.map((p) => (typeof p === "symbol" ? String(p) : p))],
+          message: friendly(issue),
+        });
+      }
+    }
+  }
+  if (type.requiresBlocks !== false && doc.blocks.filter((b) => !b.hidden).length === 0) {
     issues.push({ path: ["blocks"], message: "Add at least one section." });
   }
   doc.blocks.forEach((block, i) => {

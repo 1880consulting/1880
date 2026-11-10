@@ -1,7 +1,7 @@
-import { SectionPlaceholder, sectionMetadata } from "../SectionPlaceholder";
+import { EntryListPage } from "../_entries/EntryList";
 
-export const metadata = sectionMetadata("case-studies");
+export const metadata = { title: "Case studies" };
 
 export default function Page() {
-  return <SectionPlaceholder id="case-studies" />;
+  return <EntryListPage typeId="work" />;
 }
