@@ -17,6 +17,7 @@ export function mediaRefs(
         walk(f.fields, v as Record<string, unknown>, [...path, f.key]);
     }
   };
+  if (doc.seo?.image) refs.push({ id: doc.seo.image, path: ["seo", "image"] });
   if (type.fields && doc.fields) walk(schemaFields(type.fields), doc.fields, ["fields"]);
   doc.blocks.forEach((block, i) => {
     if (block.hidden) return;

@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { RenderBlocks } from "@/blocks";
 import { listPublishedSlugs } from "@/cms/content/store";
 import { site } from "@/site/content";
+import { entryMetadata } from "@/site/seo";
 import { getPublishedPage, getRedirect, visibleBlocks } from "@/site/pages";
 
 /** Pages made in 1880 Studio, at 1880.io/<address>. */
@@ -32,11 +33,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">): Promis
   const { slug } = await params;
   const page = await load(slug);
   if (!page) return {};
-  return {
-    title: page.doc.seo.title || page.doc.title,
-    description: page.doc.seo.description,
-    alternates: { canonical: `/${slug}` },
-  };
+  return entryMetadata({ doc: page.doc, path: `/${slug}`, media: page.media });
 }
 
 export default async function CmsPage({ params }: PageProps<"/[slug]">) {

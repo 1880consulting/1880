@@ -47,6 +47,7 @@ Last updated: 2026-11-09
 | D36 | **Media library is built.** Images upload once and are reused anywhere (the same file uploaded twice is stored once). Each upload is checked (JPEG, PNG, WebP, AVIF or GIF, up to 15 MB and 50 megapixels), turned upright, and made into AVIF and WebP at up to six widths; camera data such as GPS is removed from everything served, and originals are kept but never served. Files live in MySQL behind a storage adapter (`src/cms/media/storage.ts`), ready to switch to S3-compatible storage. Alt text is required before an image can go live; the focal point is set by clicking. Replacing a file updates every page that uses it; an image in use can't be deleted. Uploads go to `/admin/media/upload`, which skips the proxy (no body buffering) and checks the session and origin itself. First user: an **Image** section (framed or full width, with caption). SVG uploads aren't accepted (they can carry scripts) | Nov 9, Drew |
 | D37 | **Menus and footer are editable** in Studio (Menus and footer): the top menu's links (up to 5), an optional menu button, the footer's links (up to 8, e.g. LinkedIn) and whether the footer shows the email address. Saving publishes at once (one cache tag on every page) and is logged. Links must be a page (`/…`), a section (`/#…`), a web address (`https://…`) or `mailto:`; `javascript:`, `data:` and `//other-site` are refused. Links to other sites open in a new tab. Until the first save the site shows the built-in menus. The email address itself stays in code (D28) | Nov 10, Drew |
 | D38 | **Case studies and services are built** (D23). Case studies live at `/work/<address>` (client, summary, cover image, services, results), services at `/services/<address>` (summary, cover image, order); both can add sections. `/work` lists case studies newest first with service filters (in the browser, so the page stays static); `/services` lists services in their set order; each service page shows the case studies that use it. The engine now supports a content type's own fields (`ContentType.fields`, forms built from the schema like blocks), number fields and references to other entries (`.meta({ ref: "service" })`). Studio's Pages, Case studies and Services share one list, editor (with live preview) and history. Publishing a service refreshes the case studies that name it, and the other way round | Nov 10, Drew |
+| D39 | **SEO is built.** Each page, case study and service has a search title and description (with length guidance), a share image (falls back to the cover) and "hide from search engines", with Google and share previews in the editor. Share images are 1200×630 JPEGs cropped at the focal point, made on first request and stored. Every page gets canonical, Open Graph and Twitter tags; the home page carries Organization structured data, case studies Article and services Service. `/sitemap.xml`, `/robots.txt` and `/llms.txt` list live, indexable pages and refresh on publish. Absolute URLs come from `SITE_URL` at build time. Icons are generated from the 1880 mark | Nov 10, Drew |
 
 ---
 
@@ -327,9 +328,10 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] Automatic slug redirects
 - [x] Media library + pipeline (D36), with an Image section
 - [x] Menus + footer (D37)
-- [ ] SEO panel (basic search title + description are in the editor)
+- [x] SEO panel: share image, Google and share previews, hide from search (D39)
 - [x] Contact form → inquiries inbox + email alert via Resend, recipients in Settings (D32). Emails go out once Resend is set up (§4.1, Phase 5)
-- [ ] SEO (metadata, JSON-LD, sitemap, OG images, `llms.txt`), Plausible, accessibility, Lighthouse ≥ 95
+- [x] SEO: metadata, JSON-LD, sitemap, share images, `llms.txt` (D39)
+- [ ] Plausible, accessibility, Lighthouse ≥ 95
 
 ### Phase 3: Portal foundation
 - [ ] Clients and client people in the CMS, invites

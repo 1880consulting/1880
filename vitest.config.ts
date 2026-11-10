@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     // Tests get their own database (created by scripts/mysql-init.sql) and
     // migrate it first, so `npm test` never touches your local data.
     env: {

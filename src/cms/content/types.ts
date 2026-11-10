@@ -67,6 +67,10 @@ export const docSchema = z.object({
     .object({
       title: z.string().max(120).optional(),
       description: z.string().max(200).optional(),
+      /** Media id of the image shown when the page is shared (otherwise its cover, if any). */
+      image: z.string().max(36).optional(),
+      /** Ask search engines not to list this page. */
+      noindex: z.boolean().optional(),
     })
     .default({}),
   blocks: z.array(storedBlockSchema).max(100),

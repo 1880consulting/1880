@@ -30,6 +30,7 @@ import {
   type Path,
 } from "./doc";
 import { FieldInput } from "./FieldInput";
+import { SeoPanel } from "./SeoPanel";
 import { MediaFieldContext } from "./mediaField";
 import { MediaPicker } from "../media/MediaPicker";
 import type { MediaInfo } from "../media/types";
@@ -48,6 +49,8 @@ export interface PageEditorProps {
   initial: { doc: EntryDoc; slug: string; versionId: string | null };
   /** Images the draft already uses, by id. */
   initialMedia: Record<string, MediaInfo>;
+  /** The site's name and host, for the search and share previews. */
+  site: { name: string; host: string };
   /** What to call an entry, e.g. { singular: "case study", plural: "Case studies" }. */
   labels: { singular: string; plural: string };
   /** The content type's own fields (e.g. a case study's client), shown above the sections. */
@@ -403,38 +406,20 @@ export function PageEditor(props: PageEditorProps) {
                     </p>
                   )}
                 </div>
-                <details className={s.seo}>
-                  <summary>Search engines and sharing</summary>
-                  <div className={c.field}>
-                    <label htmlFor="seo-title" className={c.label}>
-                      Search title <span className={s.optional}>Optional</span>
-                    </label>
-                    <input
-                      id="seo-title"
-                      className={c.input}
-                      value={doc.seo.title ?? ""}
-                      maxLength={120}
-                      placeholder={doc.title}
-                      onChange={(e) => change(["seo", "title"], e.target.value)}
-                    />
-                    <p className={c.hint}>
-                      Shown in Google and when it&apos;s shared. Around 60 characters reads best.
-                    </p>
-                  </div>
-                  <div className={c.field}>
-                    <label htmlFor="seo-description" className={c.label}>
-                      Description <span className={s.optional}>Optional</span>
-                    </label>
-                    <textarea
-                      id="seo-description"
-                      rows={3}
-                      className={c.input}
-                      value={doc.seo.description ?? ""}
-                      maxLength={200}
-                      onChange={(e) => change(["seo", "description"], e.target.value)}
-                    />
-                  </div>
-                </details>
+                <SeoPanel
+                  doc={doc}
+                  isHome={status.isHome}
+                  site={props.site}
+                  path={livePath}
+                  fallbackDescription={
+                    typeof doc.fields?.summary === "string" ? doc.fields.summary : undefined
+                  }
+                  fallbackImage={
+                    typeof doc.fields?.cover === "string" ? doc.fields.cover : undefined
+                  }
+                  errors={errors}
+                  change={change}
+                />
               </div>
             </section>
 

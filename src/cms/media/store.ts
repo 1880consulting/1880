@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { desc, eq, inArray, or, sql } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import type { MediaRow } from "@/lib/db/schema";
-import { processImage, type Processed } from "./process";
+import { makeShareImage, processImage, type Processed } from "./process";
 import { storage } from "./storage";
 import type { MediaInfo } from "./types";
 
@@ -132,6 +132,9 @@ export async function updateMedia(
   id: string,
   input: { alt: string; focalX: number; focalY: number },
 ): Promise<void> {
+  const current = await getMediaRow(id);
+  // The share image is cropped around the focal point: make it again next time.
+  if (current) await storage().deletePrefix(prefix(id, current.rev) + "og.jpg");
   await db()
     .update(media)
     .set({
@@ -188,8 +191,15 @@ export async function deleteMedia(id: string): Promise<void> {
 
 /** A stored file, for the public /media route. Only sizes, never the original. */
 export async function readMediaFile(id: string, rev: number, file: string) {
-  if (!/^\d+\.(avif|webp)$/.test(file)) return null;
+  if (!/^(\d+\.(avif|webp)|og\.jpg)$/.test(file)) return null;
   const m = await getMediaRow(id);
   if (!m || rev > m.rev || rev < m.rev - 1) return null;
-  return storage().get(prefix(id, rev) + file);
+  const found = await storage().get(prefix(id, rev) + file);
+  if (found || file !== "og.jpg") return found;
+  // The share image is made the first time a site like LinkedIn asks for it.
+  const original = await storage().get(prefix(id, rev) + "original");
+  if (!original) return null;
+  const data = await makeShareImage(original.data, m.focalX, m.focalY);
+  await storage().put(prefix(id, rev) + file, data, "image/jpeg");
+  return { data, contentType: "image/jpeg" };
 }

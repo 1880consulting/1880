@@ -9,6 +9,7 @@ import { mediaRefs } from "@/cms/media/refs";
 import { getMediaMany } from "@/cms/media/store";
 import { Panel, Skeleton } from "@/cms/ui";
 import { CONTENT_TYPES, type ContentTypeId } from "@/site/cms";
+import { site } from "@/site/content";
 import { listMediaForPicker } from "../media/actions";
 import {
   deleteEntryAction,
@@ -88,6 +89,7 @@ async function Editor({
       initial={{ doc: draft, slug: entry.slug, versionId: entry.draftVersionId }}
       initialMedia={initialMedia}
       labels={{ singular: cfg.singular, plural: type.plural }}
+      site={{ name: site.name, host: "1880.io" }}
       entryFields={entryFields}
       refOptions={refOptions}
       status={{

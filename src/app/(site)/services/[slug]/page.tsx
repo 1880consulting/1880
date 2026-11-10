@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EntryPage, entryMetadata, staticParams } from "@/site/entries/detail";
+import { EntryPage, entryPageMetadata, staticParams } from "@/site/entries/detail";
 
 // The first visit waits for the whole page, so missing ones get a real 404.
 export const ensureStatic = "navigation";
@@ -11,7 +11,7 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: PageProps<"/services/[slug]">): Promise<Metadata> {
-  return entryMetadata("service", (await params).slug);
+  return entryPageMetadata("service", (await params).slug);
 }
 
 export default async function Page({ params }: PageProps<"/services/[slug]">) {

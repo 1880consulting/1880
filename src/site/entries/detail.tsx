@@ -5,6 +5,7 @@ import type { WorkFields } from "../collections";
 import { CONTENT_TYPES } from "../cms";
 import { site } from "../content";
 import { getPublishedEntry, getPublishedList, getRedirect } from "../pages";
+import { caseStudyJsonLd, entryMetadata, JsonLd, serviceJsonLd } from "../seo";
 import { EntryView } from "./EntryView";
 
 /** Shared by /work/[slug] and /services/[slug]. */
@@ -20,16 +21,19 @@ export async function staticParams(type: "work" | "service") {
   }
 }
 
-export async function entryMetadata(type: "work" | "service", slug: string): Promise<Metadata> {
+export async function entryPageMetadata(type: "work" | "service", slug: string): Promise<Metadata> {
   if (slug === PLACEHOLDER) return {};
   const page = await getPublishedEntry(type, slug);
   if (!page) return {};
-  const summary = (page.doc.fields as { summary?: string } | undefined)?.summary;
-  return {
-    title: page.doc.seo.title || page.doc.title,
-    description: page.doc.seo.description || summary,
-    alternates: { canonical: CONTENT_TYPES[type].path(slug) },
-  };
+  const f = (page.doc.fields ?? {}) as { summary?: string; cover?: string };
+  return entryMetadata({
+    doc: page.doc,
+    path: CONTENT_TYPES[type].path(slug),
+    media: page.media,
+    fallbackDescription: f.summary,
+    fallbackImage: f.cover,
+    type: type === "work" ? "article" : "website",
+  });
 }
 
 export async function EntryPage({ type, slug }: { type: "work" | "service"; slug: string }) {
@@ -49,14 +53,28 @@ export async function EntryPage({ type, slug }: { type: "work" | "service"; slug
     type === "service" && work && me
       ? work.entries.filter((w) => (w.doc.fields as Partial<WorkFields>)?.services?.includes(me.id))
       : undefined;
+  const path = CONTENT_TYPES[type].path(slug);
+  const fields = (page.doc.fields ?? {}) as { client?: string; cover?: string };
+  const ld =
+    type === "work"
+      ? caseStudyJsonLd(
+          page.doc,
+          path,
+          fields.client,
+          fields.cover ? page.media[fields.cover] : undefined,
+        )
+      : serviceJsonLd(page.doc, path);
   return (
-    <EntryView
-      type={type}
-      doc={page.doc}
-      media={{ ...services.media, ...(work?.media ?? {}), ...page.media }}
-      services={services.entries}
-      relatedWork={relatedWork}
-      email={site.email}
-    />
+    <>
+      <JsonLd data={ld} />
+      <EntryView
+        type={type}
+        doc={page.doc}
+        media={{ ...services.media, ...(work?.media ?? {}), ...page.media }}
+        services={services.entries}
+        relatedWork={relatedWork}
+        email={site.email}
+      />
+    </>
   );
 }

@@ -39,3 +39,8 @@ export const formatBytes = (n: number) =>
   n < 1024 * 1024
     ? `${Math.max(1, Math.round(n / 1024))} KB`
     : `${(n / 1024 / 1024).toFixed(1)} MB`;
+
+/** The 1200×630 JPEG used when a page is shared on social sites. */
+export const shareImageUrl = (m: Pick<MediaInfo, "id" | "rev" | "focalX" | "focalY">) =>
+  // The focal point is in the address, so moving it gives social sites a fresh image.
+  `/media/${m.id}/${m.rev}/og.jpg?f=${m.focalX}-${m.focalY}`;

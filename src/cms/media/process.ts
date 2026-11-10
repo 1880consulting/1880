@@ -75,3 +75,38 @@ export async function processImage(input: Buffer): Promise<Processed> {
     files,
   };
 }
+
+/** Width × height of share images (the size Facebook, LinkedIn and X recommend). */
+export const SHARE_SIZE = { width: 1200, height: 630 };
+
+/** A JPEG for social sharing: cropped to 1200×630 around the focal point, no camera data. */
+export async function makeShareImage(
+  original: Buffer,
+  focalX: number,
+  focalY: number,
+): Promise<Buffer> {
+  const img = sharp(original, { limitInputPixels: MAX_PIXELS }).rotate();
+  const { width = 0, height = 0 } = await img
+    .clone()
+    .metadata()
+    .then(async (m) => {
+      const turned = (m.orientation ?? 1) >= 5;
+      return { width: turned ? m.height : m.width, height: turned ? m.width : m.height };
+    });
+  const scale = Math.max(SHARE_SIZE.width / width, SHARE_SIZE.height / height);
+  const w = Math.round(width * scale);
+  const h = Math.round(height * scale);
+  const left = Math.min(
+    Math.max(0, Math.round((focalX / 1000) * w - SHARE_SIZE.width / 2)),
+    w - SHARE_SIZE.width,
+  );
+  const top = Math.min(
+    Math.max(0, Math.round((focalY / 1000) * h - SHARE_SIZE.height / 2)),
+    h - SHARE_SIZE.height,
+  );
+  return img
+    .resize(w, h)
+    .extract({ left, top, width: SHARE_SIZE.width, height: SHARE_SIZE.height })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+}
