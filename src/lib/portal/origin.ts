@@ -5,9 +5,9 @@ import { parsePortalSubdomain } from "@/lib/routing";
 /**
  * The portal's address, for emailed links and for showing a client's URL in
  * Studio. PORTAL_URL wins if set. Otherwise it's SITE_URL with the portal
- * subdomain in front (https://1880.io → https://clients.1880.io). In
+ * subdomain in front (https://1880.io → https://hub.1880.io). In
  * development it's built from the address in use (localhost:3000 →
- * clients.localhost:3000). Never from the Host header in production: a
+ * hub.localhost:3000). Never from the Host header in production: a
  * visitor controls that.
  */
 export async function portalOrigin(): Promise<string> {

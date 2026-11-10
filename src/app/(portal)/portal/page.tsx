@@ -11,7 +11,7 @@ import s from "@/portal/portal.module.css";
 export const metadata = { title: "Sign in" };
 
 /**
- * clients.1880.io/: sign in, or, once signed in, straight to your client (or a
+ * hub.1880.io/: sign in, or, once signed in, straight to your client (or a
  * choice of clients if you belong to several). Shows no client names or logos
  * before sign-in.
  */

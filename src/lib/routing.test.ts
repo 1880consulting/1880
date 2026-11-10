@@ -26,13 +26,13 @@ describe("routeRequest", () => {
   });
 
   it("rewrites portal requests under /portal", () => {
-    expect(route("clients.1880.io", "/")).toEqual({ kind: "rewrite", pathname: "/portal" });
-    expect(route("clients.1880.io", "/acme/d/x1")).toEqual({
+    expect(route("hub.1880.io", "/")).toEqual({ kind: "rewrite", pathname: "/portal" });
+    expect(route("hub.1880.io", "/acme/d/x1")).toEqual({
       kind: "rewrite",
       pathname: "/portal/acme/d/x1",
       client: "acme",
     });
-    expect(route("clients.localhost", "/acme")).toEqual({
+    expect(route("hub.localhost", "/acme")).toEqual({
       kind: "rewrite",
       pathname: "/portal/acme",
       client: "acme",
@@ -40,17 +40,17 @@ describe("routeRequest", () => {
   });
 
   it("serves the portal's own pages and library images outside any client", () => {
-    expect(route("clients.1880.io", "/auth")).toEqual({
+    expect(route("hub.1880.io", "/auth")).toEqual({
       kind: "rewrite",
       pathname: "/portal/auth",
     });
-    expect(route("clients.1880.io", "/account")).toEqual({
+    expect(route("hub.1880.io", "/account")).toEqual({
       kind: "rewrite",
       pathname: "/portal/account",
     });
-    expect(route("clients.1880.io", "/media/abc/1/320.webp")).toEqual({ kind: "next" });
+    expect(route("hub.1880.io", "/media/abc/1/320.webp")).toEqual({ kind: "next" });
     // Only those exact pages: anything under them is Not found.
-    expect(route("clients.1880.io", "/account/x")).toEqual({ kind: "not-found" });
+    expect(route("hub.1880.io", "/account/x")).toEqual({ kind: "not-found" });
   });
 
   it("hides the portal's internal routes on the public host", () => {
@@ -60,8 +60,8 @@ describe("routeRequest", () => {
   });
 
   it("can't reach public or admin pages through the portal host", () => {
-    expect(route("clients.1880.io", "/admin")).toEqual({ kind: "not-found" });
-    expect(route("clients.1880.io", "/about")).toEqual({
+    expect(route("hub.1880.io", "/admin")).toEqual({ kind: "not-found" });
+    expect(route("hub.1880.io", "/about")).toEqual({
       kind: "rewrite",
       pathname: "/portal/about",
       client: "about",
@@ -70,22 +70,22 @@ describe("routeRequest", () => {
 
   it("404s reserved and malformed client names before rendering", () => {
     for (const path of ["/login", "/portal/acme", "/_secret", "/Acme", "/acme--co/d/1"]) {
-      expect(route("clients.1880.io", path)).toEqual({ kind: "not-found" });
+      expect(route("hub.1880.io", path)).toEqual({ kind: "not-found" });
     }
   });
 
   it("passes shared API routes through on both hosts", () => {
-    expect(route("clients.1880.io", "/api/health")).toEqual({ kind: "next" });
+    expect(route("hub.1880.io", "/api/health")).toEqual({ kind: "next" });
     expect(route("1880.io", "/api/health")).toEqual({ kind: "next" });
   });
 
   it("blocks crawlers on the portal", () => {
-    expect(route("clients.1880.io", "/robots.txt")).toEqual({ kind: "robots-disallow" });
+    expect(route("hub.1880.io", "/robots.txt")).toEqual({ kind: "robots-disallow" });
   });
 
   it("404s whichever surface SITE_ROLE excludes", () => {
     expect(route("1880.io", "/about", "portal")).toEqual({ kind: "not-found" });
-    expect(route("clients.1880.io", "/acme", "public")).toEqual({ kind: "not-found" });
+    expect(route("hub.1880.io", "/acme", "public")).toEqual({ kind: "not-found" });
     expect(route("1880.io", "/about", "public")).toEqual({ kind: "next" });
   });
 });
@@ -124,14 +124,14 @@ describe("portal subdomain setting", () => {
       pathname: "/portal/acme",
       client: "acme",
     });
-    expect(r("clients.1880.io")).toEqual({ kind: "next" });
+    expect(r("hub.1880.io")).toEqual({ kind: "next" });
   });
 
   it("falls back to clients for missing or invalid values", () => {
-    expect(parsePortalSubdomain(undefined)).toBe("clients");
-    expect(parsePortalSubdomain("")).toBe("clients");
-    expect(parsePortalSubdomain("www")).toBe("clients");
-    expect(parsePortalSubdomain("bad.value")).toBe("clients");
+    expect(parsePortalSubdomain(undefined)).toBe("hub");
+    expect(parsePortalSubdomain("")).toBe("hub");
+    expect(parsePortalSubdomain("www")).toBe("hub");
+    expect(parsePortalSubdomain("bad.value")).toBe("hub");
     expect(parsePortalSubdomain(" Hub ")).toBe("hub");
   });
 });

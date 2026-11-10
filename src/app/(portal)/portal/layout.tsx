@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Client portal: clients.1880.io. `src/proxy.ts` rewrites every portal request
+ * Client portal: hub.1880.io. `src/proxy.ts` rewrites every portal request
  * under /portal (after checking access for pages under a client), so this
  * folder is never reached directly on 1880.io.
  */

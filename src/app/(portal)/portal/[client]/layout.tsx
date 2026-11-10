@@ -5,7 +5,7 @@ import { PortalHeader } from "@/portal/PortalHeader";
 import s from "@/portal/portal.module.css";
 
 /**
- * Everything under clients.1880.io/<client>.
+ * Everything under hub.1880.io/<client>.
  *
  * `src/proxy.ts` has already checked, before rendering started, that the
  * visitor is signed in and belongs to this client (so "unknown" and "not

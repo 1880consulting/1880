@@ -6,12 +6,12 @@
  *
  * - `1880.io`           → public site (+ CMS at /admin)
  * - `www.1880.io`       → 301 to `1880.io`
- * - `clients.1880.io/*` → client portal. Rewritten internally to `/portal/*`,
+ * - `hub.1880.io/*`     → client portal. Rewritten internally to `/portal/*`,
  *                         which is where the portal routes live in `src/app`.
  *
- * The portal subdomain isn't decided yet (PLAN D18). It comes from the
- * PORTAL_SUBDOMAIN setting, default `clients`. Any host starting with
- * `<subdomain>.` is the portal, so `clients.localhost:3000` works locally.
+ * The portal subdomain is `hub` (PLAN D44). It comes from the
+ * PORTAL_SUBDOMAIN setting, default `hub`. Any host starting with
+ * `<subdomain>.` is the portal, so `hub.localhost:3000` works locally.
  */
 
 export type SiteRole = "public" | "portal" | "all";
@@ -57,9 +57,9 @@ export function parseSiteRole(value: string | undefined): SiteRole {
   return value === "public" || value === "portal" ? value : "all";
 }
 
-export const DEFAULT_PORTAL_SUBDOMAIN = "clients";
+export const DEFAULT_PORTAL_SUBDOMAIN = "hub";
 
-/** Reads PORTAL_SUBDOMAIN. Falls back to `clients` if unset or not a valid DNS label. */
+/** Reads PORTAL_SUBDOMAIN. Falls back to `hub` if unset or not a valid DNS label. */
 export function parsePortalSubdomain(value: string | undefined): string {
   const v = value?.trim().toLowerCase();
   return v && /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(v) && v !== "www"
@@ -171,9 +171,9 @@ export function routeRequest(input: {
     // (This also 404s /admin, /login and /portal/... on the portal host.)
     const clientName = pathname.split("/")[1];
     if (clientName && !isValidClientName(clientName)) return { kind: "not-found" };
-    // clients.1880.io/ → /portal (sign in, or choose a client)
+    // hub.1880.io/ → /portal (sign in, or choose a client)
     if (!clientName) return { kind: "rewrite", pathname: PORTAL_PREFIX };
-    // clients.1880.io/acme/... → /portal/acme/..., once proxy.ts has checked access.
+    // hub.1880.io/acme/... → /portal/acme/..., once proxy.ts has checked access.
     return { kind: "rewrite", pathname: PORTAL_PREFIX + pathname, client: clientName };
   }
 

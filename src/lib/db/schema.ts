@@ -251,7 +251,7 @@ export const tenants = mysqlTable(
   "tenants",
   {
     id: varchar("id", { length: 36 }).primaryKey(),
-    /** The URL name: clients.1880.io/<slug>. */
+    /** The URL name: hub.1880.io/<slug>. */
     slug: varchar("slug", { length: 63 }).notNull(),
     name: varchar("name", { length: 200 }).notNull(),
     /** A media-library image, shown only after sign-in. */
