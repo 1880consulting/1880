@@ -24,18 +24,29 @@ export interface SecurityContext {
    * only this site may frame. Everything else can neither frame nor be framed.
    */
   frames?: "none" | "host" | "framed";
+  /** Analytics script origin (Plausible), allowed only when analytics is on. */
+  analyticsOrigin?: string | null;
 }
 
 export function contentSecurityPolicy(
-  ctx: Pick<SecurityContext, "https" | "dev" | "frames">,
+  ctx: Pick<SecurityContext, "https" | "dev" | "frames" | "analyticsOrigin">,
 ): string {
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
-    "script-src": ["'self'", "'unsafe-inline'", ...(ctx.dev ? ["'unsafe-eval'"] : [])],
+    "script-src": [
+      "'self'",
+      "'unsafe-inline'",
+      ...(ctx.dev ? ["'unsafe-eval'"] : []),
+      ...(ctx.analyticsOrigin ? [ctx.analyticsOrigin] : []),
+    ],
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:"],
     "font-src": ["'self'"],
-    "connect-src": ["'self'", ...(ctx.dev ? ["ws:", "wss:"] : [])],
+    "connect-src": [
+      "'self'",
+      ...(ctx.dev ? ["ws:", "wss:"] : []),
+      ...(ctx.analyticsOrigin ? [ctx.analyticsOrigin] : []),
+    ],
     "media-src": ["'self'"],
     "object-src": ["'none'"],
     "frame-src": [ctx.frames === "host" ? "'self'" : "'none'"],
@@ -61,7 +72,7 @@ export function securityHeaders(ctx: SecurityContext): Record<string, string> {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     // The site uses none of these, so nothing embedded can ask for them.
     "Permissions-Policy":
-      "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), serial=(), hid=(), browsing-topics=()",
+      "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), browsing-topics=()",
     // Pages opened from 1880.io (or that open it) can't reach into its window.
     "Cross-Origin-Opener-Policy": "same-origin",
   };

@@ -63,7 +63,14 @@ export function RenderBlocks({ blocks, context }: { blocks: Block[]; context: Bl
       case "contact-band":
         return <ContactBand key={i} block={block} email={context.email} />;
       case "image":
-        return <ImageSection key={i} block={block} media={context.media[block.image]} />;
+        return (
+          <ImageSection
+            key={i}
+            block={block}
+            media={context.media[block.image]}
+            priority={i === 0}
+          />
+        );
     }
   });
 }

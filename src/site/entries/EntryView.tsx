@@ -82,9 +82,9 @@ export function EntryView({
           <div className={`${section.wrap} ${s.bandInner}`}>
             <p className={section.eyebrow}>{"// Related work"}</p>
             <ul className={s.grid}>
-              {relatedWork.slice(0, 4).map((w) => (
+              {relatedWork.slice(0, 4).map((w, i) => (
                 <li key={w.id}>
-                  <WorkCard entry={w} media={media} />
+                  <WorkCard entry={w} media={media} priority={!cover && i === 0} />
                 </li>
               ))}
             </ul>

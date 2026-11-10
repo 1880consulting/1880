@@ -30,7 +30,8 @@ export function LitWords({ text }: { text: string }) {
   return (
     <>
       <span className="visually-hidden">{text}</span>
-      <span ref={ref} aria-hidden>
+      {/* data-scroll-lit: the audit (scripts/audit.mjs) skips this copy for contrast; see there. */}
+      <span ref={ref} aria-hidden data-scroll-lit>
         {words.map((w, i) => (
           <span key={i} className={styles.word}>
             {w}

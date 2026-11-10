@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, STUDIO_PATH_HEADER } from "@/cms/staff/cookie";
 import { parsePortalSubdomain, parseSiteRole, routeRequest, surfaceForHost } from "@/lib/routing";
 import { securityHeaders } from "@/lib/security-headers";
+import { analyticsOrigin } from "@/site/analytics";
 
 /**
  * Runs before every page. Decides which surface a request belongs to by its
@@ -22,6 +23,7 @@ export function proxy(request: NextRequest) {
     https: proto === "https" || url.protocol === "https:",
     dev: process.env.NODE_ENV === "development",
     private: isPortal || url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
+    analyticsOrigin: analyticsOrigin(),
     frames: url.pathname.startsWith("/admin/preview/")
       ? "framed"
       : url.pathname.startsWith("/admin/")

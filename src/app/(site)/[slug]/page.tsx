@@ -46,10 +46,12 @@ export default async function CmsPage({ params }: PageProps<"/[slug]">) {
     if (moved) permanentRedirect(moved.toPath);
     notFound();
   }
+  const blocks = visibleBlocks(page.doc);
   return (
-    <RenderBlocks
-      blocks={visibleBlocks(page.doc)}
-      context={{ email: site.email, media: page.media }}
-    />
+    <>
+      {/* Every page needs one main heading; the hero block is it when there is one. */}
+      {blocks[0]?.type !== "hero" && <h1 className="visually-hidden">{page.doc.title}</h1>}
+      <RenderBlocks blocks={blocks} context={{ email: site.email, media: page.media }} />
+    </>
   );
 }

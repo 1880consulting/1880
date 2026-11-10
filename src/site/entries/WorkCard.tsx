@@ -10,9 +10,12 @@ import s from "./entries.module.css";
 export function WorkCard({
   entry,
   media,
+  priority = false,
 }: {
   entry: Pick<ListedEntry, "path" | "doc">;
   media: Record<string, MediaInfo>;
+  /** The first card on screen: load its image right away (it's often the largest thing on the page). */
+  priority?: boolean;
 }) {
   const f = (entry.doc.fields ?? {}) as Partial<WorkFields>;
   const cover = f.cover ? media[f.cover] : undefined;
@@ -20,7 +23,12 @@ export function WorkCard({
     <Link href={entry.path} className={s.card}>
       <div className={s.cardMedia}>
         {cover && (
-          <Picture media={cover} className={s.cardImage} sizes="(max-width: 720px) 100vw, 600px" />
+          <Picture
+            media={cover}
+            className={s.cardImage}
+            sizes="(max-width: 720px) 100vw, 600px"
+            priority={priority}
+          />
         )}
       </div>
       {f.client && <p className={section.eyebrow}>{f.client}</p>}

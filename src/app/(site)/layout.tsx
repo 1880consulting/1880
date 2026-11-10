@@ -3,6 +3,7 @@ import { SiteFooter } from "@/site/chrome/SiteFooter";
 import { SiteNav } from "@/site/chrome/SiteNav";
 import { site } from "@/site/content";
 import { getMenus } from "@/site/menus";
+import { analyticsConfig } from "@/site/analytics";
 import { libreBodoni, libreBodoniExt } from "@/site/fonts";
 import { requireSurface } from "@/lib/site-role";
 
@@ -16,10 +17,12 @@ export const metadata: Metadata = {
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   requireSurface("public");
   const menus = await getMenus();
+  const analytics = analyticsConfig();
   return (
     <div data-site className={`${libreBodoni.variable} ${libreBodoniExt.variable}`}>
       <SiteNav links={menus.main} cta={menus.button} />
       <main id="main">{children}</main>
+      {analytics && <script defer data-domain={analytics.domain} src={analytics.src} />}
       <SiteFooter links={menus.footer} email={menus.showEmail ? site.email : null} />
     </div>
   );

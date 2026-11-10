@@ -54,9 +54,9 @@ export function WorkFilter({
         {shown.length} case stud{shown.length === 1 ? "y" : "ies"} shown
       </p>
       <ul className={s.grid}>
-        {shown.map((w) => (
+        {shown.map((w, i) => (
           <li key={w.id}>
-            <WorkCard entry={w} media={media} />
+            <WorkCard entry={w} media={media} priority={i === 0} />
           </li>
         ))}
       </ul>

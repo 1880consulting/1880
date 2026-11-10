@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { track } from "../analytics";
 import type { InquiryField, InquiryState } from "@/lib/inquiry";
 import { Button } from "../ui/Button";
 import styles from "./ContactForm.module.css";
@@ -15,6 +16,9 @@ const FIELDS: { name: InquiryField; label: string; type: string; autoComplete: s
 
 export function ContactForm({ action, email }: { action: Action; email: string }) {
   const [state, formAction, pending] = useActionState(action, { status: "idle" });
+  useEffect(() => {
+    if (state.status === "sent") track("Contact form sent");
+  }, [state.status]);
 
   if (state.status === "sent") {
     return (

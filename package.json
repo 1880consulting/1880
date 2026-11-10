@@ -17,7 +17,8 @@
     "db:migrate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs migrate",
     "db:studio": "drizzle-kit studio",
     "studio:owner": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/studio-owner.mts",
-    "cms:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/cms-seed.mts"
+    "cms:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/cms-seed.mts",
+    "audit": "node scripts/audit.mjs"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.49.0",
@@ -31,6 +32,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -38,6 +40,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
     "eslint-config-prettier": "^10.1.8",
+    "lighthouse": "^12.8.2",
+    "playwright": "1.63.0",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^5",

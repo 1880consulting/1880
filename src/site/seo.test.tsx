@@ -106,3 +106,18 @@ describe("share images", () => {
     expect(dominant.r).toBeGreaterThan(200);
   });
 });
+
+describe("summarize", () => {
+  it("uses the page's own words, skipping ids and image ids", async () => {
+    const { summarize } = await import("./seo");
+    expect(
+      summarize([
+        { id: "abc", type: "image", image: "e17d4d10-uuid", caption: "Our office on Main Street." },
+      ]),
+    ).toBe("Our office on Main Street.");
+    expect(summarize([])).toBeUndefined();
+    const long = summarize([{ body: "word ".repeat(80) }])!;
+    expect(long.length).toBeLessThanOrEqual(160);
+    expect(long.endsWith("…")).toBe(true);
+  });
+});

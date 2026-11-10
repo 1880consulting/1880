@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { track } from "../analytics";
 import styles from "./CopyEmail.module.css";
 
 /** An email address with a Copy button (falls back to selecting the text). */
@@ -15,6 +16,7 @@ export function CopyEmail({ email }: { email: string }) {
     try {
       await navigator.clipboard.writeText(email);
       setLabel("Copied");
+      track("Email copied");
     } catch {
       const el = addr.current;
       if (el) {

@@ -8,9 +8,12 @@ import styles from "./Image.module.css";
 export function ImageSection({
   block,
   media,
+  priority = false,
 }: {
   block: ImageBlock;
   media: MediaInfo | undefined;
+  /** The first block on the page: load the image right away. */
+  priority?: boolean;
 }) {
   // Only the editor's preview can get here without an image (publishing checks for one).
   if (!media) {
@@ -28,6 +31,7 @@ export function ImageSection({
       media={media}
       className={styles.img}
       sizes={full ? "100vw" : "(max-width: 1264px) calc(100vw - 2 * var(--gutter)), 1200px"}
+      priority={priority}
     />
   );
   return (

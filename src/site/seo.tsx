@@ -32,7 +32,7 @@ export function entryMetadata({
   type?: "website" | "article";
 }): Metadata {
   const title = doc.seo.title || doc.title;
-  const description = doc.seo.description || fallbackDescription;
+  const description = doc.seo.description || fallbackDescription || summarize(doc.blocks);
   const imageId = doc.seo.image || fallbackImage;
   const image = imageId ? media[imageId] : undefined;
   const images = image
@@ -109,4 +109,26 @@ export function serviceJsonLd(doc: EntryDoc, path: string) {
     provider: { "@type": "Organization", name: site.name, url: SITE_URL },
     audience: { "@type": "BusinessAudience", name: "Growth-stage government contractors" },
   };
+}
+
+/**
+ * A description for pages without one: the first real sentence or two of the
+ * page's text, cut at a word near 160 characters (what search results show).
+ */
+export function summarize(value: unknown): string | undefined {
+  const texts: string[] = [];
+  const walk = (v: unknown, key = "") => {
+    if (texts.join(" ").length > 200) return;
+    if (typeof v === "string") {
+      if (key !== "id" && key !== "type" && /\s/.test(v.trim())) texts.push(v.trim());
+    } else if (Array.isArray(v)) v.forEach((x) => walk(x, key));
+    else if (v && typeof v === "object")
+      for (const [k, x] of Object.entries(v as Record<string, unknown>)) walk(x, k);
+  };
+  walk(value);
+  const text = texts.join(" ").replace(/\s+/g, " ").trim();
+  if (!text) return undefined;
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 157);
+  return cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:.\s]+$/, "") + "…";
 }

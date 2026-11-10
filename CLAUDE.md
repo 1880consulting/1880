@@ -13,6 +13,7 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
 - Every Studio page section and server action that reads or changes data calls `requireStaff()` (`src/cms/auth.ts`) first, or `requireStaff({ owner: true })` for owner-only work. `proxy.ts` only does a quick cookie check; `requireStaff()` is the real one. Validate server-action arguments with zod: actions are public endpoints. Record sign-in and access changes with `audit()`.
 - `npm test` uses the `studio_test` database (never the dev one). Database tests skip when MySQL isn't running.
 - Security headers live in `src/lib/security-headers.ts`, applied by `proxy.ts`. The Content Security Policy allows only this site: adding an outside service (Plausible, Turnstile, a font or video host) means adding its origin there, in the same PR. Never use `dangerouslySetInnerHTML` with anything a visitor or editor typed (the one exception is `JsonLd` in `src/site/seo.tsx`, which escapes `<` so data can't close its script tag).
+- Quality bar: `npm run audit -- <url>` (axe + Lighthouse) against a production build passes before a public-site PR merges. Analytics events go through `track()` in `src/site/analytics.ts`.
 - Never write files to disk at runtime (Hostinger wipes them on deploy). Use the storage adapter.
 - Styling: design tokens as CSS variables in `design-system/` + CSS Modules. No Tailwind.
   - Public site: the 1880 Design System (Bodoni) in `design-system/tokens.css`.
