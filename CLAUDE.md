@@ -8,7 +8,8 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
   - `clients.1880.io/<client>`: client portal, one app for all clients (path-based, no per-client subdomains). The subdomain is **not decided**; `clients` is a working name read from `PORTAL_SUBDOMAIN`. Never hard-code it.
 - **Current focus: `1880.io`** (public site + CMS). The portal comes after.
   - `SITE_ROLE` (`public` | `portal` | `all`) limits what a deployment serves. Wrong-role routes must 404, enforced in `proxy.ts` **and** in each route group's layout.
-- **No deployments for now.** Hostinger is on hold until the client buys her own plan. Work happens in GitHub only. DNS will be at **GoDaddy**; never propose moving DNS to Hostinger.
+- **No deployments for now.** When hosting resumes, follow `docs/LAUNCH.md`. Production runs the standalone build with `npm start` (`scripts/start.mjs`); `next start` is `npm run start:next`.
+  Hostinger is on hold until the client buys her own plan. Work happens in GitHub only. DNS will be at **GoDaddy**; never propose moving DNS to Hostinger.
 - Database: **MySQL** (Hostinger's in production, Docker locally) via **Drizzle ORM**. Schema changes are generated, numbered migrations. Never edit a shipped one.
 - Every Studio page section and server action that reads or changes data calls `requireStaff()` (`src/cms/auth.ts`) first, or `requireStaff({ owner: true })` for owner-only work. `proxy.ts` only does a quick cookie check; `requireStaff()` is the real one. Validate server-action arguments with zod: actions are public endpoints. Record sign-in and access changes with `audit()`.
 - `npm test` uses the `studio_test` database (never the dev one). Database tests skip when MySQL isn't running.

@@ -51,6 +51,7 @@ Last updated: 2026-11-09
 | D40 | **Analytics and the quality bar.** Plausible is wired in and switched on by `PLAUSIBLE_DOMAIN` (off until the account exists and open question 8 is settled); its origin joins the Content Security Policy only when it is on. Events: "Contact form sent", "Email copied". `npm run audit` checks every public page and Studio sign-in with axe (WCAG 2.2 AA, light and dark) and Lighthouse (mobile and desktop, every category ≥ 95). First run: all pages pass, scores 96–100. The statement block's scroll-lit words are faint below the reading line on purpose (screen readers get the full sentence), so the contrast check skips that copy | Nov 10, Drew |
 | D41 | **Portal foundation is built.** Staff add clients in Studio (name, URL name, logo, accent color; archive and restore) and invite their people by email; any staff member can. Clients sign in with an emailed link only (15 minutes; invites last 7 days), confirmed with one click so email scanners can't use it up. `proxy.ts` checks the session and membership **before** a client page renders, so "unknown", "archived" and "not yours" all get the same real 404; every page checks again through `src/lib/portal/`. One client goes straight in; several get a picker. The portal session cookie is host-only on the portal host, separate from Studio's. The isolation suite (`src/lib/portal/isolation.test.ts`) runs in CI. `npm run portal:seed` adds a demo client. The portal look is built on the 1880 Design System and gets restyled when the portal prototype lands | Nov 10, Drew |
 | D42 | **Reports and proposals are built.** Each client's page in Studio lists its documents and creates new ones in three formats. **Built in Studio:** the same block editor and live preview as pages, with portal sections (text, stats, image, video, files, timeline) and attachments. **Interactive page:** one uploaded `.html` file, shown full-screen in a frame sandboxed without `allow-same-origin`, under its own policy (inline code, Google Fonts and the jsDelivr, cdnjs and unpkg CDNs; no network requests). **File:** a PDF shows in a viewer; other files download. Every upload or edit is a version with restore. Publishing can email the client's people (one email each). Clients get a list with filters, search and "New" badges, print-friendly pages, and private downloads; Studio shows who opened what and when. Files are served only through the portal after the same checks, never cached. Images in documents come from the media library, whose addresses are public but unguessable, so confidential material goes in files | Nov 10, Drew |
+| D43 | **Launch is prepared; the rest is Drew's.** `docs/LAUNCH.md` is the step-by-step runbook (Hostinger app and database, env vars, first owner, staging review, GoDaddy, Resend, launch, monitoring, first client). `npm start` runs the standalone server Hostinger needs. `SITE_INDEXING=off` keeps a staging copy out of search engines. The app redirects `1880consulting.com` itself once its web records point here: `/` and `/contact/` map to their new pages, WordPress leftovers to the home page | Nov 10, Drew |
 
 ---
 
@@ -354,12 +355,13 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] "Last viewed" receipts in the CMS, preview as client
 
 ### Phase 5: Hosting & launch (when the client's Hostinger plan exists)
-- [ ] Create sites, MySQL, env vars, GitHub auto-deploy, staging review with `noindex`
-- [ ] GoDaddy DNS for `1880.io` (Drew)
-- [ ] Resend: verify `1880consulting.com` as the sending domain (Drew adds the records, IT informed)
-- [ ] `1880consulting.com` → `1880.io` redirects: URL map from the current site, then Drew changes only the web records
-- [ ] Security review, backups, uptime monitor on `/api/health`
-- [ ] Launch, then onboard the first real client
+- [x] Ready in code (D43): runbook `docs/LAUNCH.md`, standalone `npm start`, staging `noindex` switch, redirect map for the current site
+- [ ] Create the app, MySQL, env vars, GitHub auto-deploy; staging review with `SITE_INDEXING=off` (Drew, LAUNCH.md steps 1–4)
+- [ ] GoDaddy DNS for `1880.io` (Drew, step 5)
+- [ ] Resend: verify `1880consulting.com` as the sending domain (Drew adds the records, IT informed; step 6)
+- [ ] Point `1880consulting.com`'s web records at Hostinger; the app redirects (Drew, step 7)
+- [ ] Backups and uptime monitor on `/api/health` (Drew, step 9)
+- [ ] Launch, then onboard the first real client (step 10)
 
 ---
 

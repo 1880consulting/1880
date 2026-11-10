@@ -78,8 +78,27 @@ export function roleServes(role: SiteRole, surface: Surface): boolean {
   return role === "all" || role === surface;
 }
 
+/**
+ * Today's site, 1880consulting.com, moves to 1880.io at launch (PLAN D11).
+ * Its pages map to their new addresses; WordPress leftovers (sample page,
+ * blog stubs, feeds, author and category archives) go to the home page.
+ */
+export const LEGACY_HOSTS = ["1880consulting.com", "www.1880consulting.com"];
+
+export function legacyPath(pathname: string): string {
+  const p = pathname.toLowerCase().replace(/\/+$/, "") || "/";
+  const map: Record<string, string> = {
+    "/": "/",
+    "/contact": "/contact",
+    "/contact-us": "/contact",
+  };
+  return map[p] ?? "/";
+}
+
 export type RouteDecision =
   | { kind: "next" }
+  /** Another site's address: send the visitor to this path on the main site (301). */
+  | { kind: "moved"; pathname: string }
   | { kind: "redirect"; hostname: string; status: 301 }
   /** `client`: the client URL name, when the page is under one (proxy.ts checks access). */
   | { kind: "rewrite"; pathname: string; client?: string }
@@ -121,9 +140,15 @@ export function routeRequest(input: {
    * check: `requireStaff()` in src/cms/auth.ts checks the session for real.
    */
   hasStaffCookie?: boolean;
+  /** Old domains that redirect to the main site. Default LEGACY_HOSTS. */
+  legacyHosts?: string[];
 }): RouteDecision {
   const hostname = input.hostname.toLowerCase();
   const { pathname, role } = input;
+
+  // 1880consulting.com/contact/ → 1880.io/contact (after launch, when its web records point here).
+  if ((input.legacyHosts ?? LEGACY_HOSTS).includes(hostname))
+    return { kind: "moved", pathname: legacyPath(pathname) };
 
   // www.1880.io → 1880.io (keeps the path and query).
   if (hostname.startsWith("www.")) {

@@ -12,7 +12,8 @@ jobs:
       mysql:
         image: mysql:8.4
         env:
-          MYSQL_DATABASE: studio
+          # Tests empty every table, so they only run against a *_test database.
+          MYSQL_DATABASE: studio_test
           MYSQL_USER: studio
           MYSQL_PASSWORD: studio
           MYSQL_ROOT_PASSWORD: root
@@ -22,8 +23,8 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1 -ustudio -pstudio"
           --health-interval=2s --health-timeout=5s --health-retries=30
     env:
-      DATABASE_URL: mysql://studio:studio@127.0.0.1:3306/studio
-      TEST_DATABASE_URL: mysql://studio:studio@127.0.0.1:3306/studio
+      DATABASE_URL: mysql://studio:studio@127.0.0.1:3306/studio_test
+      TEST_DATABASE_URL: mysql://studio:studio@127.0.0.1:3306/studio_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -156,3 +156,32 @@ describe("parseSiteRole", () => {
     expect(parseSiteRole("portal")).toBe("portal");
   });
 });
+
+describe("1880consulting.com redirects", () => {
+  const route = (hostname: string, pathname: string) =>
+    routeRequest({ hostname, pathname, role: "all" });
+  it("sends the old site's pages to their new addresses", () => {
+    expect(route("1880consulting.com", "/")).toEqual({ kind: "moved", pathname: "/" });
+    expect(route("www.1880consulting.com", "/contact/")).toEqual({
+      kind: "moved",
+      pathname: "/contact",
+    });
+    expect(route("1880consulting.com", "/Contact")).toEqual({
+      kind: "moved",
+      pathname: "/contact",
+    });
+  });
+  it("sends WordPress leftovers to the home page", () => {
+    for (const p of [
+      "/sample-page/",
+      "/uncategorized/hello-world/",
+      "/author/jmediagroup/",
+      "/feed/",
+      "/wp-login.php",
+    ])
+      expect(route("1880consulting.com", p)).toEqual({ kind: "moved", pathname: "/" });
+  });
+  it("leaves 1880.io alone", () => {
+    expect(route("1880.io", "/contact")).toEqual({ kind: "next" });
+  });
+});

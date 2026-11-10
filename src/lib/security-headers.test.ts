@@ -95,4 +95,9 @@ describe("security headers", () => {
     // The same address on the public host is just a page: no special rules.
     expect(frameContext(`/acme/d/${id}/page`, "public")).toEqual({ frames: "none" });
   });
+
+  it("keeps a staging copy out of search engines on every page", () => {
+    expect(securityHeaders({ ...live, noindex: true })["X-Robots-Tag"]).toBe("noindex, nofollow");
+    expect(securityHeaders(live)["X-Robots-Tag"]).toBeUndefined();
+  });
 });

@@ -25,6 +25,7 @@ export async function proxy(request: NextRequest) {
     https: proto === "https" || url.protocol === "https:",
     dev: process.env.NODE_ENV === "development",
     private: isPortal || url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
+    noindex: process.env.SITE_INDEXING === "off",
     analyticsOrigin: analyticsOrigin(),
     ...frameContext(url.pathname, isPortal ? "portal" : "public"),
   });
@@ -59,6 +60,12 @@ export async function proxy(request: NextRequest) {
       const target = here(url.pathname + url.search);
       target.hostname = decision.hostname;
       return finish(NextResponse.redirect(target, decision.status));
+    }
+    case "moved": {
+      // To the main site's address (SITE_URL), whatever host this came in on.
+      const site = new URL(process.env.SITE_URL || "https://1880.io");
+      const target = new URL(decision.pathname, site);
+      return finish(NextResponse.redirect(target, 301));
     }
     case "sign-in": {
       const target = here("/admin/login");

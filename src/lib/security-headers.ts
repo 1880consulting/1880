@@ -18,6 +18,8 @@ export interface SecurityContext {
   dev: boolean;
   /** Private pages (Studio, portal): never stored by browsers or caches. */
   private: boolean;
+  /** A staging copy (SITE_INDEXING=off): ask search engines to stay out of every page. */
+  noindex?: boolean;
   /**
    * Studio's live preview: the editor shows the page in a frame. "host" may
    * frame this site's own pages; "framed" is the preview page itself, which
@@ -153,5 +155,6 @@ export function securityHeaders(ctx: SecurityContext): Record<string, string> {
     headers["Cache-Control"] = "private, no-store";
     headers["X-Robots-Tag"] = "noindex, nofollow";
   }
+  if (ctx.noindex) headers["X-Robots-Tag"] = "noindex, nofollow";
   return headers;
 }
