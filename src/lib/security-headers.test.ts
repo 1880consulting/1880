@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { contentSecurityPolicy, securityHeaders } from "./security-headers";
+import {
+  contentSecurityPolicy,
+  frameContext,
+  securityHeaders,
+  VIDEO_ORIGINS,
+} from "./security-headers";
 
 const live = { https: true, dev: false, private: false };
 
@@ -60,5 +65,34 @@ describe("security headers", () => {
     const csp = contentSecurityPolicy({ https: false, dev: true });
     expect(csp).toContain("'unsafe-eval'");
     expect(csp).toContain("connect-src 'self' ws: wss:");
+  });
+
+  it("frames portal documents only from the portal itself, with interactive pages sandboxed", () => {
+    const id = "3f2a8c1e-0000-4000-8000-000000000000";
+    const viewer = frameContext(`/acme/d/${id}`, "portal");
+    expect(viewer).toEqual({ frames: "host", embeds: VIDEO_ORIGINS });
+    const viewerCsp = contentSecurityPolicy({ ...live, ...viewer });
+    expect(viewerCsp).toContain(
+      "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
+    );
+    expect(viewerCsp).toContain("frame-ancestors 'none'");
+
+    const page = frameContext(`/acme/d/${id}/page`, "portal");
+    const pageCsp = contentSecurityPolicy({ ...live, ...page });
+    expect(pageCsp).toContain("sandbox allow-scripts");
+    expect(pageCsp).not.toContain("allow-same-origin");
+    expect(pageCsp).toContain("connect-src 'none'");
+    expect(pageCsp).toContain("frame-ancestors 'self'");
+    expect(securityHeaders({ ...live, private: true, ...page })["X-Frame-Options"]).toBe(
+      "SAMEORIGIN",
+    );
+
+    expect(frameContext(`/acme/d/${id}/files/x`, "portal")).toEqual({ frames: "framed" });
+    // Same policy on every portal page (in-app navigation keeps the first page's).
+    expect(frameContext("/acme", "portal")).toEqual(viewer);
+    expect(frameContext("/", "portal")).toEqual(viewer);
+    expect(frameContext(`/admin/documents/${id}/page`, "public").content).toBe("interactive");
+    // The same address on the public host is just a page: no special rules.
+    expect(frameContext(`/acme/d/${id}/page`, "public")).toEqual({ frames: "none" });
   });
 });

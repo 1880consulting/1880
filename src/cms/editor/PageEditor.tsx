@@ -66,13 +66,24 @@ export interface PageEditorProps {
   previewUrl: string;
   historyUrl: string;
   backUrl: string;
+  /**
+   * "document": an entry without a web address of its own (a portal report):
+   * no address field and no search settings. Default "page".
+   */
+  mode?: "page" | "document";
+  /** Where "View live" goes, if not the address built from basePath and slug. */
+  liveUrl?: string;
+  /** Messages that name where the entry goes live, e.g. "Acme can see it now." */
+  messages?: { published?: string; unpublished?: string; unpublishConfirm?: string };
+  /** Offers "email people when publishing" next to Publish, with this label. */
+  notifyLabel?: string;
   actions: {
     save: (input: {
       doc: EntryDoc;
       slug: string;
       baseVersionId: string | null;
     }) => Promise<SaveResult>;
-    publish: () => Promise<ActionResult>;
+    publish: (opts?: { notify?: boolean }) => Promise<ActionResult>;
     discard: () => Promise<DiscardResult>;
     unpublish: () => Promise<ActionResult>;
     remove: () => Promise<ActionResult>;
@@ -101,6 +112,8 @@ export function PageEditor(props: PageEditorProps) {
   const [device, setDevice] = useState<"desktop" | "phone">("desktop");
   const [confirming, setConfirming] = useState<null | "delete" | "unpublish" | "discard">(null);
   const [pending, startTransition] = useTransition();
+  const [notify, setNotify] = useState(false);
+  const isDocument = props.mode === "document";
   const frame = useRef<HTMLIFrameElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -181,7 +194,7 @@ export function PageEditor(props: PageEditorProps) {
     setNotice(null);
     startTransition(async () => {
       if (dirty && !(await save())) return;
-      const result = await actions.publish();
+      const result = await actions.publish(props.notifyLabel ? { notify } : undefined);
       if (!result.ok) {
         setIssues(result.issues ?? []);
         // Open the sections that need attention.
@@ -194,7 +207,11 @@ export function PageEditor(props: PageEditorProps) {
       }
       setIssues([]);
       setStatus((st) => ({ ...st, published: true, hasChanges: false }));
-      setNotice({ tone: "success", text: `Published. The ${L.singular} is live.` });
+      setNotify(false);
+      setNotice({
+        tone: "success",
+        text: props.messages?.published ?? `Published. The ${L.singular} is live.`,
+      });
     });
   };
 
@@ -221,7 +238,9 @@ export function PageEditor(props: PageEditorProps) {
         setStatus((st) => ({ ...st, published: false, hasChanges: false }));
         setNotice({
           tone: "success",
-          text: `Unpublished. The ${L.singular} is no longer on the site; the draft is kept.`,
+          text:
+            props.messages?.unpublished ??
+            `Unpublished. The ${L.singular} is no longer on the site; the draft is kept.`,
         });
       } else {
         const r = await actions.remove();
@@ -287,7 +306,7 @@ export function PageEditor(props: PageEditorProps) {
   ) : (
     <Badge tone="success">Live</Badge>
   );
-  const livePath = props.basePath + slug;
+  const livePath = props.liveUrl ?? props.basePath + slug;
 
   return (
     <MediaFieldContext.Provider value={{ media, choose: setPicking, refOptions: props.refOptions }}>
@@ -330,6 +349,16 @@ export function PageEditor(props: PageEditorProps) {
             <Button onClick={onSave} disabled={pending || !dirty}>
               Save draft
             </Button>
+            {props.notifyLabel && (
+              <label className={s.notify}>
+                <input
+                  type="checkbox"
+                  checked={notify}
+                  onChange={(e) => setNotify(e.target.checked)}
+                />
+                {props.notifyLabel}
+              </label>
+            )}
             <Button
               variant="primary"
               onClick={onPublish}
@@ -378,48 +407,54 @@ export function PageEditor(props: PageEditorProps) {
                   />
                   {errors.get("title") && <p className={c.error}>{errors.get("title")}</p>}
                 </div>
-                <div className={c.field}>
-                  <label htmlFor="page-slug" className={c.label}>
-                    Address
-                  </label>
-                  {status.isHome ? (
-                    <p className={c.hint}>
-                      This is the home page, at {props.addressPrefix.replace(/\/$/, "")}.
-                    </p>
-                  ) : (
-                    <div className={s.address}>
-                      <span className={s.prefix}>{props.addressPrefix}</span>
-                      <input
-                        id="page-slug"
-                        className={c.input}
-                        value={slug}
-                        maxLength={80}
-                        aria-invalid={errors.has("slug") || undefined}
-                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                      />
-                    </div>
-                  )}
-                  {errors.get("slug") && <p className={c.error}>{errors.get("slug")}</p>}
-                  {status.published && !status.isHome && slug !== props.initial.slug && (
-                    <p className={c.hint}>
-                      When you publish, the old address will forward here automatically.
-                    </p>
-                  )}
-                </div>
-                <SeoPanel
-                  doc={doc}
-                  isHome={status.isHome}
-                  site={props.site}
-                  path={livePath}
-                  fallbackDescription={
-                    typeof doc.fields?.summary === "string" ? doc.fields.summary : undefined
-                  }
-                  fallbackImage={
-                    typeof doc.fields?.cover === "string" ? doc.fields.cover : undefined
-                  }
-                  errors={errors}
-                  change={change}
-                />
+                {!isDocument && (
+                  <div className={c.field}>
+                    <label htmlFor="page-slug" className={c.label}>
+                      Address
+                    </label>
+                    {status.isHome ? (
+                      <p className={c.hint}>
+                        This is the home page, at {props.addressPrefix.replace(/\/$/, "")}.
+                      </p>
+                    ) : (
+                      <div className={s.address}>
+                        <span className={s.prefix}>{props.addressPrefix}</span>
+                        <input
+                          id="page-slug"
+                          className={c.input}
+                          value={slug}
+                          maxLength={80}
+                          aria-invalid={errors.has("slug") || undefined}
+                          onChange={(e) =>
+                            setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-"))
+                          }
+                        />
+                      </div>
+                    )}
+                    {errors.get("slug") && <p className={c.error}>{errors.get("slug")}</p>}
+                    {status.published && !status.isHome && slug !== props.initial.slug && (
+                      <p className={c.hint}>
+                        When you publish, the old address will forward here automatically.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {!isDocument && (
+                  <SeoPanel
+                    doc={doc}
+                    isHome={status.isHome}
+                    site={props.site}
+                    path={livePath}
+                    fallbackDescription={
+                      typeof doc.fields?.summary === "string" ? doc.fields.summary : undefined
+                    }
+                    fallbackImage={
+                      typeof doc.fields?.cover === "string" ? doc.fields.cover : undefined
+                    }
+                    errors={errors}
+                    change={change}
+                  />
+                )}
               </div>
             </section>
 
@@ -566,7 +601,8 @@ export function PageEditor(props: PageEditorProps) {
                     {confirming === "delete"
                       ? `Delete this ${L.singular} and its history? This can't be undone.`
                       : confirming === "unpublish"
-                        ? `Take this ${L.singular} off the site? The draft is kept.`
+                        ? (props.messages?.unpublishConfirm ??
+                          `Take this ${L.singular} off the site? The draft is kept.`)
                         : "Throw away every change since the last publish?"}
                   </p>
                   <div className={c.actions}>

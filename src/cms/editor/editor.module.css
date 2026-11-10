@@ -449,3 +449,12 @@
   padding: 10px 12px;
   background: #f2f3f5;
 }
+
+/* "Email people when publishing", next to Publish. */
+.notify {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--os-ink-muted);
+}

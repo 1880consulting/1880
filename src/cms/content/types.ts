@@ -107,11 +107,15 @@ export interface Issue {
 }
 
 /** The full rules a draft must meet before it can go live. */
-export function validateForPublish(type: ContentType, doc: EntryDoc, slug: string): Issue[] {
+/** `slug` is left out for types without addresses of their own (portal documents). */
+export function validateForPublish(type: ContentType, doc: EntryDoc, slug?: string): Issue[] {
   const issues: Issue[] = [];
-  if (!doc.title.trim()) issues.push({ path: ["title"], message: "Give the page a title." });
-  const slugError = checkSlug(type, slug, { allowHome: type.allowHome });
-  if (slugError) issues.push({ path: ["slug"], message: slugError });
+  if (!doc.title.trim())
+    issues.push({ path: ["title"], message: `Give the ${type.label.toLowerCase()} a title.` });
+  if (slug !== undefined) {
+    const slugError = checkSlug(type, slug, { allowHome: type.allowHome });
+    if (slugError) issues.push({ path: ["slug"], message: slugError });
+  }
   if (type.fields) {
     const result = type.fields.safeParse(doc.fields ?? {});
     if (!result.success) {

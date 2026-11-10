@@ -2,8 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, STUDIO_PATH_HEADER } from "@/cms/staff/cookie";
 import { parsePortalSubdomain, parseSiteRole, routeRequest, surfaceForHost } from "@/lib/routing";
 import { PORTAL_COOKIE } from "@/lib/portal/cookie";
-import { portalGate } from "@/lib/portal/gate";
-import { securityHeaders } from "@/lib/security-headers";
+import { documentIdIn, portalGate } from "@/lib/portal/gate";
+import { frameContext, securityHeaders } from "@/lib/security-headers";
 import { analyticsOrigin } from "@/site/analytics";
 
 /**
@@ -26,11 +26,7 @@ export async function proxy(request: NextRequest) {
     dev: process.env.NODE_ENV === "development",
     private: isPortal || url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
     analyticsOrigin: analyticsOrigin(),
-    frames: url.pathname.startsWith("/admin/preview/")
-      ? "framed"
-      : url.pathname.startsWith("/admin/")
-        ? "host"
-        : "none",
+    ...frameContext(url.pathname, isPortal ? "portal" : "public"),
   });
   // An address on the host the visitor asked for. Built from the Host header so
   // an internal server address never leaks into a redirect (and the portal
@@ -82,7 +78,11 @@ export async function proxy(request: NextRequest) {
     case "rewrite": {
       if (decision.client) {
         // A page under a client: check access before it renders (PLAN §2.3).
-        const gate = await portalGate(request.cookies.get(PORTAL_COOKIE)?.value, decision.client);
+        const gate = await portalGate(
+          request.cookies.get(PORTAL_COOKIE)?.value,
+          decision.client,
+          documentIdIn(url.pathname),
+        );
         if (gate === "sign-in") {
           const target = here("/");
           target.searchParams.set("next", url.pathname + url.search);
@@ -118,7 +118,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Skip Next's own static files and the image optimizer, and Studio's upload
-  // endpoint (it checks the session itself, and large uploads shouldn't be
-  // buffered by the proxy).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|admin/media/upload$).*)"],
+  // endpoints (they check the session themselves, and large uploads shouldn't
+  // be buffered by the proxy).
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|admin/media/upload$|admin/documents/upload$).*)",
+  ],
 };

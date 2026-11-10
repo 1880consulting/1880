@@ -4,7 +4,7 @@ import mysql from "mysql2/promise";
 
 /** Vitest global setup: bring the test database up to date. Without MySQL, database tests skip. */
 export default async function setup() {
-  const url = process.env.TEST_DATABASE_URL ?? "mysql://studio:studio@127.0.0.1:3306/studio_test";
+  const url = process.env.TEST_DATABASE_URL || "mysql://studio:studio@127.0.0.1:3306/studio_test";
   let conn: mysql.Connection | undefined;
   try {
     conn = await mysql.createConnection({ uri: url, connectTimeout: 3000 });

@@ -6,7 +6,18 @@ import { createSession as createStaffSession, createStaff } from "@/cms/staff/se
 import { db, schema } from "@/lib/db";
 import { setupTestDatabase } from "@/test/db";
 import { clientAreaFor, clientAreasFor } from "./access";
-import { portalGate } from "./gate";
+import {
+  addDocumentFile,
+  createDocument,
+  getClientDocument,
+  listClientDocuments,
+  publishDocument,
+  readClientFile,
+  saveDocumentDraft,
+  getDocument,
+  unpublishDocument,
+} from "./documents";
+import { documentIdIn, portalGate } from "./gate";
 import { addPerson, createTenant, removePerson, setTenantStatus } from "./manage";
 import {
   consumeClientToken,
@@ -137,6 +148,114 @@ describe("client isolation", () => {
   });
 });
 
+describe("document isolation", () => {
+  const pdf = Buffer.from("%PDF-1.4\n%test\n");
+
+  /** A published file document and a published built document (with one shown attachment) per client. */
+  async function docs() {
+    const w = await world();
+    const make = async (tenantId: string, title: string) => {
+      const fileDoc = await createDocument({
+        tenantId,
+        title,
+        kind: "report",
+        format: "file",
+        authorId: "s",
+      });
+      const main = await addDocumentFile(fileDoc, "file", { filename: "r.pdf", data: pdf }, "s");
+      expect(await publishDocument(fileDoc)).toEqual({ ok: true });
+
+      const built = await createDocument({
+        tenantId,
+        title: `${title} plan`,
+        kind: "proposal",
+        format: "blocks",
+        authorId: "s",
+      });
+      const shown = await addDocumentFile(
+        built,
+        "attachment",
+        { filename: "a.csv", data: Buffer.from("a,b") },
+        "s",
+      );
+      const hidden = await addDocumentFile(
+        built,
+        "attachment",
+        { filename: "h.csv", data: Buffer.from("x") },
+        "s",
+      );
+      const draft = (await getDocument(built))!;
+      await saveDocumentDraft(
+        built,
+        {
+          ...draft.draft,
+          blocks: [
+            { id: "t", type: "text", body: "Hello" },
+            { id: "f", type: "files", files: [shown.id] },
+          ],
+        },
+        draft.document.draftVersionId,
+        "s",
+      );
+      expect(await publishDocument(built)).toEqual({ ok: true });
+      return { fileDoc, main: main.id, built, shown: shown.id, hidden: hidden.id };
+    };
+    return { w, a: await make(w.acme, "Acme"), b: await make(w.beta, "Beta") };
+  }
+
+  it("shows each client only its own documents", async () => {
+    const { w, a, b } = await docs();
+    expect((await listClientDocuments(w.acme, w.ada)).map((d) => d.id).sort()).toEqual(
+      [a.fileDoc, a.built].sort(),
+    );
+    expect(await getClientDocument(w.beta, a.fileDoc)).toBeNull();
+    expect(await getClientDocument(w.acme, b.built)).toBeNull();
+    expect(await getClientDocument(w.acme, a.built)).not.toBeNull();
+  });
+
+  it("serves a file only through its own client's live document", async () => {
+    const { w, a, b } = await docs();
+    expect((await readClientFile(w.acme, a.fileDoc, a.main))?.data.equals(pdf)).toBe(true);
+    // Another client's address, or another document's file id, finds nothing.
+    expect(await readClientFile(w.beta, a.fileDoc, a.main)).toBeNull();
+    expect(await readClientFile(w.acme, a.fileDoc, b.main)).toBeNull();
+    expect(await readClientFile(w.acme, a.built, a.main)).toBeNull();
+    // Attachments: only those a Files section shows.
+    expect(await readClientFile(w.acme, a.built, a.shown)).not.toBeNull();
+    expect(await readClientFile(w.acme, a.built, a.hidden)).toBeNull();
+  });
+
+  it("checks documents in the proxy too: someone else's, a draft or a made-up id is Not found", async () => {
+    const { w, a, b } = await docs();
+    const ada = await w.session(w.ada);
+    expect(await portalGate(ada, "acme", a.built)).toBe("ok");
+    expect(await portalGate(ada, "acme", b.built)).toBe("not-found");
+    expect(await portalGate(ada, "beta", b.built)).toBe("not-found");
+    expect(await portalGate(ada, "acme", "not-a-uuid")).toBe("not-found");
+    await unpublishDocument(a.built);
+    expect(await portalGate(ada, "acme", a.built)).toBe("not-found");
+    expect(await readClientFile(w.acme, a.built, a.shown)).toBeNull();
+    expect(documentIdIn(`/acme/d/${a.built}/files/x`)).toBe(a.built);
+    expect(documentIdIn("/acme")).toBeUndefined();
+  });
+
+  it("keeps drafts out of the portal until published", async () => {
+    const { w } = await docs();
+    const draft = await createDocument({
+      tenantId: w.acme,
+      title: "Secret",
+      kind: "other",
+      format: "blocks",
+      authorId: "s",
+    });
+    expect(await getClientDocument(w.acme, draft)).toBeNull();
+    expect((await listClientDocuments(w.acme, w.ada)).some((d) => d.id === draft)).toBe(false);
+    // Publishing an empty document is refused.
+    const r = await publishDocument(draft);
+    expect(r.ok).toBe(false);
+  });
+});
+
 describe("portal code structure", () => {
   const files = (dir: string): string[] =>
     readdirSync(dir).flatMap((f) => {
@@ -147,7 +266,9 @@ describe("portal code structure", () => {
   it("portal pages read data only through src/lib/portal", () => {
     for (const file of [...files("src/app/(portal)"), ...files("src/portal")]) {
       const text = readFileSync(file, "utf8");
-      expect(text, file).not.toMatch(/from "@\/lib\/db|from "drizzle-orm|@\/cms\/media\/store/);
+      expect(text, file).not.toMatch(
+        /from "@\/lib\/db|from "drizzle-orm|@\/cms\/media\/(store|storage)/,
+      );
     }
   });
 

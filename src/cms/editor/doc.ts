@@ -49,6 +49,13 @@ function tidyFields(fields: Field[], value: Record<string, unknown>): Record<str
     const v = out[f.key];
     if (f.kind === "text" || f.kind === "select") {
       if (!f.required && isEmpty(v)) delete out[f.key];
+    } else if (f.kind === "items") {
+      if (Array.isArray(v))
+        out[f.key] = v.map((item) =>
+          item && typeof item === "object"
+            ? tidyFields(f.fields, item as Record<string, unknown>)
+            : item,
+        );
     } else if (f.kind === "group") {
       if (v && typeof v === "object") {
         const inner = tidyFields(f.fields, v as Record<string, unknown>);
@@ -90,6 +97,8 @@ export function blockSummary(block: StoredBlock, t: BlockType | undefined): stri
     const v = block[f.key];
     if (f.kind === "text" && typeof v === "string" && v.trim()) return v.trim();
     if (f.kind === "list" && Array.isArray(v) && v.length) return v.join(", ");
+    if (f.kind === "items" && Array.isArray(v) && v.length)
+      return `${v.length} ${f.itemLabel.toLowerCase()}${v.length === 1 ? "" : "s"}`;
   }
   return "";
 }

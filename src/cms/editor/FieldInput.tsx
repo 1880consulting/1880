@@ -1,6 +1,6 @@
 "use client";
 
-import { IconPhoto, IconPlus, IconX } from "@tabler/icons-react";
+import { IconArrowDown, IconArrowUp, IconPhoto, IconPlus, IconX } from "@tabler/icons-react";
 import { Badge, Button, controls as c } from "../ui/client";
 import { mediaUrl, pickWidth } from "../media/types";
 import mediaStyles from "../media/media.module.css";
@@ -222,6 +222,88 @@ export function FieldInput({ field, value, path, errors, onChange }: Props) {
             >
               <IconPlus size={16} stroke={2} aria-hidden />
               Add
+            </button>
+          )}
+          <ErrorText id={id} message={error} />
+        </fieldset>
+      );
+    }
+
+    case "items": {
+      const items = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
+      const canAdd = field.max === undefined || items.length < field.max;
+      const moveItem = (i: number, by: number) => {
+        const next = [...items];
+        const [it] = next.splice(i, 1);
+        next.splice(i + by, 0, it);
+        onChange(path, next);
+      };
+      return (
+        <fieldset className={s.fieldset} aria-describedby={describedBy}>
+          <legend className={c.label}>{field.label}</legend>
+          {help}
+          <ol className={s.list}>
+            {items.map((item, i) => (
+              <li key={i}>
+                <fieldset className={s.fieldset}>
+                  <legend className={s.listRow} style={{ width: "100%" }}>
+                    <span className={c.label} style={{ flex: 1 }}>
+                      {field.itemLabel} {i + 1}
+                    </span>
+                    <button
+                      type="button"
+                      className={s.iconButton}
+                      aria-label={`Move ${field.itemLabel.toLowerCase()} ${i + 1} up`}
+                      disabled={i === 0}
+                      onClick={() => moveItem(i, -1)}
+                    >
+                      <IconArrowUp size={16} stroke={2} aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className={s.iconButton}
+                      aria-label={`Move ${field.itemLabel.toLowerCase()} ${i + 1} down`}
+                      disabled={i === items.length - 1}
+                      onClick={() => moveItem(i, 1)}
+                    >
+                      <IconArrowDown size={16} stroke={2} aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className={s.iconButton}
+                      aria-label={`Remove ${field.itemLabel.toLowerCase()} ${i + 1}`}
+                      onClick={() =>
+                        onChange(
+                          path,
+                          items.filter((_, j) => j !== i),
+                        )
+                      }
+                    >
+                      <IconX size={16} stroke={2} aria-hidden />
+                    </button>
+                  </legend>
+                  {field.fields.map((sub) => (
+                    <FieldInput
+                      key={sub.key}
+                      field={sub}
+                      value={item?.[sub.key]}
+                      path={[...path, i, sub.key]}
+                      errors={errors}
+                      onChange={onChange}
+                    />
+                  ))}
+                </fieldset>
+              </li>
+            ))}
+          </ol>
+          {canAdd && (
+            <button
+              type="button"
+              className={s.addItem}
+              onClick={() => onChange(path, [...items, {}])}
+            >
+              <IconPlus size={16} stroke={2} aria-hidden />
+              Add {field.itemLabel.toLowerCase()}
             </button>
           )}
           <ErrorText id={id} message={error} />

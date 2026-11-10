@@ -264,3 +264,180 @@
     font-size: 14px;
   }
 }
+
+/* ---- Document list ---- */
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 17px;
+}
+
+.filters a {
+  color: var(--color-muted);
+  text-decoration: none;
+  padding-bottom: 4px;
+  border-bottom: 1px solid transparent;
+}
+
+.filters a[aria-current="page"] {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-ink);
+}
+
+.search {
+  display: flex;
+  gap: 8px;
+}
+
+.search .input {
+  width: 220px;
+  padding: 8px 12px;
+  font-size: 16px;
+}
+
+.docRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 24px;
+  padding: 20px 0;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.docRow:hover .docTitle,
+.docRow:focus-visible .docTitle {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.docTitle {
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.docMeta {
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  text-transform: uppercase;
+}
+
+.docSummary {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.new {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 1px 8px;
+  border: 1px solid var(--color-ink);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* ---- Document viewer ---- */
+
+.back {
+  display: inline-block;
+  margin-bottom: 32px;
+  color: var(--color-ink);
+  text-underline-offset: 3px;
+}
+
+.docActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 32px 0;
+}
+
+.pdf {
+  display: block;
+  width: 100%;
+  height: min(80svh, 1100px);
+  border: 1px solid var(--color-rule);
+}
+
+.fileImage {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-rule);
+}
+
+/* An interactive page fills the screen, under a slim portal bar. */
+.full {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+
+.slimBar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px var(--gutter);
+  border-bottom: 1px solid var(--color-rule);
+  box-shadow: inset 0 -3px 0 var(--client-accent, transparent);
+  font-size: 15px;
+}
+
+.slimTitle {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.interactive {
+  flex: 1;
+  width: 100%;
+  border: 0;
+}
+
+@media print {
+  .header,
+  .tools,
+  .back,
+  .docActions,
+  .actions {
+    display: none;
+  }
+
+  .main {
+    padding: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .search .input {
+    width: 100%;
+  }
+
+  .search {
+    width: 100%;
+  }
+}

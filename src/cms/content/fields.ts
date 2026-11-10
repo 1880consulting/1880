@@ -46,6 +46,18 @@ export type Field =
       max?: number;
       maxLength?: number;
     }
+  /** A repeatable group: a list of items, each with the same fields (e.g. stat tiles). */
+  | {
+      kind: "items";
+      key: string;
+      label: string;
+      help?: string;
+      /** What to call one item, e.g. "Stat". From `.meta({ itemLabel })`. */
+      itemLabel: string;
+      min?: number;
+      max?: number;
+      fields: Field[];
+    }
   | {
       kind: "group";
       key: string;
@@ -64,6 +76,8 @@ interface JsonSchema {
   media?: boolean;
   /** Marks an array of ids as references to entries of this content type. */
   ref?: string;
+  /** For a list of objects: what to call one item. */
+  itemLabel?: string;
   minimum?: number;
   maximum?: number;
   maxLength?: number;
@@ -120,6 +134,17 @@ function toFields(schema: JsonSchema): Field[] {
         ];
       case "array":
         if (prop.ref) return [{ kind: "refs", ...base, ref: prop.ref, max: prop.maxItems }];
+        if (prop.items?.type === "object")
+          return [
+            {
+              kind: "items",
+              ...base,
+              itemLabel: prop.itemLabel ?? "Item",
+              min: prop.minItems,
+              max: prop.maxItems,
+              fields: toFields(prop.items),
+            },
+          ];
         return [
           {
             kind: "list",

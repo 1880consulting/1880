@@ -322,3 +322,86 @@ export const clientTokens = mysqlTable(
   },
   (t) => [index("client_tokens_user").on(t.userId, t.purpose)],
 );
+
+// ---------------------------------------------------------------------------
+// Portal documents (PLAN §3.5): reports, proposals and others, in three
+// formats. Every row carries tenant_id, and every portal query filters by it.
+// ---------------------------------------------------------------------------
+
+/** A report, proposal or other document for one client. */
+export const documents = mysqlTable(
+  "documents",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tenantId: varchar("tenant_id", { length: 36 }).notNull(),
+    kind: mysqlEnum("kind", ["report", "proposal", "other"]).notNull().default("report"),
+    /** blocks: built in Studio. interactive: an uploaded HTML page. file: an uploaded PDF or other file. */
+    format: mysqlEnum("format", ["blocks", "interactive", "file"]).notNull(),
+    status: mysqlEnum("status", ["draft", "published"]).notNull().default("draft"),
+    draftVersionId: varchar("draft_version_id", { length: 36 }),
+    publishedVersionId: varchar("published_version_id", { length: 36 }),
+    createdBy: varchar("created_by", { length: 36 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+    publishedAt: timestamp("published_at"),
+  },
+  (t) => [index("documents_tenant").on(t.tenantId, t.status, t.publishedAt)],
+);
+
+export type DocumentRow = typeof documents.$inferSelect;
+
+/** Every save or upload is a new row here, never changed afterwards (history and undo). */
+export const documentVersions = mysqlTable(
+  "document_versions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    documentId: varchar("document_id", { length: 36 }).notNull(),
+    tenantId: varchar("tenant_id", { length: 36 }).notNull(),
+    /** Title, summary and blocks, plus the uploaded file's id for the other formats. */
+    doc: json("doc").notNull(),
+    authorId: varchar("author_id", { length: 36 }),
+    note: varchar("note", { length: 200 }),
+    createdAt: timestamp("created_at", { fsp: 6 })
+      .notNull()
+      .default(sql`(now(6))`),
+  },
+  (t) => [index("document_versions_doc").on(t.documentId, t.createdAt)],
+);
+
+/** An uploaded file: an interactive page, a document's file, or an attachment. Bytes live in storage. */
+export const documentFiles = mysqlTable(
+  "document_files",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tenantId: varchar("tenant_id", { length: 36 }).notNull(),
+    documentId: varchar("document_id", { length: 36 }).notNull(),
+    purpose: mysqlEnum("purpose", ["interactive", "file", "attachment"]).notNull(),
+    filename: varchar("filename", { length: 255 }).notNull(),
+    mime: varchar("mime", { length: 120 }).notNull(),
+    bytes: int("bytes").notNull(),
+    sha256: varchar("sha256", { length: 64 }).notNull(),
+    createdBy: varchar("created_by", { length: 36 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("document_files_doc").on(t.documentId)],
+);
+
+export type DocumentFileRow = typeof documentFiles.$inferSelect;
+
+/** Receipts: who opened or downloaded what, and when. */
+export const documentEvents = mysqlTable(
+  "document_events",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    documentId: varchar("document_id", { length: 36 }).notNull(),
+    tenantId: varchar("tenant_id", { length: 36 }).notNull(),
+    clientUserId: varchar("client_user_id", { length: 36 }).notNull(),
+    kind: mysqlEnum("kind", ["view", "download"]).notNull(),
+    fileId: varchar("file_id", { length: 36 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("document_events_doc").on(t.documentId, t.createdAt),
+    index("document_events_user").on(t.clientUserId, t.tenantId, t.createdAt),
+  ],
+);

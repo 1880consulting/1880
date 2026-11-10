@@ -50,6 +50,7 @@ Last updated: 2026-11-09
 | D39 | **SEO is built.** Each page, case study and service has a search title and description (with length guidance), a share image (falls back to the cover) and "hide from search engines", with Google and share previews in the editor. Share images are 1200×630 JPEGs cropped at the focal point, made on first request and stored. Every page gets canonical, Open Graph and Twitter tags; the home page carries Organization structured data, case studies Article and services Service. `/sitemap.xml`, `/robots.txt` and `/llms.txt` list live, indexable pages and refresh on publish. Absolute URLs come from `SITE_URL` at build time. Icons are generated from the 1880 mark | Nov 10, Drew |
 | D40 | **Analytics and the quality bar.** Plausible is wired in and switched on by `PLAUSIBLE_DOMAIN` (off until the account exists and open question 8 is settled); its origin joins the Content Security Policy only when it is on. Events: "Contact form sent", "Email copied". `npm run audit` checks every public page and Studio sign-in with axe (WCAG 2.2 AA, light and dark) and Lighthouse (mobile and desktop, every category ≥ 95). First run: all pages pass, scores 96–100. The statement block's scroll-lit words are faint below the reading line on purpose (screen readers get the full sentence), so the contrast check skips that copy | Nov 10, Drew |
 | D41 | **Portal foundation is built.** Staff add clients in Studio (name, URL name, logo, accent color; archive and restore) and invite their people by email; any staff member can. Clients sign in with an emailed link only (15 minutes; invites last 7 days), confirmed with one click so email scanners can't use it up. `proxy.ts` checks the session and membership **before** a client page renders, so "unknown", "archived" and "not yours" all get the same real 404; every page checks again through `src/lib/portal/`. One client goes straight in; several get a picker. The portal session cookie is host-only on the portal host, separate from Studio's. The isolation suite (`src/lib/portal/isolation.test.ts`) runs in CI. `npm run portal:seed` adds a demo client. The portal look is built on the 1880 Design System and gets restyled when the portal prototype lands | Nov 10, Drew |
+| D42 | **Reports and proposals are built.** Each client's page in Studio lists its documents and creates new ones in three formats. **Built in Studio:** the same block editor and live preview as pages, with portal sections (text, stats, image, video, files, timeline) and attachments. **Interactive page:** one uploaded `.html` file, shown full-screen in a frame sandboxed without `allow-same-origin`, under its own policy (inline code, Google Fonts and the jsDelivr, cdnjs and unpkg CDNs; no network requests). **File:** a PDF shows in a viewer; other files download. Every upload or edit is a version with restore. Publishing can email the client's people (one email each). Clients get a list with filters, search and "New" badges, print-friendly pages, and private downloads; Studio shows who opened what and when. Files are served only through the portal after the same checks, never cached. Images in documents come from the media library, whose addresses are public but unguessable, so confidential material goes in files | Nov 10, Drew |
 
 ---
 
@@ -248,11 +249,12 @@ client_users       id, email(unique), name, status(active|disabled), created_at,
 memberships        client_user_id, tenant_id, invited_by, created_at        -- everyone is a viewer in v1
 client_sessions    token_hash, user_id, created_at, expires_at          -- portal cookie, hash only
 client_tokens      token_hash, user_id, purpose(login|invite), expires_at, used_at
-documents          id(random), tenant_id, type(report|proposal|other), format(blocks|interactive|file),
-                   title, status, draft_version_id, published_version_id, published_at
-document_versions  id, document_id, doc JSON (blocks) | media_id (interactive HTML or file), author_id, created_at
-document_files     id(random), document_id, tenant_id, media_id, label
-document_events    id, document_id, tenant_id, client_user_id, kind(view|download), created_at
+documents          id(random), tenant_id, kind(report|proposal|other), format(blocks|interactive|file),
+                   status(draft|published), draft_version_id, published_version_id, published_at
+document_versions  id, document_id, tenant_id, doc JSON (title, summary, blocks, file id), author_id, note, created_at
+document_files     id(random), tenant_id, document_id, purpose(interactive|file|attachment), filename, mime,
+                   bytes, sha256                                         -- bytes in storage, key portal/<tenant>/<id>
+document_events    id, document_id, tenant_id, client_user_id, kind(view|download), file_id, created_at
 ```
 
 ---
@@ -344,11 +346,12 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - [x] **Isolation test suite passing** (gate for real data)
 
 ### Phase 4: Reports & proposals
-- [ ] Document editor: format 1 (portal blocks), format 2 (interactive page upload), format 3 (file upload)
-- [ ] Sandboxed full-screen viewer for interactive pages + its security policy. Test with a real letswork-style page
-- [ ] Publish to client, optional "new report" email
-- [ ] Portal home, document pages, downloads, print layout
-- [ ] "Last viewed" receipts in the CMS, preview as client
+- [x] Document editor: format 1 (portal blocks), format 2 (interactive page upload), format 3 (file upload) (D42)
+- [x] Sandboxed full-screen viewer for interactive pages + its security policy (tested with a sample dashboard page)
+- [ ] Try one real letswork page in the viewer (Drew: upload one to the demo client)
+- [x] Publish to client, optional "new report" email
+- [x] Portal home, document pages, downloads, print layout
+- [x] "Last viewed" receipts in the CMS, preview as client
 
 ### Phase 5: Hosting & launch (when the client's Hostinger plan exists)
 - [ ] Create sites, MySQL, env vars, GitHub auto-deploy, staging review with `noindex`

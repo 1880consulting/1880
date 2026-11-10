@@ -26,11 +26,80 @@ export interface SecurityContext {
   frames?: "none" | "host" | "framed";
   /** Analytics script origin (Plausible), allowed only when analytics is on. */
   analyticsOrigin?: string | null;
+  /** Outside players a page may embed (portal video sections): added to frame-src. */
+  embeds?: string[];
+  /**
+   * "interactive": an uploaded interactive page (PLAN §3.5), served inside the
+   * portal's sandboxed frame. It gets its own policy (interactivePagePolicy).
+   */
+  content?: "app" | "interactive";
+}
+
+/**
+ * Where an uploaded interactive page may load things from: inline code, fonts
+ * from Google Fonts, and libraries from the three big public CDNs. Nothing
+ * else, no network requests, and the `sandbox` directive gives it a unique
+ * origin, so it can't reach the portal's session or other documents, even if
+ * someone opens its address directly. Only this site may frame it.
+ */
+export const INTERACTIVE_ALLOWED = {
+  scripts: ["https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
+  styles: ["https://fonts.googleapis.com"],
+  fonts: ["https://fonts.gstatic.com"],
+};
+
+/** Video players the portal's video section embeds (privacy-enhanced YouTube, Vimeo). */
+export const VIDEO_ORIGINS = ["https://www.youtube-nocookie.com", "https://player.vimeo.com"];
+
+/**
+ * Framing and content rules by address. Pure, so it's easy to test.
+ * `pathname` is the address as the visitor typed it (before the portal rewrite).
+ */
+export function frameContext(
+  pathname: string,
+  surface: "public" | "portal",
+): Pick<SecurityContext, "frames" | "embeds" | "content"> {
+  if (surface === "portal") {
+    // /acme/d/<id>/page: an uploaded interactive page, shown in the viewer's frame.
+    if (/^\/[^/]+\/d\/[^/]+\/page$/.test(pathname))
+      return { frames: "framed", content: "interactive" };
+    // /acme/d/<id>/files/<file>: a PDF may show inside the viewer.
+    if (/^\/[^/]+\/d\/[^/]+\/files\/[^/]+$/.test(pathname)) return { frames: "framed" };
+    // Every other portal page: a document's viewer frames the two above, and
+    // video sections embed players. The same rule on every portal page, because
+    // moving between pages inside the app keeps the first page's policy.
+    return { frames: "host", embeds: VIDEO_ORIGINS };
+  }
+  if (/^\/admin\/documents\/[^/]+\/page$/.test(pathname))
+    return { frames: "framed", content: "interactive" };
+  if (/^\/admin\/documents\/[^/]+\/files\/[^/]+$/.test(pathname)) return { frames: "framed" };
+  if (pathname.startsWith("/admin/preview/")) return { frames: "framed", embeds: VIDEO_ORIGINS };
+  if (pathname.startsWith("/admin/")) return { frames: "host" };
+  return { frames: "none" };
+}
+
+export function interactivePagePolicy(): string {
+  const a = INTERACTIVE_ALLOWED;
+  return [
+    "default-src 'none'",
+    `script-src 'unsafe-inline' ${a.scripts.join(" ")}`,
+    `style-src 'unsafe-inline' ${a.styles.join(" ")}`,
+    `font-src data: ${a.fonts.join(" ")}`,
+    "img-src data: blob:",
+    "media-src data: blob:",
+    "connect-src 'none'",
+    "form-action 'none'",
+    "base-uri 'none'",
+    "frame-ancestors 'self'",
+    "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
+  ].join("; ");
 }
 
 export function contentSecurityPolicy(
-  ctx: Pick<SecurityContext, "https" | "dev" | "frames" | "analyticsOrigin">,
+  ctx: Pick<SecurityContext, "https" | "dev" | "frames" | "analyticsOrigin" | "embeds" | "content">,
 ): string {
+  if (ctx.content === "interactive") return interactivePagePolicy();
+  const frameSrc = [...(ctx.frames === "host" ? ["'self'"] : []), ...(ctx.embeds ?? [])];
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "script-src": [
@@ -49,7 +118,7 @@ export function contentSecurityPolicy(
     ],
     "media-src": ["'self'"],
     "object-src": ["'none'"],
-    "frame-src": [ctx.frames === "host" ? "'self'" : "'none'"],
+    "frame-src": frameSrc.length ? frameSrc : ["'none'"],
     "worker-src": ["'self'", "blob:"],
     "manifest-src": ["'self'"],
     "base-uri": ["'self'"],

@@ -68,3 +68,35 @@ describe("editor document helpers", () => {
     ).toBe("Fill this in.");
   });
 });
+
+describe("repeatable groups", () => {
+  it("become an items field, and tidy each item", async () => {
+    const { z } = await import("zod");
+    const { defineBlock } = await import("../content/types");
+    const def = defineBlock({
+      type: "stats",
+      label: "Stats",
+      schema: z.object({
+        type: z.literal("stats"),
+        stats: z
+          .array(z.object({ value: z.string().max(20), note: z.string().max(80).optional() }))
+          .max(4)
+          .meta({ title: "Stats", itemLabel: "Stat" }),
+      }),
+      defaults: { stats: [] },
+    });
+    const fields = blockFields(def);
+    expect(fields[0]).toMatchObject({ kind: "items", itemLabel: "Stat", max: 4 });
+    const t: BlockType = { ...def, fields };
+    const tidy = tidyDoc(
+      {
+        title: "R",
+        seo: {},
+        blocks: [{ id: "a", type: "stats", stats: [{ value: "9", note: " " }] }],
+      },
+      [t],
+    );
+    expect(tidy.blocks[0].stats).toEqual([{ value: "9" }]);
+    expect(blockSummary(tidy.blocks[0], t)).toBe("1 stat");
+  });
+});

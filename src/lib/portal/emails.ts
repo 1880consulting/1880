@@ -36,3 +36,25 @@ export function clientInviteEmail(
     ].join("\n"),
   };
 }
+
+export function newDocumentEmail(input: {
+  name: string;
+  clientName: string;
+  title: string;
+  kindLabel: string;
+  link: string;
+}) {
+  const kind = input.kindLabel.toLowerCase();
+  return {
+    subject: `New ${kind} from 1880: ${input.title}`,
+    text: [
+      `Hi ${input.name},`,
+      "",
+      `1880 shared a new ${kind} with ${input.clientName}: “${input.title}”.`,
+      "Open it here:",
+      input.link,
+      "",
+      "If you're asked to sign in, enter this email address and we'll send you a link.",
+    ].join("\n"),
+  };
+}

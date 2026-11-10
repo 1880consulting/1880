@@ -15,7 +15,8 @@ export default defineConfig({
     // migrate it first, so `npm test` never touches your local data.
     env: {
       DATABASE_URL:
-        process.env.TEST_DATABASE_URL ?? "mysql://studio:studio@127.0.0.1:3306/studio_test",
+        // `||`, not `??`: an empty value must not fall through to the dev database.
+        process.env.TEST_DATABASE_URL || "mysql://studio:studio@127.0.0.1:3306/studio_test",
     },
     globalSetup: ["./src/test/migrate.ts"],
     // Database tests share one MySQL, so files run one at a time.

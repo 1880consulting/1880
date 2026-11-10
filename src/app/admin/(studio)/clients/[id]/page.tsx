@@ -14,6 +14,7 @@ import {
   Panel,
   Skeleton,
 } from "@/cms/ui";
+import { KIND_LABELS, listTenantDocuments } from "@/lib/portal/documents";
 import { getTenant, listTenantPeople } from "@/lib/portal/manage";
 import { portalOrigin } from "@/lib/portal/origin";
 import { listMediaForPicker } from "../../media/actions";
@@ -21,6 +22,7 @@ import { changeClientStatus, saveClient } from "../actions";
 import { ClientForm } from "../ClientForm";
 import { ClientInviteForm } from "../ClientInviteForm";
 import { ClientPersonActions } from "../ClientPersonActions";
+import { NewDocumentForm } from "../NewDocumentForm";
 
 export const metadata = { title: "Client" };
 
@@ -47,7 +49,8 @@ async function Client({ params }: Pick<PageProps<"/admin/clients/[id]">, "params
   if (!z.uuid().safeParse(id).success) notFound();
   const tenant = await getTenant(id);
   if (!tenant) notFound();
-  const [people, origin, logo] = await Promise.all([
+  const [docs, people, origin, logo] = await Promise.all([
+    listTenantDocuments(id),
     listTenantPeople(id),
     portalOrigin(),
     tenant.logoMediaId ? getMedia(tenant.logoMediaId) : null,
@@ -88,6 +91,66 @@ async function Client({ params }: Pick<PageProps<"/admin/clients/[id]">, "params
           </Alert>
         </div>
       )}
+      <div className={c.split} style={{ marginBottom: 24 }}>
+        <Panel flush title={`Documents (${docs.length})`}>
+          {docs.length === 0 ? (
+            <p className={c.meta} style={{ padding: 20 }}>
+              No reports or proposals yet. Create one: it stays a draft until you publish it.
+            </p>
+          ) : (
+            <table className={c.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Document</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className={c.hideSm}>
+                    Last opened
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {docs.map((d) => (
+                  <tr key={d.id}>
+                    <td>
+                      <a
+                        href={`/admin/clients/${id}/documents/${d.id}`}
+                        style={{ fontWeight: 600 }}
+                      >
+                        {d.title}
+                      </a>
+                      <div className={c.meta}>
+                        {KIND_LABELS[d.kind]} ·{" "}
+                        {d.format === "blocks"
+                          ? "Built in Studio"
+                          : d.format === "interactive"
+                            ? "Interactive page"
+                            : "File"}
+                      </div>
+                    </td>
+                    <td>
+                      {d.status !== "published" ? (
+                        <Badge>Draft</Badge>
+                      ) : d.hasChanges ? (
+                        <Badge tone="warning">Live, changes waiting</Badge>
+                      ) : (
+                        <Badge tone="success">Live</Badge>
+                      )}
+                    </td>
+                    <td className={`${c.meta} ${c.hideSm} ${c.num}`}>
+                      {d.lastViewedAt ? shortDate(d.lastViewedAt) : "Not yet"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Panel>
+        {!archived && (
+          <Panel title="New document">
+            <NewDocumentForm tenantId={id} />
+          </Panel>
+        )}
+      </div>
       <div className={c.split}>
         <Panel flush title={`People (${people.length})`}>
           {people.length === 0 ? (
