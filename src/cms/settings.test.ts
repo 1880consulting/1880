@@ -19,3 +19,28 @@ describe("settings", () => {
     await expect(setSetting("inquiries.alertRecipients", ["not-an-email"])).rejects.toThrow();
   });
 });
+
+describe("menus setting", () => {
+  it("is empty until first saved, then keeps what was saved", async () => {
+    expect(await getSetting("site.menus")).toBeNull();
+    const menus = {
+      main: [{ label: "About", href: "/about" }],
+      button: null,
+      footer: [],
+      showEmail: false,
+    };
+    await setSetting("site.menus", menus);
+    expect(await getSetting("site.menus")).toEqual(menus);
+  });
+
+  it("refuses unsafe links even if they get past the editor", async () => {
+    await expect(
+      setSetting("site.menus", {
+        main: [{ label: "x", href: "javascript:alert(1)" }],
+        button: null,
+        footer: [],
+        showEmail: false,
+      }),
+    ).rejects.toThrow();
+  });
+});

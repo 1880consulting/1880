@@ -81,7 +81,7 @@ npm run build
 | `src/app/(portal)/portal/` | Client portal, served at `<PORTAL_SUBDOMAIN>.1880.io` |
 | `src/app/api/health/` | Uptime check: 200 when the site and database work, 503 when not |
 | `src/lib/security-headers.ts` | Security headers for every response, applied in `src/proxy.ts` |
-| `src/cms/` | The CMS engine: content (`content/`), the page editor (`editor/`), the media library (`media/`), inquiries, settings, email, sign-in, admin UI (`ui/`) |
+| `src/cms/` | The CMS engine: content (`content/`), the page editor (`editor/`), the media library (`media/`), menus (`menus/`), inquiries, settings, email, sign-in, admin UI (`ui/`) |
 | `src/site/cms.ts` | 1880's content types: which blocks a page can use, and reserved addresses |
 | `src/lib/db/` | Database connection and tables (`schema.ts`). `npm run db:generate` turns a schema change into a numbered migration in `drizzle/` |
 | `src/cms/ui/` | Admin building blocks in the 1880 OS look |
