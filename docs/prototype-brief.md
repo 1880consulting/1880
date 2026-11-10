@@ -1,10 +1,10 @@
 # Prototype brief (for Claude Design)
 
-Two clickable prototypes get built before any production code: **A. the public site** (`1880.io`) and **B. the client portal** (`clients.1880.io/<client>`). Once approved, they become the visual and behavioral spec.
+Two clickable prototypes get built before any production code: **A. the public site** (`1880.io`) and **B. the client portal** (`hub.1880.io/<client>`). Once approved, they become the visual and behavioral spec.
 
 The CMS admin doesn't need its own prototype. It uses the 1880 OS design system (PLAN D30, `design-system/1880-os/`).
 
-`clients.1880.io` is a working name; the portal subdomain isn't decided yet (PLAN D18).
+The portal lives at `hub.1880.io` (PLAN D44).
 
 ---
 
@@ -34,7 +34,7 @@ The CMS admin doesn't need its own prototype. It uses the 1880 OS design system 
 | Insights / news | *Optional.* Not a CMS collection in v1 (PLAN D23); design it only if you want it for later |
 | Team | *Optional.* Not a CMS collection in v1 (PLAN D23); can be a normal page built from blocks |
 | Contact | Form (name, email, company, message, maybe "what do you need help with"), success state, error state |
-| Client sign-in link | Small link in the header or footer to `clients.1880.io` |
+| Client sign-in link | Small link in the header or footer to `hub.1880.io` |
 | Privacy | Plain legal text page |
 | 404 | Friendly not-found page |
 
@@ -46,7 +46,7 @@ The CMS admin doesn't need its own prototype. It uses the 1880 OS design system 
 
 ---
 
-## B. Client portal (`clients.1880.io`)
+## B. Client portal (`hub.1880.io`)
 
 Clients can only **view and download**. Only the 1880 team adds content.
 

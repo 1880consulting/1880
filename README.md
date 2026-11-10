@@ -1,6 +1,6 @@
 # 1880
 
-Source for **1880.io** (public website + the 1880 Studio CMS) and a private client portal for reports and proposals (subdomain to be decided; `clients.1880.io` for now).
+Source for **1880.io** (public website + the 1880 Studio CMS) and a private client portal for reports and proposals at `hub.1880.io`.
 
 > 🚧 Early build: the app is scaffolded with placeholder pages. Real pages come after the prototypes.
 > - Plan: **[docs/PLAN.md](docs/PLAN.md)**
@@ -10,7 +10,7 @@ Source for **1880.io** (public website + the 1880 Studio CMS) and a private clie
 
 - One Next.js 16 app:
   - `1880.io`: public site, CMS at `/admin`
-  - `clients.1880.io/<client>`: gated client portal
+  - `hub.1880.io/<client>`: gated client portal
 - MySQL + Drizzle ORM
 - Our own CMS (1880 Studio), built as a reusable engine
 - Hosting (Hostinger, on the client's plan) is on hold. GitHub only for now
@@ -53,7 +53,7 @@ Then open:
 
 - http://localhost:3000: public site (`1880.io`)
 - http://localhost:3000/admin: 1880 Studio (the CMS)
-- http://clients.localhost:3000/acme: client portal (works in Chrome and Edge with no setup)
+- http://hub.localhost:3000/acme: client portal (works in Chrome and Edge with no setup)
 
 ## Checks
 

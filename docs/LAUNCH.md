@@ -50,11 +50,11 @@ it whole each time.
 | `SITE_URL` | the staging address Hostinger gives you, e.g. `https://xyz.hostingersite.com` | `https://1880.io` |
 | `SITE_INDEXING` | `off` (keeps search engines out) | *(leave out)* |
 | `SITE_ROLE` | `all` | `all` |
-| `PORTAL_SUBDOMAIN` | `clients` (or the chosen name, PLAN open question 6) | same |
+| `PORTAL_SUBDOMAIN` | `hub` | same |
 | `PORTAL_URL` | the staging portal address, if it isn't `SITE_URL` with the subdomain in front | *(leave out)* |
 | `RESEND_API_KEY` | from step 6 (until then, leave out: sign-in links are shown in Studio or need a password) | same |
 | `MAIL_FROM` | `1880 Consulting <notifications@1880consulting.com>` (PLAN open question 2) | same |
-| `PLAUSIBLE_DOMAIN` | *(leave out)* | `1880.io`, once analytics is decided (open question 8) |
+| `PLAUSIBLE_DOMAIN` | *(leave out)* | `1880.io`, once analytics is decided (open question 7) |
 
 `SITE_URL` is built into pages, so changing it needs a rebuild (redeploy).
 
@@ -89,19 +89,19 @@ home page into the CMS. Then sign in at `<address>/admin`, invite the team
 
 ## 5. DNS for 1880.io (Drew, at GoDaddy)
 
-1. In hPanel, add `1880.io`, `www.1880.io` and `clients.1880.io` (or the chosen portal subdomain) to the app. Hostinger shows the address to point them at.
+1. In hPanel, add `1880.io`, `www.1880.io` and `hub.1880.io` to the app. Hostinger shows the address to point them at.
 2. At GoDaddy, in the `1880.io` zone (new domain, nothing to preserve):
 
 | Type | Name | Value |
 |---|---|---|
 | A | `@` | Hostinger's IP |
 | CNAME | `www` | `1880.io` |
-| A | `clients` | Hostinger's IP |
+| A | `hub` | Hostinger's IP |
 
 3. Wait for HTTPS certificates to appear in hPanel (minutes to a few hours).
 
 **Check:** `https://1880.io/api/health` answers, `https://www.1880.io` goes to
-`https://1880.io`, and `https://clients.1880.io` shows the portal's sign-in page.
+`https://1880.io`, and `https://hub.1880.io` shows the portal's sign-in page.
 
 ## 6. Email through Resend (Drew, with a heads-up to IT)
 
@@ -136,7 +136,7 @@ and email to `@1880consulting.com` still arrives.
 
 1. In Google Search Console, add `1880.io` and submit `https://1880.io/sitemap.xml`.
 2. If `1880consulting.com` is in Search Console, use **Change of address** to `1880.io`.
-3. Today's site uses Google Analytics (`G-FNXWW6CRNM`); the new site has Plausible ready (open question 8).
+3. Today's site uses Google Analytics (`G-FNXWW6CRNM`); the new site has Plausible ready (open question 7).
 
 ## 9. Keep it running (Drew)
 

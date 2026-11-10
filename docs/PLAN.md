@@ -16,7 +16,7 @@ Last updated: 2026-11-09
 | D5 | **Only the 1880 team** creates and edits content. Clients view and download | Nov 9, Drew |
 | D6 | Public site gets a **custom, modern CMS** (WordPress-easy, much better). "Best infrastructure for a modern CMS" is the goal (see §3) | Nov 9, Drew |
 | D7 | **Nothing is live on `1880.io` today.** The business currently uses **`1880consulting.com`** | Nov 9, Drew |
-| D8 | Client portal is **one app at one address**: **`<portal subdomain>.1880.io/<client-name>`**. No per-client subdomains. The subdomain itself is **not decided yet** (D18) | Nov 9, Drew |
+| D8 | Client portal is **one app at one address**: **`<portal subdomain>.1880.io/<client-name>`**. No per-client subdomains. The subdomain is **`hub`**: `hub.1880.io` (D44) | Nov 9, Drew |
 | D9 | Drew builds **both prototypes (public site + client portal) in Claude Design first** and hands them off. The build follows the approved prototypes (see `docs/prototype-brief.md`) | Nov 9, Drew |
 | D10 | Every client's area is **gated**: sign-in required, and each person sees only the clients they've been invited to | Nov 9, Drew |
 | D11 | **`1880consulting.com` redirects to `1880.io`** at launch. **Email stays on `1880consulting.com`** and belongs to 1880's IT team: we never touch its mail records | Nov 9, Drew |
@@ -26,7 +26,7 @@ Last updated: 2026-11-09
 | D15 | Site emails (magic links, contact alerts, "new report" notices) **send from `1880consulting.com`** for now | Nov 9, Drew |
 | D16 | **`1880consulting.com` DNS is at GoDaddy, and Drew makes the changes** (web records at launch, Resend sending records) | Nov 9, Drew |
 | D17 | Font: ship the free **Libre Bodoni** only. **Later:** *LTC Bodoni 175 Pro*, the system's preferred face, once a web license is bought (the font stack already lists it first, so adding it is a drop-in) | Nov 9, Drew |
-| D18 | **Portal subdomain not decided.** `clients.1880.io` is a working name only. The app reads it from the `PORTAL_SUBDOMAIN` setting (default `clients`), so changing it later is a config change. **Focus now is `1880.io`** (public site + CMS); the portal follows | Nov 9, Drew |
+| D18 | **Portal subdomain not decided.** `clients.1880.io` is a working name only. The app reads it from the `PORTAL_SUBDOMAIN` setting (default `clients`), so changing it later is a config change. **Focus now is `1880.io`** (public site + CMS); the portal follows. *Superseded by D44: the portal is `hub.1880.io`.* | Nov 9, Drew |
 | D19 | **We build our own CMS.** Metro RES (`jmediagroup/metrores-web`) was only a reference; nothing is ported from it | Nov 9, Drew |
 | D20 | **Repo:** `1880consulting/1880` on GitHub | Nov 9, Drew |
 | D21 | CMS roles: **owner + editors.** Owners manage people and settings; editors write and publish | Nov 9, Drew |
@@ -48,10 +48,11 @@ Last updated: 2026-11-09
 | D37 | **Menus and footer are editable** in Studio (Menus and footer): the top menu's links (up to 5), an optional menu button, the footer's links (up to 8, e.g. LinkedIn) and whether the footer shows the email address. Saving publishes at once (one cache tag on every page) and is logged. Links must be a page (`/…`), a section (`/#…`), a web address (`https://…`) or `mailto:`; `javascript:`, `data:` and `//other-site` are refused. Links to other sites open in a new tab. Until the first save the site shows the built-in menus. The email address itself stays in code (D28) | Nov 10, Drew |
 | D38 | **Case studies and services are built** (D23). Case studies live at `/work/<address>` (client, summary, cover image, services, results), services at `/services/<address>` (summary, cover image, order); both can add sections. `/work` lists case studies newest first with service filters (in the browser, so the page stays static); `/services` lists services in their set order; each service page shows the case studies that use it. The engine now supports a content type's own fields (`ContentType.fields`, forms built from the schema like blocks), number fields and references to other entries (`.meta({ ref: "service" })`). Studio's Pages, Case studies and Services share one list, editor (with live preview) and history. Publishing a service refreshes the case studies that name it, and the other way round | Nov 10, Drew |
 | D39 | **SEO is built.** Each page, case study and service has a search title and description (with length guidance), a share image (falls back to the cover) and "hide from search engines", with Google and share previews in the editor. Share images are 1200×630 JPEGs cropped at the focal point, made on first request and stored. Every page gets canonical, Open Graph and Twitter tags; the home page carries Organization structured data, case studies Article and services Service. `/sitemap.xml`, `/robots.txt` and `/llms.txt` list live, indexable pages and refresh on publish. Absolute URLs come from `SITE_URL` at build time. Icons are generated from the 1880 mark | Nov 10, Drew |
-| D40 | **Analytics and the quality bar.** Plausible is wired in and switched on by `PLAUSIBLE_DOMAIN` (off until the account exists and open question 8 is settled); its origin joins the Content Security Policy only when it is on. Events: "Contact form sent", "Email copied". `npm run audit` checks every public page and Studio sign-in with axe (WCAG 2.2 AA, light and dark) and Lighthouse (mobile and desktop, every category ≥ 95). First run: all pages pass, scores 96–100. The statement block's scroll-lit words are faint below the reading line on purpose (screen readers get the full sentence), so the contrast check skips that copy | Nov 10, Drew |
+| D40 | **Analytics and the quality bar.** Plausible is wired in and switched on by `PLAUSIBLE_DOMAIN` (off until the account exists and open question 7 is settled); its origin joins the Content Security Policy only when it is on. Events: "Contact form sent", "Email copied". `npm run audit` checks every public page and Studio sign-in with axe (WCAG 2.2 AA, light and dark) and Lighthouse (mobile and desktop, every category ≥ 95). First run: all pages pass, scores 96–100. The statement block's scroll-lit words are faint below the reading line on purpose (screen readers get the full sentence), so the contrast check skips that copy | Nov 10, Drew |
 | D41 | **Portal foundation is built.** Staff add clients in Studio (name, URL name, logo, accent color; archive and restore) and invite their people by email; any staff member can. Clients sign in with an emailed link only (15 minutes; invites last 7 days), confirmed with one click so email scanners can't use it up. `proxy.ts` checks the session and membership **before** a client page renders, so "unknown", "archived" and "not yours" all get the same real 404; every page checks again through `src/lib/portal/`. One client goes straight in; several get a picker. The portal session cookie is host-only on the portal host, separate from Studio's. The isolation suite (`src/lib/portal/isolation.test.ts`) runs in CI. `npm run portal:seed` adds a demo client. The portal look is built on the 1880 Design System and gets restyled when the portal prototype lands | Nov 10, Drew |
 | D42 | **Reports and proposals are built.** Each client's page in Studio lists its documents and creates new ones in three formats. **Built in Studio:** the same block editor and live preview as pages, with portal sections (text, stats, image, video, files, timeline) and attachments. **Interactive page:** one uploaded `.html` file, shown full-screen in a frame sandboxed without `allow-same-origin`, under its own policy (inline code, Google Fonts and the jsDelivr, cdnjs and unpkg CDNs; no network requests). **File:** a PDF shows in a viewer; other files download. Every upload or edit is a version with restore. Publishing can email the client's people (one email each). Clients get a list with filters, search and "New" badges, print-friendly pages, and private downloads; Studio shows who opened what and when. Files are served only through the portal after the same checks, never cached. Images in documents come from the media library, whose addresses are public but unguessable, so confidential material goes in files | Nov 10, Drew |
 | D43 | **Launch is prepared; the rest is Drew's.** `docs/LAUNCH.md` is the step-by-step runbook (Hostinger app and database, env vars, first owner, staging review, GoDaddy, Resend, launch, monitoring, first client). `npm start` runs the standalone server Hostinger needs. `SITE_INDEXING=off` keeps a staging copy out of search engines. The app redirects `1880consulting.com` itself once its web records point here: `/` and `/contact/` map to their new pages, WordPress leftovers to the home page | Nov 10, Drew |
+| D44 | **Addresses decided.** The public site and 1880 Studio are at **`1880.io`**; the client portal is at **`hub.1880.io`**. `PORTAL_SUBDOMAIN` now defaults to `hub` and stays a setting | Nov 10, Drew |
 
 ---
 
@@ -61,13 +62,12 @@ Last updated: 2026-11-09
 |---|---|---|
 | **Public site** | `1880.io` (`www.1880.io` redirects here) | Everyone |
 | **1880 Studio** (the CMS) | `1880.io/admin` | 1880 team only |
-| **Client portal** | `clients.1880.io/<client>` (e.g. `clients.1880.io/acme`). Subdomain not decided (D18) | Each client's invited people |
+| **Client portal** | `hub.1880.io/<client>` (e.g. `hub.1880.io/acme`) (D44) | Each client's invited people |
 
-One CMS runs everything. The 1880 team edits the public site **and** publishes each client's reports and proposals from the same `/admin`. Clients sign in at `clients.1880.io` and see only their own area.
+One CMS runs everything. The 1880 team edits the public site **and** publishes each client's reports and proposals from the same `/admin`. Clients sign in at `hub.1880.io` and see only their own area.
 
-> **Note:** `clients.1880.io` throughout this plan is a working name for the portal address (D18).
 
-**The golden rule:** someone signed in to `clients.1880.io/acme` can never see another client's data, whatever URL they type.
+**The golden rule:** someone signed in to `hub.1880.io/acme` can never see another client's data, whatever URL they type.
 
 ---
 
@@ -85,7 +85,7 @@ One CMS runs everything. The 1880 team edits the public site **and** publishes e
 │   ├── app/
 │   │   ├── (site)/       → public pages            1880.io
 │   │   ├── admin/        → 1880 Studio CMS         1880.io/admin
-│   │   ├── (portal)/     → client portal           clients.1880.io/[client]
+│   │   ├── (portal)/     → client portal           hub.1880.io/[client]
 │   │   └── api/          → health, forms
 │   ├── cms/              → CMS core: content engine, editor, media, versions (reusable)
 │   ├── blocks/           → 1880's page blocks (component + schema per block)
@@ -98,7 +98,7 @@ One CMS runs everything. The 1880 team edits the public site **and** publishes e
 The public site, the CMS and the portal share one codebase, one design system and one database. That's what lets the team "manage it all under one app."
 
 **How it gets hosted later (on hold, D2).** The same code can run two ways:
-- **Two Hostinger sites** (recommended): one serves `1880.io`, the other `clients.1880.io`. A setting (`SITE_ROLE=public` / `portal`) tells each copy which part to serve. A problem on one can't take the other down, and the portal can run with fewer database permissions.
+- **Two Hostinger sites** (recommended): one serves `1880.io`, the other `hub.1880.io`. A setting (`SITE_ROLE=public` / `portal`) tells each copy which part to serve. A problem on one can't take the other down, and the portal can run with fewer database permissions.
 - **One Hostinger site** answering both addresses (`SITE_ROLE=all`), if the client's plan has only one Node.js slot.
 
 Both deploy from `main`. No long-lived per-site branches: they drift apart and every fix has to be copied.
@@ -112,14 +112,14 @@ Both deploy from `main`. No long-lived per-site branches: they drift apart and e
 | `1880.io/about` | Public page |
 | `1880.io/admin/...` | CMS (staff sign-in required) |
 | `www.1880.io/...` | 301 redirect to `1880.io/...` |
-| `clients.1880.io/` | Sign-in page. After sign-in: straight to your client, or a picker if you belong to several |
-| `clients.1880.io/acme/...` | Acme's area (client sign-in + Acme membership required) |
-| `clients.1880.io/unknown` **or** a client you're not invited to | The same plain "Not found" page, so nobody can tell which clients exist |
-| A portal URL on `1880.io`, or a public/admin URL on `clients.1880.io` | 404 |
+| `hub.1880.io/` | Sign-in page. After sign-in: straight to your client, or a picker if you belong to several |
+| `hub.1880.io/acme/...` | Acme's area (client sign-in + Acme membership required) |
+| `hub.1880.io/unknown` **or** a client you're not invited to | The same plain "Not found" page, so nobody can tell which clients exist |
+| A portal URL on `1880.io`, or a public/admin URL on `hub.1880.io` | 404 |
 
 **Reserved names** that can't be a client's URL name: `login`, `logout`, `auth`, `api`, `admin`, `account`, `settings`, `help`, `support`, `assets`, `static`, `images`, `files`, `health`, `robots.txt`, `sitemap.xml`, `favicon.ico`, `portal`, anything starting with `_`.
 
-**How it's built:** portal pages live under an internal `/portal` folder in `src/app/(portal)/`. `proxy.ts` rewrites `clients.1880.io/acme` to `/portal/acme`, and 404s `/portal` on `1880.io` (which is why `portal` is reserved). Checks that decide between a page and "Not found" (reserved names now, client membership in Phase 3) must finish **before** the page starts streaming, because a streamed page has already sent a `200` status. The proxy is the safest place for them.
+**How it's built:** portal pages live under an internal `/portal` folder in `src/app/(portal)/`. `proxy.ts` rewrites `hub.1880.io/acme` to `/portal/acme`, and 404s `/portal` on `1880.io` (which is why `portal` is reserved). Checks that decide between a page and "Not found" (reserved names now, client membership in Phase 3) must finish **before** the page starts streaming, because a streamed page has already sent a `200` status. The proxy is the safest place for them.
 
 ### 2.3 Keeping clients' data separate
 
@@ -128,7 +128,7 @@ All clients share one address, so the protection is in the code and the database
 1. **The client comes from the URL** (`/acme`) and is checked on the server against the signed-in person's memberships. Unknown client and "not yours" look identical (both "Not found").
 2. **A single portal data module** (`src/lib/portal/`) is the only code allowed to read client content. Every function needs the client and the signed-in person, checks membership, and every query includes `WHERE tenant_id = ?`. Portal pages never touch the database directly.
 3. **Nothing about a client is shown before sign-in.** No logo or name on the login page, so client names stay private.
-4. **Sessions:** host-only cookies. The client session lives on `clients.1880.io`, the staff session on `1880.io`. We **never** set a cookie for `.1880.io`.
+4. **Sessions:** host-only cookies. The client session lives on `hub.1880.io`, the staff session on `1880.io`. We **never** set a cookie for `.1880.io`.
 5. **Random IDs** for documents and files, never 1, 2, 3…
 6. **Files are streamed through the portal** after the same check, with `Cache-Control: private, no-store`, so no CDN ever caches them.
 7. **Portal is always `noindex`** and blocked in `robots.txt`.
@@ -216,7 +216,7 @@ Every document (report, proposal, other) has a type, a title and a status, plus 
 **How interactive pages work (format 2):**
 - **Authoring** follows the letswork approach: one self-contained HTML file (CSS, JS and images embedded), responsive, respecting reduced motion, ideally using the 1880 design system. Data-driven pages (letswork's `PROJECT`-object dashboards) work as-is.
 - **Uploading:** in the document editor, "Upload interactive page" stores the file through the storage adapter. Re-uploading creates a new version (undo and roll back work as for everything else).
-- **Viewing:** the client opens `clients.1880.io/acme/d/<id>`. The portal checks membership, then shows the page full-screen inside a **sandboxed frame**, under a slim portal bar (back to documents, sign out).
+- **Viewing:** the client opens `hub.1880.io/acme/d/<id>`. The portal checks membership, then shows the page full-screen inside a **sandboxed frame**, under a slim portal bar (back to documents, sign out).
 - **Why sandboxed:** custom pages run their own JavaScript. The sandbox gives them no access to the portal's session, so even a buggy or copy-pasted script can't reach other documents or other clients. Because of the sandbox, pages must be **self-contained**: no loading images or scripts from the portal by relative paths. External fonts and libraries only from an allow-list (fonts, a charting CDN), set in the page's security policy.
 - **Later (not v1):** multi-file bundles (`.zip` with an `assets/` folder) served with short-lived signed links, for pages too large to embed everything.
 
@@ -264,7 +264,7 @@ document_events    id, document_id, tenant_id, client_user_id, kind(view|downloa
 
 ### 4.1 Domains
 - `1880.io`: new, nothing live (D7). Public site + CMS.
-- `clients.1880.io`: client portal.
+- `hub.1880.io`: client portal.
 - `1880consulting.com`: today's domain. At launch its **website** records point at the public site, which 301-redirects every URL to the matching `1880.io` page (D11). Its **email** records (MX, SPF, DKIM, DMARC, autodiscover…) are 1880 IT's and are **never changed**. Before launch, list the current site's URLs and map each to its new page.
 
 GoDaddy records needed at launch (once hosting exists). Drew makes all of them (D16):
@@ -287,7 +287,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 ### 4.3 Environments (until hosting resumes)
 | Env | Where |
 |---|---|
-| Local | `localhost:3000` (public + `/admin`) and `clients.localhost:3000` (portal), works in Chrome/Edge with no setup. MySQL in Docker (`docker compose up`) |
+| Local | `localhost:3000` (public + `/admin`) and `hub.localhost:3000` (portal), works in Chrome/Edge with no setup. MySQL in Docker (`docker compose up`) |
 | CI | GitHub Actions with a throwaway MySQL service |
 | Staging / production | Later, on the client's Hostinger plan |
 
@@ -312,7 +312,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 ### Phase 0: Repo foundation (no design or hosting needed, can start now)
 - [x] Scaffold Next.js 16 at the repo root, TypeScript strict, ESLint, Prettier
 - [x] Docker MySQL for local dev, Drizzle schema + first migration (`inquiries`, `settings`)
-- [x] `proxy.ts` hostname routing (`1880.io` / `clients.1880.io`), reserved names, `SITE_ROLE`
+- [x] `proxy.ts` hostname routing (`1880.io` / `hub.1880.io`), reserved names, `SITE_ROLE`
 - [x] Staff sign-in (password + emailed link), owner/editor roles, rate limits, activity log, mail via Resend (D33)
 - [x] Security headers, health check that includes the database (D34)
 - [x] GitHub Actions CI: lint, typecheck, unit tests, build
@@ -372,9 +372,8 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 3. **Client sign-in:** is a magic link fine for everyone at launch?
 4. **Client URL names:** readable (`/acme`) is the default. Any clients whose name must stay discreet (e.g. a code name)?
 5. **Who on the 1880 team needs CMS access**, and who is the owner?
-6. **Portal subdomain:** which subdomain of `1880.io` should the client portal use? (D18)
-7. **LTC Bodoni 175 on the web:** today's site loads it from an Adobe Fonts kit (`exu1qnt`). If 1880's Adobe Creative Cloud plan includes it, adding `1880.io` to that kit's web project would let the new site use it instead of Libre Bodoni (D17). Who owns that Adobe account?
-8. **Analytics:** today's site uses Google Analytics 4 (`G-FNXWW6CRNM`) with a cookie banner. The plan says Plausible (cookieless, no banner). Keep GA4, switch to Plausible, or both for a while?
+6. **LTC Bodoni 175 on the web:** today's site loads it from an Adobe Fonts kit (`exu1qnt`). If 1880's Adobe Creative Cloud plan includes it, adding `1880.io` to that kit's web project would let the new site use it instead of Libre Bodoni (D17). Who owns that Adobe account?
+7. **Analytics:** today's site uses Google Analytics 4 (`G-FNXWW6CRNM`) with a cookie banner. The plan says Plausible (cookieless, no banner). Keep GA4, switch to Plausible, or both for a while?
 
 **Parked for later:** buying a web license for *LTC Bodoni 175 Pro* (D17).
 
@@ -385,7 +384,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 - **CMS:** the admin where the team edits content without touching code.
 - **Block:** a pre-designed page section (hero, text, quote…) editors fill in. Layout and style stay locked to the brand.
 - **Version:** a saved snapshot of a page or document. Lets you undo or roll back.
-- **Tenant / client:** one client organization, with its own private area at `clients.1880.io/<name>`.
+- **Tenant / client:** one client organization, with its own private area at `hub.1880.io/<name>`.
 - **Magic link:** sign in by clicking a one-time link emailed to you.
 - **Interactive page:** a custom, self-contained HTML landing page (like the letswork pages) uploaded as a portal document.
 - **Sandboxed frame:** a locked-down window inside the portal page that runs an interactive page without giving it access to the portal.

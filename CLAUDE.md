@@ -5,7 +5,7 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
 ## Ground rules
 - **One Next.js 16 app at the repo root** serving three surfaces, routed by hostname in `src/proxy.ts`:
   - `1880.io`: public site; `1880.io/admin`: the CMS (1880 Studio).
-  - `clients.1880.io/<client>`: client portal, one app for all clients (path-based, no per-client subdomains). The subdomain is **not decided**; `clients` is a working name read from `PORTAL_SUBDOMAIN`. Never hard-code it.
+  - `hub.1880.io/<client>`: client portal, one app for all clients (path-based, no per-client subdomains). The subdomain is `hub` (PLAN D44), read from `PORTAL_SUBDOMAIN` (default `hub`). Never hard-code it.
 - **Current focus: `1880.io`** (public site + CMS). The portal comes after.
   - `SITE_ROLE` (`public` | `portal` | `all`) limits what a deployment serves. Wrong-role routes must 404, enforced in `proxy.ts` **and** in each route group's layout.
 - **No deployments for now.** When hosting resumes, follow `docs/LAUNCH.md`. Production runs the standalone build with `npm start` (`scripts/start.mjs`); `next start` is `npm run start:next`.
@@ -30,7 +30,7 @@ Read `docs/PLAN.md` first. It is the source of truth for architecture, decisions
   - Portal server actions never call `redirect()`: Next.js renders the target inside the same request, skipping the proxy's `/portal` rewrite, so 1880.io's pages would appear on the portal host. Return the address and use `src/portal/ActionButton.tsx` (a full page load). Links (`<Link>`) are fine.
   - Documents (PLAN D42) live in `src/lib/portal/documents.ts`: Studio functions first, then portal functions that always take the client's id. Portal blocks are in `src/portal/blocks/` (schema + `PortalBlocks`); a new one goes in `PORTAL_BLOCKS` and the `portalBlockSchema` union, and needs no editor code. Files are served only by the routes under `src/app/(portal)/portal/[client]/d/[id]/` and `src/app/admin/documents/`, through `src/lib/portal/serve.ts`.
   - Framing rules per address are in `frameContext()` (`src/lib/security-headers.ts`). Every portal page shares one policy, because in-app navigation keeps the first page's policy; keep it that way.
-  - `npm run portal:seed` adds a demo client (`/demo`) and prints a sign-in link. Locally the portal is at `clients.localhost:3000`.
+  - `npm run portal:seed` adds a demo client (`/demo`) and prints a sign-in link. Locally the portal is at `hub.localhost:3000`.
 - Only 1880 staff create content. Clients can view and download, never edit. Proposals are view-only (no e-sign). Build the v1 column in PLAN §5; don't overbuild.
 - Portal documents come in three formats: CMS blocks, **interactive pages** (self-contained HTML, like letswork-jmg pages) and files. Interactive pages always render in a sandboxed iframe **without** `allow-same-origin`, behind the membership check.
 - Email: site emails send from `1880consulting.com` via Resend. That domain's mailboxes belong to 1880's IT: only **add** Resend's records; never change its existing MX/SPF/DKIM/DMARC records. Drew makes all GoDaddy DNS changes.
