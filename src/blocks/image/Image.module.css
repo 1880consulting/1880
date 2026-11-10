@@ -1,0 +1,45 @@
+.figure {
+  margin: 0;
+  /* Clears the floating nav when an image is a page's first section. */
+  padding-block: 112px 64px;
+}
+
+.full {
+  padding-block: 0;
+}
+
+.img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Edge to edge, never taller than the screen; crops keep the focal point. */
+.full .img {
+  max-height: 100svh;
+  object-fit: cover;
+}
+
+.caption {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-rule);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-muted);
+  max-width: var(--measure);
+}
+
+.full .caption {
+  max-width: calc(var(--max-width) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  border-top: 0;
+}
+
+.missing {
+  padding: 48px;
+  border: 1px dashed var(--color-rule-strong);
+  color: var(--color-muted);
+  text-align: center;
+}

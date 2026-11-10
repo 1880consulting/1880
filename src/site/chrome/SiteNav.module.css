@@ -1,0 +1,255 @@
+.skip {
+  position: fixed;
+  left: 16px;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  z-index: 1000;
+  background: #fff;
+  color: var(--color-charcoal);
+  padding: 8px 12px;
+  font: 600 14px/20px var(--font-serif);
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 0.7s var(--ease);
+}
+
+.skip:focus {
+  transform: none;
+}
+
+.nav {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 24px);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.bar {
+  pointer-events: auto;
+  margin: 0 auto;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 8px 8px 8px 24px;
+  background: rgba(35, 31, 32, 0.72);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  animation: navIn 1.2s var(--ease-slow) 1.6s both;
+}
+
+@keyframes navIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.logo {
+  display: block;
+  width: 120px;
+  line-height: 0;
+  color: #fff;
+}
+
+.logo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.links a {
+  font: 600 14px/20px var(--font-serif);
+  color: #fff;
+  text-decoration: none;
+  padding-block: 4px;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.7s var(--ease);
+}
+
+.links a:hover,
+.links a[aria-current] {
+  border-bottom-color: #fff;
+}
+
+.cta {
+  font: 600 14px/20px var(--font-serif);
+  padding: 8px 12px;
+  background: #fff;
+  color: var(--color-charcoal);
+  border: 1px solid #fff;
+  text-decoration: none;
+  transition:
+    background-color 0.7s var(--ease),
+    color 0.7s var(--ease);
+}
+
+.cta:hover {
+  background: transparent;
+  color: #fff;
+}
+
+.cta:active {
+  transform: scale(0.98);
+}
+
+.nav :focus-visible,
+.menu :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.burger {
+  display: none;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 0;
+}
+
+.burger span {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 1px;
+  background: #fff;
+  transition:
+    transform 0.7s var(--ease),
+    top 0.7s var(--ease);
+}
+
+.burger span:nth-child(1) {
+  top: 15px;
+}
+
+.burger span:nth-child(2) {
+  top: 23px;
+}
+
+.burger[aria-expanded="true"] span:nth-child(1) {
+  top: 19px;
+  transform: rotate(45deg);
+}
+
+.burger[aria-expanded="true"] span:nth-child(2) {
+  top: 19px;
+  transform: rotate(-45deg);
+}
+
+@media (max-width: 720px) {
+  .links,
+  .cta {
+    display: none;
+  }
+
+  .burger {
+    display: block;
+  }
+
+  .bar {
+    width: calc(100% - 32px);
+    justify-content: space-between;
+    padding-left: 16px;
+  }
+}
+
+.menu {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: rgba(35, 31, 32, 0.86);
+  backdrop-filter: blur(64px);
+  color: #fff;
+  display: grid;
+  align-content: center;
+  padding-inline: 24px;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.7s var(--ease),
+    visibility 0.7s;
+}
+
+.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 24px;
+}
+
+.menu a {
+  display: inline-block;
+  font: 400 36px/40px var(--font-serif);
+  color: #fff;
+  text-decoration: none;
+  transform: translateY(48px);
+  opacity: 0;
+  transition:
+    transform 0.7s var(--ease),
+    opacity 0.7s var(--ease);
+}
+
+.open a {
+  transform: none;
+  opacity: 1;
+}
+
+.open li:nth-child(1) a {
+  transition-delay: 0.1s;
+}
+
+.open li:nth-child(2) a {
+  transition-delay: 0.15s;
+}
+
+.open li:nth-child(3) a {
+  transition-delay: 0.2s;
+}
+
+.open li:nth-child(4) a {
+  transition-delay: 0.25s;
+}
+
+.open li:nth-child(5) a {
+  transition-delay: 0.3s;
+}
+
+.open li:nth-child(n + 6) a {
+  transition-delay: 0.35s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+  }
+
+  .skip,
+  .menu,
+  .menu a,
+  .burger span {
+    transition: none;
+  }
+}

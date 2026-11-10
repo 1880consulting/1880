@@ -1,0 +1,189 @@
+.hero {
+  overflow: hidden;
+  min-height: max(720px, 100svh);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.inner {
+  position: relative;
+  z-index: 2;
+  --wrap-gap: 32px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 160px);
+  padding-bottom: clamp(180px, 30vw, 380px);
+}
+
+.title {
+  margin: 0;
+  font-size: 72px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  max-width: 12em;
+  text-wrap: balance;
+}
+
+.sub {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  color: var(--color-muted);
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+.cta {
+  margin-top: 16px;
+  animation: lateIn 1.4s var(--ease-slow) 1.8s both;
+}
+
+/* Word-by-word rise */
+.word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(8px);
+  animation: wordIn 1.4s var(--ease-slow) both;
+}
+
+@keyframes wordIn {
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes lateIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Hairline + giant mark */
+.art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(env(safe-area-inset-top, 0px) + 112px);
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  transform-origin: left;
+  animation: draw 1.8s var(--ease-slow) 0.1s both;
+}
+
+.mark {
+  position: absolute;
+  left: max(32px, env(safe-area-inset-left, 0px));
+  right: max(32px, env(safe-area-inset-right, 0px));
+  bottom: 0;
+}
+
+.mark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: translateY(30%);
+  overflow: visible;
+}
+
+.digits {
+  fill: #fff;
+  opacity: 0.08;
+  animation: markRise 2.4s var(--ease-slow) 0.2s both;
+}
+
+.dot {
+  fill: #fff;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dotIn 1.2s var(--ease-slow) 1.9s both;
+}
+
+@keyframes draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes markRise {
+  from {
+    opacity: 0;
+    transform: translateY(80px);
+  }
+  to {
+    opacity: 0.08;
+    transform: none;
+  }
+}
+
+@keyframes dotIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 900px) {
+  .title {
+    font-size: 60px;
+  }
+}
+
+@media (max-width: 720px) {
+  .mark {
+    left: 16px;
+    right: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .title {
+    font-size: 48px;
+  }
+
+  .sub {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .inner {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 128px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word,
+  .cta,
+  .line,
+  .digits,
+  .dot {
+    animation: none;
+  }
+
+  .word {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}

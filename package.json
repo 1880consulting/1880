@@ -1,0 +1,56 @@
+{
+  "name": "1880",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "node scripts/start.mjs",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "tokens:os": "node scripts/build-os-tokens.mjs",
+    "db:up": "docker compose up -d --wait",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs migrate",
+    "db:studio": "drizzle-kit studio",
+    "studio:owner": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/studio-owner.mts",
+    "cms:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/cms-seed.mts",
+    "audit": "node scripts/audit.mjs",
+    "portal:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/portal-seed.mts",
+    "postbuild": "node scripts/postbuild.mjs",
+    "start:next": "next start"
+  },
+  "dependencies": {
+    "@tabler/icons-react": "^3.49.0",
+    "drizzle-orm": "^0.45.4",
+    "mysql2": "^3.24.6",
+    "next": "16.4.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.5",
+    "eslint-config-prettier": "^10.1.8",
+    "lighthouse": "^12.8.2",
+    "playwright": "1.63.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

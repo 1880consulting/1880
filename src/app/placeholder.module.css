@@ -1,0 +1,15 @@
+.main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 96px var(--gutter);
+}
+
+.label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border-bottom: 1px solid var(--color-rule);
+  padding-bottom: 8px;
+  margin-bottom: 32px;
+}

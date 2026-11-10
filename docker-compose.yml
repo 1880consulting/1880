@@ -1,0 +1,24 @@
+# Local MySQL for development: `docker compose up -d`
+# Matches production (Hostinger's MySQL 8). Data lives in the `mysql-data` volume.
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: studio
+      MYSQL_USER: studio
+      MYSQL_PASSWORD: studio
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./scripts/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ustudio", "-pstudio"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  mysql-data:

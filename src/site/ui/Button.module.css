@@ -1,0 +1,70 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 12px 24px;
+  border: 1px solid var(--color-ink);
+  border-radius: 0;
+  background: var(--color-ink);
+  color: var(--color-surface);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.7s var(--ease),
+    color 0.7s var(--ease),
+    border-color 0.7s var(--ease),
+    transform 0.7s var(--ease);
+}
+
+.button:hover,
+.button:focus-visible {
+  background: transparent;
+  color: var(--color-ink);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-ink);
+  border-color: var(--color-rule-strong);
+}
+
+.ghost:hover {
+  border-color: var(--color-ink);
+}
+
+/* Drawn arrow after the label (Libre Bodoni has no arrow glyph). */
+.arrow::after {
+  content: "";
+  display: inline-block;
+  width: 22px;
+  height: 10px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 10'%3E%3Cpath d='M0 5H21M16.5.5L21 5l-4.5 4.5' fill='none' stroke='black' stroke-width='1'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  transition: transform 0.7s var(--ease);
+}
+
+.arrow:hover::after {
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .arrow::after {
+    transition: none;
+  }
+}
