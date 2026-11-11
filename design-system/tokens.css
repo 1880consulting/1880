@@ -23,6 +23,15 @@
     var(--font-libre-bodoni, "Libre Bodoni"), var(--font-libre-bodoni-ext, "Libre Bodoni"), Georgia,
     "Times New Roman", serif;
 
+  /*
+   * Body copy (PLAN D48): Neue Haas Grotesk Text, from an Adobe Fonts kit when
+   * ADOBE_FONTS_KIT is set (it's a paid face, so it can't be bundled). Until
+   * then, Helvetica Neue (its descendant, on every Apple device), then Arial.
+   */
+  --font-sans:
+    "neue-haas-grotesk-text", "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk Text",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-slow: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -44,6 +53,11 @@
     "ltc-bodoni-175", "LTC Bodoni 175 Pro", "LTC Bodoni 175",
     var(--font-libre-bodoni, "Libre Bodoni"), var(--font-libre-bodoni-ext, "Libre Bodoni"), Georgia,
     "Times New Roman", serif;
+  font-family: var(--font-sans);
+}
+
+/* Bodoni for headings; Neue Haas Grotesk for everything else. */
+:is([data-site], [data-portal]) :is(h1, h2, h3, h4, h5, h6) {
   font-family: var(--font-serif);
 }
 

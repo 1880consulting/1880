@@ -56,6 +56,7 @@ Last updated: 2026-11-09
 | D45 | **Google tools and Resend.** Analytics is **Google Analytics 4** (`GA_MEASUREMENT_ID`, the same property as today's site, `G-FNXWW6CRNM`), on the public site only; Plausible is dropped. **Google Search Console** tracks the site (a Domain property for `1880.io`, and a change of address from `1880consulting.com`). Email goes through **Resend**, as planned | Nov 11, Drew |
 | D46 | **Live on Hostinger as two apps.** `1880.io` went live on Nov 11 as a Node.js app (`SITE_ROLE=public`: the public site and Studio). The client portal is a second Node.js app from the same repo and database at `hub.1880.io` (`SITE_ROLE=portal`, `SKIP_MIGRATIONS=1`, so only the first app updates the database). `npm run build` applies migrations first, because Hostinger runs plain `npm run build` | Nov 11, Drew |
 | D47 | **First owner from the browser.** `/admin/setup` creates the first Studio owner with a code from `STUDIO_SETUP_TOKEN`, and loads today's home page into Studio. It exists only while Studio has no owner and the code is set (the proxy answers a real 404 otherwise), refuses wrong codes with a rate limit, and logs every try. `npm run studio:owner` stays for recovery | Nov 11, Drew |
+| D48 | **Two typefaces.** Headings (and display lines) stay **Bodoni**; body copy, navigation, buttons and forms are **Neue Haas Grotesk** (Text), on the public site and the portal. It's a paid face, so it comes from an **Adobe Fonts kit** (`ADOBE_FONTS_KIT`); until the kit is set, Helvetica Neue (its descendant, on every Apple device) then Arial stand in. Studio keeps Inter (1880 OS) | Nov 11, Drew |
 
 ---
 
@@ -375,7 +376,7 @@ Known Hostinger quirks: env vars are a full replace and can't be read back; `NEX
 3. **Client sign-in:** is a magic link fine for everyone at launch?
 4. **Client URL names:** readable (`/acme`) is the default. Any clients whose name must stay discreet (e.g. a code name)?
 5. **Who on the 1880 team needs CMS access**, and who is the owner?
-6. **LTC Bodoni 175 on the web:** today's site loads it from an Adobe Fonts kit (`exu1qnt`). If 1880's Adobe Creative Cloud plan includes it, adding `1880.io` to that kit's web project would let the new site use it instead of Libre Bodoni (D17). Who owns that Adobe account?
+6. **LTC Bodoni 175 on the web:** today's site loads it from an Adobe Fonts kit (`exu1qnt`). If 1880's Adobe Creative Cloud plan includes it, adding `1880.io` to that kit's web project would let the new site use it instead of Libre Bodoni (D17). Who owns that Adobe account? The same Adobe Fonts kit can serve Neue Haas Grotesk (D48): one kit, with `1880.io` and `hub.1880.io` added to its web project.
 
 **Parked for later:** buying a web license for *LTC Bodoni 175 Pro* (D17).
 

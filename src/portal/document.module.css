@@ -81,6 +81,7 @@
 }
 
 .stat dd {
+  font-family: var(--font-serif);
   margin: 0 0 8px;
   font-size: 44px;
   line-height: 1.1;
@@ -196,6 +197,7 @@
 }
 
 .milestoneTitle {
+  font-family: var(--font-serif);
   margin: 2px 0 0;
   font-size: 20px;
 }

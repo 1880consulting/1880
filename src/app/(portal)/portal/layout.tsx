@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireSurface } from "@/lib/site-role";
 import s from "@/portal/portal.module.css";
+import { FontKit } from "@/site/FontKit";
 import { libreBodoni, libreBodoniExt } from "@/site/fonts";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   requireSurface("portal");
   return (
     <div className={`${s.page} ${libreBodoni.variable} ${libreBodoniExt.variable}`} data-portal>
+      <FontKit />
       {children}
     </div>
   );

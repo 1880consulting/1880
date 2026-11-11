@@ -65,6 +65,12 @@
   font-weight: 400;
 }
 
+/* Display lines are Bodoni, even when they aren't headings (e.g. a closing line). */
+.huge,
+.big {
+  font-family: var(--font-serif);
+}
+
 .huge {
   font-size: 72px;
   line-height: 1;

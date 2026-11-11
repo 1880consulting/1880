@@ -3,6 +3,7 @@ import { SiteFooter } from "@/site/chrome/SiteFooter";
 import { SiteNav } from "@/site/chrome/SiteNav";
 import { site } from "@/site/content";
 import { getMenus } from "@/site/menus";
+import { FontKit } from "@/site/FontKit";
 import { libreBodoni, libreBodoniExt } from "@/site/fonts";
 
 /** Studio's live preview: the public site's look, inside the editor's frame. */
@@ -10,6 +11,7 @@ export default async function PreviewLayout({ children }: { children: React.Reac
   const menus = await getMenus();
   return (
     <div data-site className={`${libreBodoni.variable} ${libreBodoniExt.variable}`}>
+      <FontKit />
       <Suspense>
         <SiteNav links={menus.main} cta={menus.button} />
       </Suspense>
