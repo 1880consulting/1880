@@ -112,6 +112,7 @@ export const STUDIO_PUBLIC_PATHS = [
   "/admin/link",
   "/admin/set-password",
   "/admin/forgot",
+  "/admin/setup",
 ];
 
 function isStudioPath(pathname: string): boolean {

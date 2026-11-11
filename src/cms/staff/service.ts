@@ -209,6 +209,11 @@ export class LastOwnerError extends Error {
   }
 }
 
+/** Whether Studio has at least one owner who can sign in. */
+export async function hasActiveOwner(): Promise<boolean> {
+  return (await activeOwnerCount()) > 0;
+}
+
 async function activeOwnerCount(): Promise<number> {
   const [row] = await db()
     .select({ n: count() })

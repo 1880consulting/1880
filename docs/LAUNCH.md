@@ -95,7 +95,13 @@ push that added a migration, redeploy the hub once the first app is done.
 
 ## 3. Create the first owner and the home page (Drew)
 
-These run once, from a terminal that can reach the database: Hostinger's SSH
+**In the browser (easiest):**
+
+1. Add `STUDIO_SETUP_TOKEN` to the 1880.io app's variables: a long random code (at least 24 characters; your variables file has one). Redeploy.
+2. Open `https://1880.io/admin/setup`, enter that code, your name, email and a password. You're signed in as the owner, and today's home page is loaded into Studio so you can edit it.
+3. The setup page then disappears for good (it only exists while Studio has no owner). Remove `STUDIO_SETUP_TOKEN` from the variables and redeploy.
+
+**Or from a terminal** that can reach the database: Hostinger's SSH
 terminal (in the app's folder), or your own computer with `DATABASE_URL` pointed
 at the production database (turn on remote MySQL access for your IP in hPanel
 first, and turn it off again after).
