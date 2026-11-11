@@ -11,6 +11,8 @@
  * would need to abuse inline scripts.
  */
 
+import { ADOBE_FONTS_ORIGINS } from "@/site/font-kit";
+
 export interface SecurityContext {
   /** Served over HTTPS (production behind Hostinger's front end). */
   https: boolean;
@@ -28,6 +30,8 @@ export interface SecurityContext {
   frames?: "none" | "host" | "framed";
   /** Where analytics loads from and reports to (GA4), allowed only when it's on. */
   analytics?: { scripts: string[]; connect: string[]; images: string[] } | null;
+  /** An Adobe Fonts kit is in use (PLAN D48): allow its stylesheets and font files. */
+  fontKit?: boolean;
   /** Outside players a page may embed (portal video sections): added to frame-src. */
   embeds?: string[];
   /**
@@ -98,7 +102,10 @@ export function interactivePagePolicy(): string {
 }
 
 export function contentSecurityPolicy(
-  ctx: Pick<SecurityContext, "https" | "dev" | "frames" | "analytics" | "embeds" | "content">,
+  ctx: Pick<
+    SecurityContext,
+    "https" | "dev" | "frames" | "analytics" | "embeds" | "content" | "fontKit"
+  >,
 ): string {
   if (ctx.content === "interactive") return interactivePagePolicy();
   const frameSrc = [...(ctx.frames === "host" ? ["'self'"] : []), ...(ctx.embeds ?? [])];
@@ -110,9 +117,9 @@ export function contentSecurityPolicy(
       ...(ctx.dev ? ["'unsafe-eval'"] : []),
       ...(ctx.analytics?.scripts ?? []),
     ],
-    "style-src": ["'self'", "'unsafe-inline'"],
+    "style-src": ["'self'", "'unsafe-inline'", ...(ctx.fontKit ? ADOBE_FONTS_ORIGINS.styles : [])],
     "img-src": ["'self'", "data:", "blob:", ...(ctx.analytics?.images ?? [])],
-    "font-src": ["'self'"],
+    "font-src": ["'self'", ...(ctx.fontKit ? ADOBE_FONTS_ORIGINS.fonts : [])],
     "connect-src": [
       "'self'",
       ...(ctx.dev ? ["ws:", "wss:"] : []),

@@ -7,6 +7,7 @@ import { frameContext, securityHeaders } from "@/lib/security-headers";
 import { siteUrlSetting } from "@/lib/site-url";
 import { setupAvailable } from "@/cms/staff/setup";
 import { analyticsSources } from "@/site/analytics";
+import { adobeFontsKit } from "@/site/font-kit";
 
 /**
  * Runs before every page. Decides which surface a request belongs to by its
@@ -30,6 +31,7 @@ export async function proxy(request: NextRequest) {
     noindex: process.env.SITE_INDEXING === "off",
     // Only the public site loads analytics; Studio and the portal never do.
     analytics: isPortal ? null : analyticsSources(),
+    fontKit: adobeFontsKit() !== null,
     ...frameContext(url.pathname, isPortal ? "portal" : "public"),
   });
   // An address on the host the visitor asked for. Built from the Host header so

@@ -106,4 +106,13 @@ describe("security headers", () => {
     expect(securityHeaders({ ...live, noindex: true })["X-Robots-Tag"]).toBe("noindex, nofollow");
     expect(securityHeaders(live)["X-Robots-Tag"]).toBeUndefined();
   });
+
+  it("allows the Adobe Fonts kit only when one is set", () => {
+    expect(contentSecurityPolicy(live)).not.toContain("typekit");
+    const csp = contentSecurityPolicy({ ...live, fontKit: true });
+    expect(csp).toContain(
+      "style-src 'self' 'unsafe-inline' https://use.typekit.net https://p.typekit.net;",
+    );
+    expect(csp).toContain("font-src 'self' https://use.typekit.net;");
+  });
 });

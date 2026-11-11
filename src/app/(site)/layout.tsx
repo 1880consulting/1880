@@ -5,6 +5,7 @@ import { site } from "@/site/content";
 import { getMenus } from "@/site/menus";
 import { measurementId } from "@/site/analytics";
 import { GoogleAnalytics } from "@/site/GoogleAnalytics";
+import { FontKit } from "@/site/FontKit";
 import { libreBodoni, libreBodoniExt } from "@/site/fonts";
 import { requireSurface } from "@/lib/site-role";
 
@@ -21,6 +22,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const gaId = measurementId();
   return (
     <div data-site className={`${libreBodoni.variable} ${libreBodoniExt.variable}`}>
+      <FontKit />
       <SiteNav links={menus.main} cta={menus.button} />
       <main id="main">{children}</main>
       {gaId && <GoogleAnalytics id={gaId} />}
