@@ -243,7 +243,6 @@ async function Editor({ params }: Pick<Props, "params">) {
         <div style={{ display: "grid", gap: 24, alignContent: "start" }}>
           <Panel title="Publish">
             <DocumentPublish
-              key={`${published}-${found.hasChanges}-${document.draftVersionId}`}
               published={published}
               hasChanges={found.hasChanges}
               clientName={tenant.name}

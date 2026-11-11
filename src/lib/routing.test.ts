@@ -49,6 +49,8 @@ describe("routeRequest", () => {
       pathname: "/portal/account",
     });
     expect(route("hub.1880.io", "/media/abc/1/320.webp")).toEqual({ kind: "next" });
+    expect(route("hub.1880.io", "/icon.png")).toEqual({ kind: "next" });
+    expect(route("hub.1880.io", "/apple-icon.png")).toEqual({ kind: "next" });
     // Only those exact pages: anything under them is Not found.
     expect(route("hub.1880.io", "/account/x")).toEqual({ kind: "not-found" });
   });

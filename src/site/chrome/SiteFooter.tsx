@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { isExternal, type MenuLink } from "@/cms/menus/schema";
+import { isExternal, type MenuLink } from "@/cms/menus/links";
 import section from "../section.module.css";
 import { Logo } from "../ui/Logo";
 import styles from "./SiteFooter.module.css";

@@ -124,6 +124,8 @@ export function contentSecurityPolicy(
       "'self'",
       ...(ctx.dev ? ["ws:", "wss:"] : []),
       ...(ctx.analytics?.connect ?? []),
+      // Next.js re-fetches the font kit's stylesheet during in-app navigation.
+      ...(ctx.fontKit ? ADOBE_FONTS_ORIGINS.styles : []),
     ],
     "media-src": ["'self'"],
     "object-src": ["'none'"],

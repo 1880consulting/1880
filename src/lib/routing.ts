@@ -165,6 +165,8 @@ export function routeRequest(input: {
     if (isSharedPath(pathname)) return { kind: "next" };
     // Library images (a client's logo). Public on 1880.io too: random ids, images only.
     if (pathname.startsWith("/media/")) return { kind: "next" };
+    // The site's icons (browser tab, home screen), the same on every host.
+    if (pathname === "/icon.png" || pathname === "/apple-icon.png") return { kind: "next" };
     if (PORTAL_PAGES.includes(pathname))
       return { kind: "rewrite", pathname: PORTAL_PREFIX + pathname };
     // Reject reserved or malformed client names here, before rendering starts:
