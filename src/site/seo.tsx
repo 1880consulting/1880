@@ -1,3 +1,4 @@
+import { siteUrlSetting } from "@/lib/site-url";
 import type { Metadata } from "next";
 import type { EntryDoc } from "@/cms/content/types";
 import { SHARE_SIZE } from "@/cms/media/process";
@@ -5,7 +6,7 @@ import { shareImageUrl, type MediaInfo } from "@/cms/media/types";
 import { site } from "./content";
 
 /** Where the site lives, for absolute links in sitemaps, share tags and structured data. */
-export const SITE_URL = (process.env.SITE_URL || "https://1880.io").replace(/\/$/, "");
+export const SITE_URL = siteUrlSetting() ?? "https://1880.io";
 export const absolute = (path: string) => `${SITE_URL}${path === "/" ? "" : path}` || SITE_URL;
 
 /**

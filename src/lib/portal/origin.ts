@@ -1,6 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 import { parsePortalSubdomain } from "@/lib/routing";
+import { normalizeOrigin, siteUrlSetting } from "@/lib/site-url";
 
 /**
  * The portal's address, for emailed links and for showing a client's URL in
@@ -11,9 +12,10 @@ import { parsePortalSubdomain } from "@/lib/routing";
  * visitor controls that.
  */
 export async function portalOrigin(): Promise<string> {
-  if (process.env.PORTAL_URL) return process.env.PORTAL_URL.replace(/\/$/, "");
+  const portal = normalizeOrigin(process.env.PORTAL_URL);
+  if (portal) return portal;
   const sub = parsePortalSubdomain(process.env.PORTAL_SUBDOMAIN);
-  let base = process.env.SITE_URL;
+  let base = siteUrlSetting();
   if (!base) {
     if (process.env.NODE_ENV === "production") base = "https://1880.io";
     else {

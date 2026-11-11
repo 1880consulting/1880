@@ -27,10 +27,11 @@ autodiscover) belong to 1880's IT and stay exactly as they are.
 Everything lives in this one database: pages, images, client files, sign-ins. Its
 backups are the site's backups (step 9).
 
-## 2. Create the Node.js app (Drew, in hPanel)
+## 2. Create the Node.js app for 1880.io (Drew, in hPanel)
 
-One app serves all three surfaces (`SITE_ROLE=all`). Splitting the public site and
-the portal into two apps later is a settings change (PLAN §2.1).
+Two apps run the same code from the same repo and share one database (PLAN D46):
+this one serves the public site and Studio at `1880.io` (`SITE_ROLE=public`); the
+second serves the client portal at `hub.1880.io` (step 2b).
 
 | Setting | Value |
 |---|---|
@@ -49,17 +50,48 @@ it whole each time.
 | `DATABASE_URL` | from step 1 | same |
 | `SITE_URL` | the staging address Hostinger gives you, e.g. `https://xyz.hostingersite.com` | `https://1880.io` |
 | `SITE_INDEXING` | `off` (keeps search engines out) | *(leave out)* |
-| `SITE_ROLE` | `all` | `all` |
+| `SITE_ROLE` | `public` | `public` |
 | `PORTAL_SUBDOMAIN` | `hub` | same |
 | `PORTAL_URL` | the staging portal address, if it isn't `SITE_URL` with the subdomain in front | *(leave out)* |
 | `RESEND_API_KEY` | from step 6 (until then, leave out: sign-in links are shown in Studio or need a password) | same |
 | `MAIL_FROM` | `1880 Consulting <notifications@1880consulting.com>` (PLAN open question 2) | same |
-| `PLAUSIBLE_DOMAIN` | *(leave out)* | `1880.io`, once analytics is decided (open question 7) |
+| `GA_MEASUREMENT_ID` | *(leave out)* | `G-FNXWW6CRNM` (Google Analytics 4, the same property as today's site) |
 
-`SITE_URL` is built into pages, so changing it needs a rebuild (redeploy).
+`SITE_URL` is built into pages, so changing it needs a rebuild (redeploy). Write
+it with `https://`; the app adds it if it's missing.
 
 **Check:** open `<staging address>/api/health`. It should say
 `{"ok":true,...,"migrations":{"ok":true,...}}`.
+
+## 2b. Create the Node.js app for hub.1880.io (Drew, in hPanel)
+
+The same steps as step 2, with a second Node.js app:
+
+| Setting | Value |
+|---|---|
+| Repository / branch | `1880consulting/1880`, `main` (the same as the first app) |
+| Node.js version | 22 |
+| Build command | `npm run build` |
+| Start command | `npm start` |
+| Domain | `hub.1880.io` |
+
+Its environment variables are the first app's, with three differences:
+
+| Variable | Value | Why |
+|---|---|---|
+| `SITE_ROLE` | `portal` | This app serves only the client portal |
+| `SKIP_MIGRATIONS` | `1` | The first app updates the shared database; two apps doing it at once could collide |
+| `GA_MEASUREMENT_ID` | *(leave out)* | The portal is private: no analytics |
+
+Keep `DATABASE_URL`, `SITE_URL=https://1880.io`, `PORTAL_SUBDOMAIN=hub`,
+`RESEND_API_KEY` and `MAIL_FROM` the same as the first app's.
+
+When both apps deploy from the same push, the hub app may finish first and see a
+database the first app hasn't updated yet. If the hub build fails right after a
+push that added a migration, redeploy the hub once the first app is done.
+
+**Check:** `https://hub.1880.io` shows the portal's sign-in page and
+`https://hub.1880.io/api/health` says `"ok":true`.
 
 ## 3. Create the first owner and the home page (Drew)
 
@@ -89,14 +121,14 @@ home page into the CMS. Then sign in at `<address>/admin`, invite the team
 
 ## 5. DNS for 1880.io (Drew, at GoDaddy)
 
-1. In hPanel, add `1880.io`, `www.1880.io` and `hub.1880.io` to the app. Hostinger shows the address to point them at.
+1. In hPanel, add `1880.io` and `www.1880.io` to the first app, and `hub.1880.io` to the hub app. Hostinger shows the address to point each at.
 2. At GoDaddy, in the `1880.io` zone (new domain, nothing to preserve):
 
 | Type | Name | Value |
 |---|---|---|
 | A | `@` | Hostinger's IP |
 | CNAME | `www` | `1880.io` |
-| A | `hub` | Hostinger's IP |
+| A | `hub` | the hub app's IP (often the same) |
 
 3. Wait for HTTPS certificates to appear in hPanel (minutes to a few hours).
 
@@ -115,11 +147,18 @@ home page into the CMS. Then sign in at `<address>/admin`, invite the team
 submit the contact form and confirm the alert arrives (Settings lists who gets
 it).
 
-## 7. Launch (Drew)
+## 7. Launch, and move 1880consulting.com (Drew)
 
-1. In the app's settings: remove `SITE_INDEXING`, set `SITE_URL=https://1880.io`, redeploy.
-2. In hPanel, also add `1880consulting.com` and `www.1880consulting.com` to the app.
-3. At GoDaddy, in the `1880consulting.com` zone, change **only** the web records: `@` (A) and `www` to Hostinger. Mail records stay untouched.
+1. In both apps' settings: remove `SITE_INDEXING`, check `SITE_URL=https://1880.io`, redeploy.
+2. In hPanel, add `1880consulting.com` and `www.1880consulting.com` to the **1880.io** app as extra domains (Hostinger may call them alias or parked domains). Hostinger then shows where to point them, and issues their HTTPS certificates once DNS points there.
+3. At GoDaddy, **export the `1880consulting.com` zone** first (a backup). Then, in that zone, change **only** these two web records:
+
+| Type | Name | Change to |
+|---|---|---|
+| A | `@` | the 1880.io app's IP from hPanel (today `76.13.207.80`; confirm in hPanel) |
+| CNAME | `www` | `1880consulting.com` (or an A record to the same IP, if `www` is an A record today) |
+
+   MX, the SPF and DMARC `TXT` records, DKIM, `autodiscover` and anything else mail-related stay exactly as they are. If GoDaddy's "Forwarding" is switched on for the domain, turn it off; the app does the redirect.
 
 The app redirects the old site for you (`src/lib/routing.ts`, `legacyPath`):
 
@@ -132,11 +171,12 @@ The app redirects the old site for you (`src/lib/routing.ts`, `legacyPath`):
 **Check:** `https://1880consulting.com/contact/` lands on `https://1880.io/contact`,
 and email to `@1880consulting.com` still arrives.
 
-## 8. Search engines (Drew)
+## 8. Search engines and analytics (Drew)
 
-1. In Google Search Console, add `1880.io` and submit `https://1880.io/sitemap.xml`.
-2. If `1880consulting.com` is in Search Console, use **Change of address** to `1880.io`.
-3. Today's site uses Google Analytics (`G-FNXWW6CRNM`); the new site has Plausible ready (open question 7).
+1. In Google Search Console, add `1880.io` as a **Domain** property. Google gives you a `TXT` record; add it to the `1880.io` zone at GoDaddy (a new domain, so nothing to preserve). A Domain property covers `www` and `hub` too.
+2. Submit `https://1880.io/sitemap.xml` under Sitemaps.
+3. After the redirect in step 7 is live, open the `1880consulting.com` property and use **Settings → Change of address** to `1880.io`. It tells Google the site moved, so its ranking carries over.
+4. Analytics: set `GA_MEASUREMENT_ID=G-FNXWW6CRNM` on the 1880.io app (step 2), the same GA4 property as today's site, so the history continues. Once it's live, check GA4's Realtime report while you browse the site. The contact form sends a `generate_lead` event; copying the email address sends `copy_email`.
 
 ## 9. Keep it running (Drew)
 

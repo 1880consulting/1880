@@ -54,11 +54,17 @@ describe("security headers", () => {
     expect(framed["X-Frame-Options"]).toBe("SAMEORIGIN");
   });
 
-  it("allows the analytics script's origin only when analytics is on", () => {
-    expect(contentSecurityPolicy(live)).not.toContain("plausible.io");
-    const csp = contentSecurityPolicy({ ...live, analyticsOrigin: "https://plausible.io" });
-    expect(csp).toContain("script-src 'self' 'unsafe-inline' https://plausible.io;");
-    expect(csp).toContain("connect-src 'self' https://plausible.io;");
+  it("allows Google Analytics only when it's on", () => {
+    expect(contentSecurityPolicy(live)).not.toContain("google");
+    const analytics = {
+      scripts: ["https://www.googletagmanager.com"],
+      connect: ["https://*.google-analytics.com"],
+      images: ["https://*.google-analytics.com"],
+    };
+    const csp = contentSecurityPolicy({ ...live, analytics });
+    expect(csp).toContain("script-src 'self' 'unsafe-inline' https://www.googletagmanager.com;");
+    expect(csp).toContain("connect-src 'self' https://*.google-analytics.com;");
+    expect(csp).toContain("img-src 'self' data: blob: https://*.google-analytics.com;");
   });
 
   it("relaxes only what hot reload needs in development", () => {

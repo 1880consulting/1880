@@ -1,4 +1,5 @@
 import "server-only";
+import { siteUrlSetting } from "@/lib/site-url";
 import { cookies, headers } from "next/headers";
 import { connection } from "next/server";
 import { notFound, redirect } from "next/navigation";
@@ -79,7 +80,8 @@ export async function clientIp(): Promise<string> {
  * Host header, which a visitor controls); development uses the address in use.
  */
 export async function linkOrigin(): Promise<string> {
-  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, "");
+  const configured = siteUrlSetting();
+  if (configured) return configured;
   if (process.env.NODE_ENV === "production") return "https://1880.io";
   const h = await headers();
   return `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host") ?? "localhost:3000"}`;

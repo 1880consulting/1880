@@ -4,7 +4,8 @@ import { parsePortalSubdomain, parseSiteRole, routeRequest, surfaceForHost } fro
 import { PORTAL_COOKIE } from "@/lib/portal/cookie";
 import { documentIdIn, portalGate } from "@/lib/portal/gate";
 import { frameContext, securityHeaders } from "@/lib/security-headers";
-import { analyticsOrigin } from "@/site/analytics";
+import { siteUrlSetting } from "@/lib/site-url";
+import { analyticsSources } from "@/site/analytics";
 
 /**
  * Runs before every page. Decides which surface a request belongs to by its
@@ -26,7 +27,8 @@ export async function proxy(request: NextRequest) {
     dev: process.env.NODE_ENV === "development",
     private: isPortal || url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
     noindex: process.env.SITE_INDEXING === "off",
-    analyticsOrigin: analyticsOrigin(),
+    // Only the public site loads analytics; Studio and the portal never do.
+    analytics: isPortal ? null : analyticsSources(),
     ...frameContext(url.pathname, isPortal ? "portal" : "public"),
   });
   // An address on the host the visitor asked for. Built from the Host header so
@@ -63,7 +65,7 @@ export async function proxy(request: NextRequest) {
     }
     case "moved": {
       // To the main site's address (SITE_URL), whatever host this came in on.
-      const site = new URL(process.env.SITE_URL || "https://1880.io");
+      const site = new URL(siteUrlSetting() ?? "https://1880.io");
       const target = new URL(decision.pathname, site);
       return finish(NextResponse.redirect(target, 301));
     }
