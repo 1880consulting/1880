@@ -36,7 +36,7 @@ the portal into two apps later is a settings change (PLAN §2.1).
 |---|---|
 | Repository / branch | `1880consulting/1880`, `main` |
 | Node.js version | 22 (matches `.nvmrc`) |
-| Install + build command | `npm ci && npm run db:migrate && npm run build` |
+| Build command | `npm run build` (Hostinger's Next.js setting; it applies database migrations first, then builds) |
 | Start command | `npm start` |
 | Auto-deploy | On, for pushes to `main` |
 
