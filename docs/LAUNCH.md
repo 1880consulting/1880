@@ -191,6 +191,18 @@ and email to `@1880consulting.com` still arrives.
 - **Backups:** Hostinger backs up daily. Because images and client files live in MySQL too, a database export is a full backup. Once a month, download a database export from hPanel and keep it somewhere safe.
 - **Updates:** merge to `main`, CI checks it, Hostinger deploys it. New migrations run during the build.
 
+## 9b. Hostinger's CDN (Drew)
+
+Safe to switch on for both apps. What it will and won't keep:
+
+- **Public pages** (1880.io): kept for up to 60 seconds, so a change you publish in Studio shows for everyone within about a minute. If you need it sooner, purge the CDN cache in hPanel.
+- **Images, fonts, scripts and styles**: kept for a year. Their addresses change whenever their content does, so they never go stale.
+- **Studio, sign-in pages and the whole hub**: never kept (they're marked private), so nobody sees someone else's page.
+
+**Check after switching it on:** publish a small change in Studio and reload the
+page a minute later; sign in to the hub in two different browsers as two
+different people and confirm each sees only their own client.
+
 ## 10. The first real client (Drew)
 
 - [ ] The isolation tests pass on `main` (they run in CI on every change: PLAN §2.3 point 8).

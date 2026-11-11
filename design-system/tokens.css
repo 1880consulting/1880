@@ -1,4 +1,31 @@
 /*
+ * Neue Haas Grotesk arrives a moment after the page draws (the Adobe kit loads
+ * in the background, src/site/FontKit.tsx). Until then text is set in Arial
+ * resized to Neue Haas Grotesk Text's proportions (measured on the site's copy: 4.1% wider in
+ * regular, 1.2% in bold, and a little taller), so nothing moves when the real
+ * font swaps in. Liberation Sans is Arial's metric twin on Linux.
+ */
+@font-face {
+  font-family: "NHG Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans");
+  font-weight: 100 549;
+  size-adjust: 104.1%;
+  ascent-override: 94.1%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "NHG Fallback";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold");
+  font-weight: 550 900;
+  size-adjust: 101.2%;
+  ascent-override: 98.8%;
+  descent-override: 25.7%;
+  line-gap-override: 0%;
+}
+
+/*
  * 1880 Design System (v0.3): public-site tokens.
  *
  * Ported from the current 1880consulting.com stylesheet. Monochrome,
@@ -30,7 +57,7 @@
    */
   --font-sans:
     "neue-haas-grotesk-text", "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk Text",
-    "Helvetica Neue", Helvetica, Arial, sans-serif;
+    "NHG Fallback", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-slow: cubic-bezier(0.16, 1, 0.3, 1);

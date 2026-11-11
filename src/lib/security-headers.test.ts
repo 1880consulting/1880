@@ -114,5 +114,6 @@ describe("security headers", () => {
       "style-src 'self' 'unsafe-inline' https://use.typekit.net https://p.typekit.net;",
     );
     expect(csp).toContain("font-src 'self' https://use.typekit.net;");
+    expect(csp).toContain("connect-src 'self' https://use.typekit.net https://p.typekit.net;");
   });
 });

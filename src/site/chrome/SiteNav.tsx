@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { isExternal, type MenuLink } from "@/cms/menus/schema";
+import { isExternal, type MenuLink } from "@/cms/menus/links";
 import { Logo } from "../ui/Logo";
 import styles from "./SiteNav.module.css";
 
