@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { audit } from "@/cms/audit";
@@ -8,13 +9,19 @@ import { sendMail } from "@/cms/mail";
 import { clearRateLimit, rateLimit } from "@/cms/rate-limit";
 import { loginLinkEmail, resetEmail } from "@/cms/staff/emails";
 import { PASSWORD_MAX, PASSWORD_MIN } from "@/cms/staff/password";
+import { setupAvailable, setupTokenMatches } from "@/cms/staff/setup";
+import { pageTag } from "@/site/pages";
+import { importBuiltInHome } from "@/site/seed-home";
 import {
+  changeRole,
   checkPassword,
   consumeToken,
+  createStaff,
   deleteUserSessions,
   findStaffByEmail,
   issueToken,
   normalizeEmail,
+  setAccess,
   setPassword,
 } from "@/cms/staff/service";
 
@@ -193,4 +200,70 @@ export async function signOut(): Promise<void> {
   await endSession();
   if (staff) await audit({ actor: { type: "staff", id: staff.id }, action: "staff.sign_out" });
   redirect("/admin/login");
+}
+
+// ---- The first owner (only while Studio has none; see src/cms/staff/setup.ts) ----
+
+export async function setUpFirstOwner(_prev: FormState, form: FormData): Promise<FormState> {
+  const raw = {
+    token: String(form.get("token") ?? ""),
+    name: String(form.get("name") ?? "").trim(),
+    email: String(form.get("email") ?? "").trim(),
+    password: String(form.get("password") ?? ""),
+    confirm: String(form.get("confirm") ?? ""),
+  };
+  const ip = await clientIp();
+  const rl = await rateLimit(`setup:ip:${ip}`, 5, FIFTEEN_MIN);
+  if (!rl.ok) return { ...tooMany(rl.retryAfterSeconds), email: raw.email };
+  if (!(await setupAvailable()))
+    return {
+      status: "error",
+      message: "Setup is closed: Studio already has an owner. Sign in instead.",
+    };
+  if (!setupTokenMatches(raw.token)) {
+    await audit({ actor: { type: "system" }, action: "staff.setup_refused", detail: { ip } });
+    return {
+      status: "error",
+      message: "That setup code doesn't match STUDIO_SETUP_TOKEN in the host's settings.",
+      email: raw.email,
+    };
+  }
+  if (!raw.name) return { status: "error", message: "Enter your name.", email: raw.email };
+  if (!email.safeParse(raw.email).success)
+    return { status: "error", message: "Enter your full work email address.", email: raw.email };
+  if (raw.password.length < PASSWORD_MIN)
+    return {
+      status: "error",
+      message: `Use at least ${PASSWORD_MIN} characters. A short sentence works well.`,
+      email: raw.email,
+    };
+  if (raw.password.length > PASSWORD_MAX)
+    return {
+      status: "error",
+      message: `Use ${PASSWORD_MAX} characters or fewer.`,
+      email: raw.email,
+    };
+  if (raw.password !== raw.confirm)
+    return {
+      status: "error",
+      message: "The two passwords don't match. Type them again.",
+      email: raw.email,
+    };
+
+  const existing = await findStaffByEmail(raw.email);
+  const userId =
+    existing?.id ?? (await createStaff({ email: raw.email, name: raw.name, role: "owner" }));
+  if (existing) await changeRole(userId, "owner");
+  await setPassword(userId, raw.password);
+  await setAccess(userId, "restore");
+  await startSession(userId);
+  // A fresh site: put today's home page into Studio so it can be edited.
+  const importedHome = await importBuiltInHome().catch(() => false);
+  if (importedHome) updateTag(pageTag(""));
+  await audit({
+    actor: { type: "staff", id: userId },
+    action: "staff.first_owner_created",
+    detail: { ip, importedHome },
+  });
+  redirect("/admin");
 }

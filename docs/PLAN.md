@@ -55,6 +55,7 @@ Last updated: 2026-11-09
 | D44 | **Addresses decided.** The public site and 1880 Studio are at **`1880.io`**; the client portal is at **`hub.1880.io`**. `PORTAL_SUBDOMAIN` now defaults to `hub` and stays a setting | Nov 10, Drew |
 | D45 | **Google tools and Resend.** Analytics is **Google Analytics 4** (`GA_MEASUREMENT_ID`, the same property as today's site, `G-FNXWW6CRNM`), on the public site only; Plausible is dropped. **Google Search Console** tracks the site (a Domain property for `1880.io`, and a change of address from `1880consulting.com`). Email goes through **Resend**, as planned | Nov 11, Drew |
 | D46 | **Live on Hostinger as two apps.** `1880.io` went live on Nov 11 as a Node.js app (`SITE_ROLE=public`: the public site and Studio). The client portal is a second Node.js app from the same repo and database at `hub.1880.io` (`SITE_ROLE=portal`, `SKIP_MIGRATIONS=1`, so only the first app updates the database). `npm run build` applies migrations first, because Hostinger runs plain `npm run build` | Nov 11, Drew |
+| D47 | **First owner from the browser.** `/admin/setup` creates the first Studio owner with a code from `STUDIO_SETUP_TOKEN`, and loads today's home page into Studio. It exists only while Studio has no owner and the code is set (the proxy answers a real 404 otherwise), refuses wrong codes with a rate limit, and logs every try. `npm run studio:owner` stays for recovery | Nov 11, Drew |
 
 ---
 

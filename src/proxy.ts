@@ -5,6 +5,7 @@ import { PORTAL_COOKIE } from "@/lib/portal/cookie";
 import { documentIdIn, portalGate } from "@/lib/portal/gate";
 import { frameContext, securityHeaders } from "@/lib/security-headers";
 import { siteUrlSetting } from "@/lib/site-url";
+import { setupAvailable } from "@/cms/staff/setup";
 import { analyticsSources } from "@/site/analytics";
 
 /**
@@ -109,6 +110,12 @@ export async function proxy(request: NextRequest) {
       break;
     }
     case "next": {
+      // The first-owner setup page exists only until Studio has an owner:
+      // decided here, so "gone" is a real 404 (a streamed page can't change its status).
+      if (url.pathname === "/admin/setup" && !(await setupAvailable())) {
+        response = NextResponse.rewrite(new URL("/_not-found", url));
+        break;
+      }
       if (url.pathname.startsWith("/admin")) {
         // Tell the page which address was asked for (see requireStaff). Set
         // here, so a visitor can't supply their own value.

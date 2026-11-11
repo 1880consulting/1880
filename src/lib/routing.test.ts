@@ -100,7 +100,13 @@ describe("Studio sign-in gate", () => {
   });
 
   it("lets everyone reach the sign-in pages", () => {
-    for (const p of ["/admin/login", "/admin/link", "/admin/set-password", "/admin/forgot"]) {
+    for (const p of [
+      "/admin/login",
+      "/admin/link",
+      "/admin/set-password",
+      "/admin/forgot",
+      "/admin/setup",
+    ]) {
       expect(r(p)).toEqual({ kind: "next" });
     }
   });
