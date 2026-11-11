@@ -43,7 +43,8 @@ second serves the client portal at `hub.1880.io` (step 2b).
 
 **Environment variables.** Hostinger replaces the whole list on every save and
 can't show values back, so keep the full list in your password manager and paste
-it whole each time.
+it whole each time. Ready-made lists for both apps, without the password, are in
+`deploy/hostinger/` (`public.env.example`, `hub.env.example`).
 
 | Variable | Staging value | Production value |
 |---|---|---|
