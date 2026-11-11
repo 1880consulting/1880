@@ -17,7 +17,7 @@ const FIELDS: { name: InquiryField; label: string; type: string; autoComplete: s
 export function ContactForm({ action, email }: { action: Action; email: string }) {
   const [state, formAction, pending] = useActionState(action, { status: "idle" });
   useEffect(() => {
-    if (state.status === "sent") track("Contact form sent");
+    if (state.status === "sent") track("generate_lead", { form: "contact" });
   }, [state.status]);
 
   if (state.status === "sent") {

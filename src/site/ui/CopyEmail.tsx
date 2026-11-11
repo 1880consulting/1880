@@ -16,7 +16,7 @@ export function CopyEmail({ email }: { email: string }) {
     try {
       await navigator.clipboard.writeText(email);
       setLabel("Copied");
-      track("Email copied");
+      track("copy_email");
     } catch {
       const el = addr.current;
       if (el) {

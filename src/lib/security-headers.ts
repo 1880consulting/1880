@@ -26,8 +26,8 @@ export interface SecurityContext {
    * only this site may frame. Everything else can neither frame nor be framed.
    */
   frames?: "none" | "host" | "framed";
-  /** Analytics script origin (Plausible), allowed only when analytics is on. */
-  analyticsOrigin?: string | null;
+  /** Where analytics loads from and reports to (GA4), allowed only when it's on. */
+  analytics?: { scripts: string[]; connect: string[]; images: string[] } | null;
   /** Outside players a page may embed (portal video sections): added to frame-src. */
   embeds?: string[];
   /**
@@ -98,7 +98,7 @@ export function interactivePagePolicy(): string {
 }
 
 export function contentSecurityPolicy(
-  ctx: Pick<SecurityContext, "https" | "dev" | "frames" | "analyticsOrigin" | "embeds" | "content">,
+  ctx: Pick<SecurityContext, "https" | "dev" | "frames" | "analytics" | "embeds" | "content">,
 ): string {
   if (ctx.content === "interactive") return interactivePagePolicy();
   const frameSrc = [...(ctx.frames === "host" ? ["'self'"] : []), ...(ctx.embeds ?? [])];
@@ -108,15 +108,15 @@ export function contentSecurityPolicy(
       "'self'",
       "'unsafe-inline'",
       ...(ctx.dev ? ["'unsafe-eval'"] : []),
-      ...(ctx.analyticsOrigin ? [ctx.analyticsOrigin] : []),
+      ...(ctx.analytics?.scripts ?? []),
     ],
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:"],
+    "img-src": ["'self'", "data:", "blob:", ...(ctx.analytics?.images ?? [])],
     "font-src": ["'self'"],
     "connect-src": [
       "'self'",
       ...(ctx.dev ? ["ws:", "wss:"] : []),
-      ...(ctx.analyticsOrigin ? [ctx.analyticsOrigin] : []),
+      ...(ctx.analytics?.connect ?? []),
     ],
     "media-src": ["'self'"],
     "object-src": ["'none'"],

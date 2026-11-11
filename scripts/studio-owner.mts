@@ -18,6 +18,7 @@ import {
   setAccess,
 } from "@/cms/staff/service";
 import { closeDb } from "@/lib/db";
+import { normalizeOrigin } from "@/lib/site-url";
 
 const { values } = parseArgs({ options: { email: { type: "string" }, name: { type: "string" } } });
 const email = z.email().safeParse(values.email?.trim());
@@ -45,7 +46,7 @@ try {
 
   const purpose = user.passwordHash ? "reset" : "invite";
   const token = await issueToken(user.id, purpose);
-  const origin = (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const origin = normalizeOrigin(process.env.SITE_URL) ?? "http://localhost:3000";
   await audit({ actor: { type: "system" }, action: "staff.owner_link_issued", target: user.email });
 
   console.log(

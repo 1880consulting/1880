@@ -22,6 +22,7 @@ import {
 import { addPerson, createTenant } from "@/lib/portal/manage";
 import { issueClientToken } from "@/lib/portal/users";
 import { parsePortalSubdomain } from "@/lib/routing";
+import { normalizeOrigin } from "@/lib/site-url";
 
 const { values } = parseArgs({
   options: { email: { type: "string" }, name: { type: "string" } },
@@ -201,11 +202,10 @@ try {
   await sampleDocuments(demo);
   const token = await issueClientToken(userId, "invite");
   const sub = parsePortalSubdomain(process.env.PORTAL_SUBDOMAIN);
+  const site = normalizeOrigin(process.env.SITE_URL);
   const origin =
-    process.env.PORTAL_URL ??
-    (process.env.SITE_URL
-      ? new URL(process.env.SITE_URL).origin.replace("://", `://${sub}.`)
-      : `http://${sub}.localhost:3000`);
+    normalizeOrigin(process.env.PORTAL_URL) ??
+    (site ? site.replace("://", `://${sub}.`) : `http://${sub}.localhost:3000`);
   console.info(`Demo client ready: ${origin}/demo`);
   console.info(`Sign in as ${name} <${email}> (works once, for 7 days):`);
   console.info(`${origin}/auth?token=${token}&next=%2Fdemo`);

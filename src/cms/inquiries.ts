@@ -1,4 +1,5 @@
 import "server-only";
+import { siteUrlSetting } from "@/lib/site-url";
 import { randomUUID } from "node:crypto";
 import { and, count, desc, eq, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
@@ -66,7 +67,7 @@ export async function markRead(id: string): Promise<void> {
 }
 
 export function studioUrl(id: string): string {
-  const base = (process.env.SITE_URL || "https://1880.io").replace(/\/$/, "");
+  const base = siteUrlSetting() ?? "https://1880.io";
   return `${base}/admin/inquiries/${id}`;
 }
 
