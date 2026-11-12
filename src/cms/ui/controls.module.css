@@ -474,3 +474,56 @@ a.stat:hover {
     transition: none;
   }
 }
+
+/* A row of filter fields (search, person, dates) that wraps on small screens. */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0 16px;
+  align-items: start;
+}
+
+/* A list of short events: text on the left, when on the right, hairlines between. */
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feed > li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--os-border);
+  line-height: 1.45;
+}
+
+.feed > li:first-child {
+  padding-top: 0;
+}
+
+.feed > li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.feed time {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* A small panel that opens under a toolbar button. */
+.popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  width: min(420px, calc(100vw - 32px));
+  padding: 16px;
+  background: var(--os-surface);
+  border: 1px solid var(--os-border);
+  border-radius: var(--os-radius-md);
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.14);
+}

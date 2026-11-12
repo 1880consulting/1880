@@ -5,6 +5,7 @@ import { PORTAL_COOKIE } from "@/lib/portal/cookie";
 import { documentIdIn, portalGate } from "@/lib/portal/gate";
 import { frameContext, securityHeaders } from "@/lib/security-headers";
 import { siteUrlSetting } from "@/lib/site-url";
+import { resolvePreviewToken } from "@/cms/content/preview-links";
 import { setupAvailable } from "@/cms/staff/setup";
 import { analyticsSources } from "@/site/analytics";
 import { adobeFontsKit } from "@/site/font-kit";
@@ -27,7 +28,12 @@ export async function proxy(request: NextRequest) {
   const headers = securityHeaders({
     https: proto === "https" || url.protocol === "https:",
     dev: process.env.NODE_ENV === "development",
-    private: isPortal || url.pathname === "/admin" || url.pathname.startsWith("/admin/"),
+    // Studio, the hub and shared draft previews are private: never indexed, never stored.
+    private:
+      isPortal ||
+      url.pathname === "/admin" ||
+      url.pathname.startsWith("/admin/") ||
+      url.pathname.startsWith("/preview/"),
     noindex: process.env.SITE_INDEXING === "off",
     // Only the public site loads analytics; Studio and the portal never do.
     analytics: isPortal ? null : analyticsSources(),
@@ -115,6 +121,12 @@ export async function proxy(request: NextRequest) {
       // The first-owner setup page exists only until Studio has an owner:
       // decided here, so "gone" is a real 404 (a streamed page can't change its status).
       if (url.pathname === "/admin/setup" && !(await setupAvailable())) {
+        response = NextResponse.rewrite(new URL("/_not-found", url));
+        break;
+      }
+      // A shared draft preview: an unknown, expired or turned-off link is a real 404.
+      const preview = /^\/preview\/([^/]+)$/.exec(url.pathname);
+      if (preview && !(await resolvePreviewToken(preview[1]))) {
         response = NextResponse.rewrite(new URL("/_not-found", url));
         break;
       }

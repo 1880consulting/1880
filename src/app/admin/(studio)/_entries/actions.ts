@@ -4,7 +4,8 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { audit } from "@/cms/audit";
-import { requireStaff } from "@/cms/auth";
+import { linkOrigin, requireStaff } from "@/cms/auth";
+import { createPreviewLink, revokePreviewLink } from "@/cms/content/preview-links";
 import {
   ConflictError,
   createEntry,
@@ -119,6 +120,7 @@ const saveInput = z.object({
   doc: docSchema,
   slug: z.string().max(200),
   baseVersionId: z.uuid().nullable(),
+  autosave: z.boolean().optional(),
 });
 
 export async function saveEntryAction(
@@ -236,4 +238,55 @@ export async function restoreEntryVersion(
     detail: { versionId },
   });
   redirect(`${STUDIO[type.id as keyof typeof STUDIO].base}/${entryId}`);
+}
+
+// ---- Shareable draft previews (PLAN D50) ----
+
+export interface PreviewLinkView {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  /** Only right after creating it: the token isn't stored, so the link can't be shown again. */
+  url?: string;
+}
+
+export async function createPreviewLinkAction(
+  typeId: string,
+  entryId: string,
+): Promise<PreviewLinkView> {
+  const me = await requireStaff();
+  const type = contentType(typeId);
+  const { entry } = await ownEntry(type, entryId);
+  const link = await createPreviewLink(entry.id, me.id);
+  await audit({
+    actor: { type: "staff", id: me.id },
+    action: "preview.link_created",
+    target: entry.id,
+    detail: { linkId: link.id },
+  });
+  return {
+    id: link.id,
+    createdAt: new Date().toISOString(),
+    expiresAt: link.expiresAt.toISOString(),
+    url: `${await linkOrigin()}/preview/${link.token}`,
+  };
+}
+
+export async function revokePreviewLinkAction(
+  typeId: string,
+  entryId: string,
+  linkId: string,
+): Promise<boolean> {
+  const me = await requireStaff();
+  const type = contentType(typeId);
+  const { entry } = await ownEntry(type, entryId);
+  const done = await revokePreviewLink(entry.id, id.parse(linkId));
+  if (done)
+    await audit({
+      actor: { type: "staff", id: me.id },
+      action: "preview.link_revoked",
+      target: entry.id,
+      detail: { linkId },
+    });
+  return done;
 }

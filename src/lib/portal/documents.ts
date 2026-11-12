@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
-import { and, count, desc, eq, inArray, isNotNull, max, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, isNotNull, max, sql } from "drizzle-orm";
+import { AUTOSAVE_MERGE_MINUTES, AUTOSAVE_NOTE } from "@/cms/content/store";
 import { emptyDoc, validateForPublish, type EntryDoc, type Issue } from "@/cms/content/types";
 import { mediaIssues, mediaRefs } from "@/cms/media/refs";
 import { getMediaMany } from "@/cms/media/store";
@@ -183,13 +184,32 @@ export async function saveDocumentDraft(
   content: DocumentDoc,
   baseVersionId: string | null,
   authorId: string,
+  opts: { autosave?: boolean } = {},
 ): Promise<string> {
   const d = await getDocumentRow(id);
   if (!d) throw new Error("That document no longer exists.");
   if (baseVersionId !== d.draftVersionId) throw new DocumentConflictError();
   // The uploaded file stays with the draft whatever the editor sends.
   const current = await versionDoc(d.draftVersionId);
-  return addVersion(d, { ...content, ...(current?.file ? { file: current.file } : {}) }, authorId);
+  const versionId = await addVersion(
+    d,
+    { ...content, ...(current?.file ? { file: current.file } : {}) },
+    authorId,
+    opts.autosave ? AUTOSAVE_NOTE : undefined,
+  );
+  // Like pages: a run of autosaves keeps one version per ~10 minutes.
+  if (opts.autosave && d.draftVersionId && d.draftVersionId !== d.publishedVersionId)
+    await db()
+      .delete(versions)
+      .where(
+        and(
+          eq(versions.id, d.draftVersionId),
+          eq(versions.note, AUTOSAVE_NOTE),
+          eq(versions.authorId, authorId),
+          gt(versions.createdAt, sql`now(6) - interval ${AUTOSAVE_MERGE_MINUTES} minute`),
+        ),
+      );
+  return versionId;
 }
 
 export async function setDocumentKind(id: string, kind: DocKind): Promise<void> {

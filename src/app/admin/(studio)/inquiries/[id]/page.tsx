@@ -1,4 +1,11 @@
-import { IconArchive, IconInbox, IconMail, IconMailOpened, IconRefresh } from "@tabler/icons-react";
+import {
+  IconArchive,
+  IconBan,
+  IconInbox,
+  IconMail,
+  IconMailOpened,
+  IconRefresh,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
@@ -37,7 +44,7 @@ async function Detail({ params }: Pick<PageProps<"/admin/inquiries/[id]">, "para
   if (row.status === "new") after(() => markRead(row.id));
   const status = row.status === "new" ? "read" : row.status;
 
-  const reply = `mailto:${encodeURIComponent(row.email)}?subject=${encodeURIComponent("Re: your message to 1880")}`;
+  const reply = replyLink(row);
   const canRetry = row.alertStatus !== "sent";
 
   return (
@@ -52,7 +59,14 @@ async function Detail({ params }: Pick<PageProps<"/admin/inquiries/[id]">, "para
               <IconMail size={18} stroke={2} aria-hidden />
               Reply by email
             </a>
-            {status === "archived" ? (
+            {status === "spam" ? (
+              <form action={changeStatus.bind(null, row.id, "read")}>
+                <Button type="submit">
+                  <IconInbox size={18} stroke={2} aria-hidden />
+                  Not spam
+                </Button>
+              </form>
+            ) : status === "archived" ? (
               <form action={changeStatus.bind(null, row.id, "read")}>
                 <Button type="submit">
                   <IconInbox size={18} stroke={2} aria-hidden />
@@ -65,6 +79,12 @@ async function Detail({ params }: Pick<PageProps<"/admin/inquiries/[id]">, "para
                   <Button type="submit" variant="ghost">
                     <IconMailOpened size={18} stroke={2} aria-hidden />
                     Mark as new
+                  </Button>
+                </form>
+                <form action={changeStatus.bind(null, row.id, "spam")}>
+                  <Button type="submit" variant="ghost">
+                    <IconBan size={18} stroke={2} aria-hidden />
+                    Spam
                   </Button>
                 </form>
                 <form action={changeStatus.bind(null, row.id, "archived")}>
@@ -118,4 +138,19 @@ async function Detail({ params }: Pick<PageProps<"/admin/inquiries/[id]">, "para
       </div>
     </>
   );
+}
+
+/**
+ * Opens the email app with a reply ready: to the sender, a subject, and their
+ * message quoted below. Long messages are cut (mail apps cap link length).
+ */
+function replyLink(row: { name: string; email: string; message: string; createdAt: Date }) {
+  const first = row.name.trim().split(/\s+/)[0] || "there";
+  const quoted = row.message
+    .slice(0, 1500)
+    .split("\n")
+    .map((l) => `> ${l}`)
+    .join("\n");
+  const body = `Hi ${first},\n\n\n\nOn ${longDate(row.createdAt)}, you wrote:\n${quoted}${row.message.length > 1500 ? "\n> [...]" : ""}`;
+  return `mailto:${encodeURIComponent(row.email)}?subject=${encodeURIComponent("Re: your message to 1880")}&body=${encodeURIComponent(body)}`;
 }

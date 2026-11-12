@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import type { EntryRow, EntryVersionRow } from "@/lib/db/schema";
 import {
@@ -208,10 +208,25 @@ export async function createEntry(
  * Saves a new draft version. `baseVersionId` is the draft the editor started
  * from: if someone saved in between, this refuses rather than overwrite them.
  */
+/**
+ * Autosaves (PLAN D50). Each one replaces the one before it if that was also
+ * an autosave by the same person, not live, and under this many minutes old.
+ * Explicit saves, publishes and restores are always kept.
+ */
+export const AUTOSAVE_NOTE = "Autosaved";
+export const AUTOSAVE_MERGE_MINUTES = 10;
+
 export async function saveDraft(
   type: ContentType,
   id: string,
-  input: { doc: EntryDoc; slug: string; baseVersionId: string | null; note?: string },
+  input: {
+    doc: EntryDoc;
+    slug: string;
+    baseVersionId: string | null;
+    note?: string;
+    /** An automatic save from the editor (PLAN D50): see AUTOSAVE_NOTE. */
+    autosave?: boolean;
+  },
   authorId: string | null,
 ): Promise<string> {
   const doc = docSchema.parse(input.doc);
@@ -236,13 +251,33 @@ export async function saveDraft(
           },
         ]);
       }
-      await tx
-        .insert(versions)
-        .values({ id: versionId, entryId: id, doc, authorId, note: input.note ?? "Saved" });
+      await tx.insert(versions).values({
+        id: versionId,
+        entryId: id,
+        doc,
+        authorId,
+        note: input.autosave ? AUTOSAVE_NOTE : (input.note ?? "Saved"),
+      });
       await tx
         .update(entries)
         .set({ draftVersionId: versionId, slug: input.slug, updatedBy: authorId })
         .where(eq(entries.id, id));
+      // A run of autosaves keeps one version per ~10 minutes, not one per pause.
+      if (
+        input.autosave &&
+        entry.draftVersionId &&
+        entry.draftVersionId !== entry.publishedVersionId
+      )
+        await tx
+          .delete(versions)
+          .where(
+            and(
+              eq(versions.id, entry.draftVersionId),
+              eq(versions.note, AUTOSAVE_NOTE),
+              authorId ? eq(versions.authorId, authorId) : sql`false`,
+              gt(versions.createdAt, sql`now(6) - interval ${AUTOSAVE_MERGE_MINUTES} minute`),
+            ),
+          );
     });
   } catch (err) {
     if (isDuplicate(err)) throw new SlugTakenError();

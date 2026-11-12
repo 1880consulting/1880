@@ -16,5 +16,6 @@ export function AlertBadge({ status }: { status: InquiryRow["alertStatus"] }) {
 export function StatusBadge({ status }: { status: InquiryRow["status"] }) {
   if (status === "new") return <Badge tone="info">New</Badge>;
   if (status === "archived") return <Badge>Archived</Badge>;
+  if (status === "spam") return <Badge tone="warning">Spam</Badge>;
   return <Badge>Read</Badge>;
 }

@@ -1,7 +1,7 @@
 import "server-only";
 import { siteUrlSetting } from "@/lib/site-url";
 import { randomUUID } from "node:crypto";
-import { and, count, desc, eq, isNull, lt, ne, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import type { InquiryRow } from "@/lib/db/schema";
 import type { Inquiry } from "@/lib/inquiry";
@@ -11,7 +11,7 @@ import { getSetting } from "./settings";
 /** How many times an alert email is tried before it waits for someone to press Retry. */
 export const MAX_ALERT_ATTEMPTS = 5;
 
-export type InquiryView = "new" | "all" | "archived";
+export type InquiryView = "new" | "all" | "archived" | "spam";
 
 const { inquiries } = schema;
 
@@ -27,13 +27,26 @@ export async function createInquiry(
 }
 
 export async function listInquiries(view: InquiryView, limit = 200): Promise<InquiryRow[]> {
-  const where =
-    view === "new"
-      ? eq(inquiries.status, "new")
-      : view === "archived"
-        ? eq(inquiries.status, "archived")
-        : ne(inquiries.status, "archived");
-  return db().select().from(inquiries).where(where).orderBy(desc(inquiries.createdAt)).limit(limit);
+  return db()
+    .select()
+    .from(inquiries)
+    .where(viewFilter(view))
+    .orderBy(desc(inquiries.createdAt))
+    .limit(limit);
+}
+
+/** Which inquiries a view shows. "All" is the inbox: new and read, never archived or spam. */
+function viewFilter(view: InquiryView) {
+  if (view === "new") return eq(inquiries.status, "new");
+  if (view === "archived") return eq(inquiries.status, "archived");
+  if (view === "spam") return eq(inquiries.status, "spam");
+  return inArray(inquiries.status, ["new", "read"]);
+}
+
+/** Every inquiry in a view, oldest first, for the spreadsheet export. */
+export async function exportInquiries(view: InquiryView | "everything"): Promise<InquiryRow[]> {
+  const q = db().select().from(inquiries);
+  return (view === "everything" ? q : q.where(viewFilter(view))).orderBy(inquiries.createdAt);
 }
 
 export async function countInquiries(): Promise<Record<InquiryRow["status"], number>> {
@@ -41,7 +54,7 @@ export async function countInquiries(): Promise<Record<InquiryRow["status"], num
     .select({ status: inquiries.status, n: count() })
     .from(inquiries)
     .groupBy(inquiries.status);
-  const out = { new: 0, read: 0, archived: 0 };
+  const out = { new: 0, read: 0, archived: 0, spam: 0 };
   for (const r of rows) out[r.status] = r.n;
   return out;
 }

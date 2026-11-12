@@ -83,7 +83,11 @@ const failure = (err: unknown): { ok: false; message: string; conflict?: boolean
   return { ok: false, message: "That didn't work. Try again." };
 };
 
-const saveInput = z.object({ doc: docSchema, baseVersionId: z.uuid().nullable() });
+const saveInput = z.object({
+  doc: docSchema,
+  baseVersionId: z.uuid().nullable(),
+  autosave: z.boolean().optional(),
+});
 
 export async function saveDocumentAction(
   tenantId: string,
@@ -101,6 +105,7 @@ export async function saveDocumentAction(
       parsed.data.doc,
       parsed.data.baseVersionId,
       staff.id,
+      { autosave: parsed.data.autosave },
     );
     return { ok: true, versionId };
   } catch (err) {

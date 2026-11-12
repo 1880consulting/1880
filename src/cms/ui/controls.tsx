@@ -140,7 +140,8 @@ export function StatTile({ label, value, href }: { label: string; value: number;
 
 export function Skeleton({ lines = 4 }: { lines?: number }) {
   return (
-    <div aria-busy="true" aria-label="Loading">
+    // role="status" makes the label count, so screen readers announce "Loading".
+    <div role="status" aria-busy="true" aria-label="Loading">
       {Array.from({ length: lines }, (_, i) => (
         <div key={i} className={c.skeleton} style={{ width: `${90 - i * 12}%` }} />
       ))}
