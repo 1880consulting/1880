@@ -35,6 +35,15 @@ describe("sendMail", () => {
     expect(body.from).toBe("1880 Consulting <notifications@1880consulting.com>");
   });
 
+  it("sends replies to MAIL_REPLY_TO when the email has no reply-to of its own", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("MAIL_REPLY_TO", "inquiries@1880consulting.com");
+    const f = fakeFetch(200, { id: "email_2" });
+    await sendMail({ to: ["c@example.com"], subject: "Invite", text: "Hi" }, f);
+    const body = JSON.parse((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+    expect(body.reply_to).toBe("inquiries@1880consulting.com");
+  });
+
   it("reports Resend errors", async () => {
     vi.stubEnv("RESEND_API_KEY", "re_test");
     const r = await sendMail(mail, fakeFetch(422, { message: "Invalid from" }));

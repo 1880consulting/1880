@@ -55,7 +55,8 @@ it whole each time. Ready-made lists for both apps, without the password, are in
 | `PORTAL_SUBDOMAIN` | `hub` | same |
 | `PORTAL_URL` | the staging portal address, if it isn't `SITE_URL` with the subdomain in front | *(leave out)* |
 | `RESEND_API_KEY` | from step 6 (until then, leave out: sign-in links are shown in Studio or need a password) | same |
-| `MAIL_FROM` | `1880 Consulting <notifications@1880consulting.com>` (PLAN open question 2) | same |
+| `MAIL_FROM` | *(leave out: the default is `1880 Consulting <notifications@1880consulting.com>`, PLAN D51)* | same |
+| `MAIL_REPLY_TO` | `inquiries@1880consulting.com` (where replies to site emails go) | same |
 | `GA_MEASUREMENT_ID` | *(leave out)* | `G-FNXWW6CRNM` (Google Analytics 4, the same property as today's site) |
 
 `SITE_URL` is built into pages, so changing it needs a rebuild (redeploy). Write
@@ -142,17 +143,21 @@ home page into the CMS. Then sign in at `<address>/admin`, invite the team
 **Check:** `https://1880.io/api/health` answers, `https://www.1880.io` goes to
 `https://1880.io`, and `https://hub.1880.io` shows the portal's sign-in page.
 
-## 6. Email through Resend (Drew, with a heads-up to IT)
+## 6. Email through Resend (done Nov 12, PLAN D51)
 
-1. Tell 1880's IT you're adding sending records for Resend on `1880consulting.com`; nothing of theirs changes. Ask whether their DMARC policy is strict.
-2. At GoDaddy, **export the `1880consulting.com` zone** first (a backup).
-3. Create a Resend account, add the domain `1880consulting.com`, and copy the records Resend lists (a DKIM `TXT` named like `resend._domainkey`, and an `MX` plus `TXT` on a `send` subdomain).
-4. Add **only those** at GoDaddy. Edit nothing else.
-5. When Resend says the domain is verified, create an API key and set `RESEND_API_KEY` (step 2), then redeploy.
+Resend has `1880.io` and `1880consulting.com` verified, with click tracking off.
+Only Resend's records were added; IT's mail records on `1880consulting.com` are
+untouched. Emails send as `notifications@1880consulting.com` for now (`1880.io` is
+verified too; switch with `MAIL_FROM`); replies go to `inquiries@1880consulting.com`.
+
+To switch it on (or after replacing the key):
+
+1. In Resend → API Keys, create a key with **Sending access** (all domains, or limited to the one in `MAIL_FROM`). Copy it (Resend shows it once).
+2. Set `RESEND_API_KEY` to it in **both** apps (1880.io and the hub), with `MAIL_REPLY_TO=inquiries@1880consulting.com`, and redeploy both.
 
 **Check:** on `/admin/login`, ask for an email link to your own address. Then
 submit the contact form and confirm the alert arrives (Settings lists who gets
-it).
+it). In Resend → Emails, each one shows as delivered.
 
 ## 7. Launch, and move 1880consulting.com (Drew)
 
@@ -206,7 +211,7 @@ different people and confirm each sees only their own client.
 ## 10. The first real client (Drew)
 
 - [ ] The isolation tests pass on `main` (they run in CI on every change: PLAN §2.3 point 8).
-- [ ] In Studio: Clients → Add a client (decide the URL name; a code name if they need to stay discreet, open question 4).
+- [ ] In Studio: Clients → Add a client (decide the URL name; a code name if they need to stay discreet, open question 3).
 - [ ] Invite their people. Each gets an email with a link that signs them in.
 - [ ] Create their first document, publish it with "Email … people" ticked.
 - [ ] Check "Who opened it" on the document a day later.
