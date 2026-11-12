@@ -262,3 +262,57 @@ describe("edit forms", () => {
     ]);
   });
 });
+
+describe("autosave (PLAN D50)", () => {
+  it("keeps one autosave per run, and never replaces a manual save or the live version", async () => {
+    const id = await createEntry(T, { title: "About", slug: "about" }, "u1");
+    const auto = (title: string) =>
+      draftOf(id).then((base) =>
+        saveDraft(
+          T,
+          id,
+          { doc: doc(title), slug: "about", baseVersionId: base, autosave: true },
+          "u1",
+        ),
+      );
+    await auto("A1");
+    await auto("A2");
+    await auto("A3");
+    let notes = (await listVersions(id)).map((v) => v.note);
+    // The first version ("Created") plus the latest autosave.
+    expect(notes.filter((n) => n === "Autosaved")).toHaveLength(1);
+
+    // A manual save is kept; the next autosave starts a new run after it.
+    await saveDraft(
+      T,
+      id,
+      { doc: doc("M"), slug: "about", baseVersionId: await draftOf(id) },
+      "u1",
+    );
+    await auto("A4");
+    notes = (await listVersions(id)).map((v) => v.note);
+    expect(notes.filter((n) => n === "Autosaved")).toHaveLength(2);
+    expect(notes).toContain("Saved");
+
+    // Someone else's autosave doesn't replace yours.
+    await saveDraft(
+      T,
+      id,
+      { doc: doc("B"), slug: "about", baseVersionId: await draftOf(id), autosave: true },
+      "u2",
+    );
+    expect((await listVersions(id)).filter((v) => v.note === "Autosaved")).toHaveLength(3);
+
+    // The live version is never removed by an autosave.
+    await publish(T, id, "u2");
+    const live = (await getEntry(id))!.entry.publishedVersionId;
+    await saveDraft(
+      T,
+      id,
+      { doc: doc("C"), slug: "about", baseVersionId: await draftOf(id), autosave: true },
+      "u2",
+    );
+    expect((await listVersions(id)).some((v) => v.id === live)).toBe(true);
+    expect((await getEntry(id))!.draft.title).toBe("C");
+  });
+});

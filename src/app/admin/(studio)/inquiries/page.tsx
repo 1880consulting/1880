@@ -1,9 +1,17 @@
-import { IconInbox } from "@tabler/icons-react";
+import { IconDownload, IconInbox } from "@tabler/icons-react";
 import { Suspense } from "react";
 import { requireStaff } from "@/cms/auth";
 import { shortDate } from "@/cms/format";
 import { countInquiries, listInquiries, type InquiryView } from "@/cms/inquiries";
-import { controls as c, EmptyState, PageHeader, Panel, Segments, Skeleton } from "@/cms/ui";
+import {
+  buttonClass,
+  controls as c,
+  EmptyState,
+  PageHeader,
+  Panel,
+  Segments,
+  Skeleton,
+} from "@/cms/ui";
 import { AlertBadge } from "./AlertBadge";
 import { SetupNotice } from "./SetupNotice";
 
@@ -13,6 +21,7 @@ const VIEWS: { id: InquiryView; label: string }[] = [
   { id: "new", label: "New" },
   { id: "all", label: "All" },
   { id: "archived", label: "Archived" },
+  { id: "spam", label: "Spam" },
 ];
 
 const EMPTY: Record<InquiryView, { title: string; text: string }> = {
@@ -25,6 +34,10 @@ const EMPTY: Record<InquiryView, { title: string; text: string }> = {
     title: "Nothing archived",
     text: "Archive an inquiry once it's handled to clear it from the inbox.",
   },
+  spam: {
+    title: "No spam",
+    text: "Mark junk as spam from its page; it stays here, out of the inbox and the counts.",
+  },
 };
 
 export default function InquiriesPage({ searchParams }: PageProps<"/admin/inquiries">) {
@@ -34,6 +47,17 @@ export default function InquiriesPage({ searchParams }: PageProps<"/admin/inquir
         pretitle="1880 Studio"
         title="Inquiries"
         description="Messages from the contact form on 1880.io."
+        actions={
+          // A file download, not a page: a plain link, so the browser saves it.
+          <a
+            className={buttonClass("secondary")}
+            href="/admin/inquiries/export?view=everything"
+            download
+          >
+            <IconDownload size={18} stroke={2} aria-hidden />
+            Export spreadsheet
+          </a>
+        }
       />
       <Suspense
         fallback={
@@ -67,7 +91,9 @@ async function Inbox({ searchParams }: Pick<PageProps<"/admin/inquiries">, "sear
               ? counts.new
               : v.id === "all"
                 ? counts.new + counts.read
-                : counts.archived,
+                : v.id === "archived"
+                  ? counts.archived
+                  : counts.spam,
           current: v.id === view,
         }))}
       />

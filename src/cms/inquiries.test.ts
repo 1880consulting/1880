@@ -9,6 +9,7 @@ import { setupTestDatabase } from "@/test/db";
 import {
   alertText,
   countInquiries,
+  exportInquiries,
   createInquiry,
   getInquiry,
   listInquiries,
@@ -101,13 +102,21 @@ describe("inquiries", () => {
     const a = await createInquiry(ada);
     const b = await createInquiry({ ...ada, name: "Grace" });
     const c = await createInquiry({ ...ada, name: "Mary" });
+    const d = await createInquiry({ ...ada, name: "Spammy" });
     await markRead(b);
     await setInquiryStatus(c, "archived");
+    await setInquiryStatus(d, "spam");
 
     expect((await listInquiries("new")).map((r) => r.id)).toEqual([a]);
     expect((await listInquiries("all")).map((r) => r.id).sort()).toEqual([a, b].sort());
     expect((await listInquiries("archived")).map((r) => r.id)).toEqual([c]);
-    expect(await countInquiries()).toEqual({ new: 1, read: 1, archived: 1 });
+    expect((await listInquiries("spam")).map((r) => r.id)).toEqual([d]);
+    expect(await countInquiries()).toEqual({ new: 1, read: 1, archived: 1, spam: 1 });
+    // The export: one view, or everything (spam included), oldest first.
+    expect((await exportInquiries("all")).map((r) => r.id).sort()).toEqual([a, b].sort());
+    expect((await exportInquiries("everything")).map((r) => r.id).sort()).toEqual(
+      [a, b, c, d].sort(),
+    );
 
     // Mark as new again clears the read time.
     await setInquiryStatus(b, "new");

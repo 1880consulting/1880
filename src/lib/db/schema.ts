@@ -26,7 +26,8 @@ export const inquiries = mysqlTable(
     name: varchar("name", { length: 200 }).notNull(),
     email: varchar("email", { length: 320 }).notNull(),
     message: text("message").notNull(),
-    status: mysqlEnum("status", ["new", "read", "archived"]).notNull().default("new"),
+    /** "spam": junk, kept out of the inbox and counts (PLAN D50). */
+    status: mysqlEnum("status", ["new", "read", "archived", "spam"]).notNull().default("new"),
     /** The alert email to the team: pending → sent, or failed/skipped (retryable). */
     alertStatus: mysqlEnum("alert_status", ["pending", "sent", "failed", "skipped"])
       .notNull()
@@ -403,5 +404,26 @@ export const documentEvents = mysqlTable(
   (t) => [
     index("document_events_doc").on(t.documentId, t.createdAt),
     index("document_events_user").on(t.clientUserId, t.tenantId, t.createdAt),
+  ],
+);
+
+/**
+ * Shareable draft previews (PLAN D50): an expiring link to an entry's current
+ * draft for someone without a Studio account. Only the token's hash is stored.
+ */
+export const previewLinks = mysqlTable(
+  "preview_links",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    entryId: varchar("entry_id", { length: 36 }).notNull(),
+    createdBy: varchar("created_by", { length: 36 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    expiresAt: timestamp("expires_at").notNull(),
+    revokedAt: timestamp("revoked_at"),
+  },
+  (t) => [
+    uniqueIndex("preview_links_token").on(t.tokenHash),
+    index("preview_links_entry").on(t.entryId),
   ],
 );

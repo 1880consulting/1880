@@ -1,0 +1,1 @@
+ALTER TABLE `inquiries` MODIFY COLUMN `status` enum('new','read','archived','spam') NOT NULL DEFAULT 'new';

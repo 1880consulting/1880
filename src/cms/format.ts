@@ -24,3 +24,13 @@ export function longDate(d: Date): string {
     .replace("PM", "pm");
   return `${date}, ${time} ET`;
 }
+
+/** "just now", "5 min ago", "3 hr ago", then the short date. For activity feeds. */
+export function timeAgo(d: Date, now = new Date()): string {
+  const s = Math.round((now.getTime() - d.getTime()) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} hr ago`;
+  if (s < 7 * 86400) return `${Math.floor(s / 86400)} d ago`;
+  return shortDate(d, now);
+}

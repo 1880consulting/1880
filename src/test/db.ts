@@ -52,6 +52,7 @@ export function setupTestDatabase() {
       schema.documentVersions,
       schema.documentFiles,
       schema.documentEvents,
+      schema.previewLinks,
     ]) {
       await db().delete(table);
     }

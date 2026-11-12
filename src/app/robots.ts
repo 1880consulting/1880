@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
   // A staging copy for review: keep every crawler out (PLAN Phase 5).
   if (process.env.SITE_INDEXING === "off") return { rules: [{ userAgent: "*", disallow: "/" }] };
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/api/"] }],
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/api/", "/preview/"] }],
     sitemap: absolute("/sitemap.xml"),
     host: absolute("/"),
   };

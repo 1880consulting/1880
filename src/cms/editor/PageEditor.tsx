@@ -77,11 +77,15 @@ export interface PageEditorProps {
   messages?: { published?: string; unpublished?: string; unpublishConfirm?: string };
   /** Offers "email people when publishing" next to Publish, with this label. */
   notifyLabel?: string;
+  /** Extra controls at the start of the toolbar (e.g. "Share preview"). */
+  toolbarExtra?: React.ReactNode;
   actions: {
     save: (input: {
       doc: EntryDoc;
       slug: string;
       baseVersionId: string | null;
+      /** An automatic save (see AUTOSAVE_MS); the server merges a run of them. */
+      autosave?: boolean;
     }) => Promise<SaveResult>;
     publish: (opts?: { notify?: boolean }) => Promise<ActionResult>;
     discard: () => Promise<DiscardResult>;
@@ -91,6 +95,9 @@ export interface PageEditorProps {
     listMedia: () => Promise<MediaInfo[]>;
   };
 }
+
+/** How long after the last change the editor saves on its own. */
+const AUTOSAVE_MS = 3000;
 
 type Notice = { tone: "success" | "danger" | "warning"; text: string } | null;
 
@@ -164,19 +171,73 @@ export function PageEditor(props: PageEditorProps) {
   }, [sendPreview]);
 
   // ---- Saving ----
+  // The draft version this editor is based on. A ref as well as state, so a
+  // save that starts right after an autosave uses the version it just made.
+  const versionRef = useRef(versionId);
+  const adoptVersion = (id: string | null) => {
+    versionRef.current = id;
+    setVersionId(id);
+  };
+  // The autosave in flight, if any: other saves wait for it.
+  const autosaving = useRef<Promise<void> | null>(null);
+  const [autoState, setAutoState] = useState<"idle" | "saving" | "blocked">("idle");
+  const [autoError, setAutoError] = useState<{ snapshot: string; message: string } | null>(null);
+
   const save = useCallback(async (): Promise<boolean> => {
+    await autosaving.current;
+    const snapshot = JSON.stringify({ doc, slug });
     const clean = tidyDoc(doc, blockTypes, entryFields);
-    const result = await actions.save({ doc: clean, slug, baseVersionId: versionId });
+    const result = await actions.save({ doc: clean, slug, baseVersionId: versionRef.current });
     if (!result.ok) {
       setIssues(result.issues ?? []);
       setNotice({ tone: result.conflict ? "warning" : "danger", text: result.message });
       return false;
     }
-    setVersionId(result.versionId);
-    setSaved(JSON.stringify({ doc, slug }));
+    adoptVersion(result.versionId);
+    setSaved(snapshot);
+    setAutoError(null);
     setStatus((st) => ({ ...st, hasChanges: st.published }));
     return true;
-  }, [actions, blockTypes, entryFields, doc, slug, versionId]);
+  }, [actions, blockTypes, entryFields, doc, slug]);
+
+  // Autosave (PLAN D50): a few seconds after the last change, save quietly.
+  // Stops after a conflict (someone else saved), and waits for a new change
+  // after anything else goes wrong, so it never retries in a loop.
+  useEffect(() => {
+    const snapshot = JSON.stringify({ doc, slug });
+    if (!dirty || pending || autoState !== "idle" || autosaving.current) return;
+    if (autoError?.snapshot === snapshot) return;
+    const timer = setTimeout(() => {
+      setAutoState("saving");
+      autosaving.current = (async () => {
+        const result = await actions
+          .save({
+            doc: tidyDoc(doc, blockTypes, entryFields),
+            slug,
+            baseVersionId: versionRef.current,
+            autosave: true,
+          })
+          .catch(() => ({ ok: false as const, message: "Couldn't reach Studio." }));
+        autosaving.current = null;
+        if (!result.ok) {
+          if ("conflict" in result && result.conflict) {
+            setAutoState("blocked");
+            setNotice({ tone: "warning", text: result.message });
+          } else {
+            setAutoState("idle");
+            setAutoError({ snapshot, message: result.message });
+          }
+          return;
+        }
+        adoptVersion(result.versionId);
+        setSaved(snapshot);
+        setAutoError(null);
+        setStatus((st) => ({ ...st, hasChanges: st.published }));
+        setAutoState("idle");
+      })();
+    }, AUTOSAVE_MS);
+    return () => clearTimeout(timer);
+  }, [doc, slug, dirty, pending, autoState, autoError, actions, blockTypes, entryFields]);
 
   // Old messages go the moment a new action starts (outside the transition,
   // which would otherwise hold the update until the action finishes).
@@ -224,7 +285,7 @@ export function PageEditor(props: PageEditorProps) {
         if (!r.ok) return setNotice({ tone: "danger", text: r.message });
         setDoc(r.doc);
         setSlug(r.slug);
-        setVersionId(r.versionId);
+        adoptVersion(r.versionId);
         setSaved(JSON.stringify({ doc: r.doc, slug: r.slug }));
         setIssues([]);
         setStatus((st) => ({ ...st, hasChanges: false }));
@@ -331,11 +392,22 @@ export function PageEditor(props: PageEditorProps) {
             <div className={s.meta}>
               {statusBadge}
               <span className={c.meta} role="status">
-                {pending ? "Working…" : dirty ? "Unsaved changes" : "All changes saved"}
+                {pending
+                  ? "Working…"
+                  : autoState === "saving"
+                    ? "Saving…"
+                    : autoState === "blocked"
+                      ? "Autosave paused"
+                      : autoError && dirty
+                        ? `Not saved yet: ${autoError.message}`
+                        : dirty
+                          ? "Unsaved changes"
+                          : "All changes saved"}
               </span>
             </div>
           </div>
           <div className={c.actions}>
+            {props.toolbarExtra}
             <Link href={props.historyUrl} className={buttonClass("ghost")}>
               <IconHistory size={18} stroke={2} aria-hidden />
               History

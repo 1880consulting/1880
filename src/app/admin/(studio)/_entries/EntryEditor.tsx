@@ -11,14 +11,18 @@ import { Panel, Skeleton } from "@/cms/ui";
 import { CONTENT_TYPES, type ContentTypeId } from "@/site/cms";
 import { site } from "@/site/content";
 import { listMediaForPicker } from "../media/actions";
+import { activePreviewLinks } from "@/cms/content/preview-links";
 import {
+  createPreviewLinkAction,
   deleteEntryAction,
   discardEntryAction,
   publishEntryAction,
+  revokePreviewLinkAction,
   saveEntryAction,
   unpublishEntryAction,
 } from "./actions";
 import { STUDIO } from "./config";
+import { SharePreview } from "./SharePreview";
 
 /** Studio's editor for one entry of any content type. */
 export function EntryEditorPage({
@@ -76,9 +80,10 @@ async function Editor({
   if (!found || found.entry.type !== type.id) notFound();
   const { entry, draft } = found;
   const entryFields = type.fields ? schemaFields(type.fields) : [];
-  const [initialMedia, refOptions] = await Promise.all([
+  const [initialMedia, refOptions, links] = await Promise.all([
     getMediaMany(mediaRefs(type, draft).map((r) => r.id)),
     referenceOptions(entryFields),
+    activePreviewLinks(entry.id),
   ]);
 
   return (
@@ -105,6 +110,17 @@ async function Editor({
       previewUrl={`/admin/preview/${entry.id}`}
       historyUrl={`${cfg.base}/${entry.id}/history`}
       backUrl={cfg.base}
+      toolbarExtra={
+        <SharePreview
+          initial={links.map((l) => ({
+            id: l.id,
+            createdAt: l.createdAt.toISOString(),
+            expiresAt: l.expiresAt.toISOString(),
+          }))}
+          create={createPreviewLinkAction.bind(null, typeId, entry.id)}
+          revoke={revokePreviewLinkAction.bind(null, typeId, entry.id)}
+        />
+      }
       actions={{
         save: saveEntryAction.bind(null, typeId, entry.id),
         publish: publishEntryAction.bind(null, typeId, entry.id),
