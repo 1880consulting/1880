@@ -55,7 +55,7 @@ it whole each time. Ready-made lists for both apps, without the password, are in
 | `PORTAL_SUBDOMAIN` | `hub` | same |
 | `PORTAL_URL` | the staging portal address, if it isn't `SITE_URL` with the subdomain in front | *(leave out)* |
 | `RESEND_API_KEY` | from step 6 (until then, leave out: sign-in links are shown in Studio or need a password) | same |
-| `MAIL_FROM` | *(leave out: the default is `1880 Consulting <notifications@1880.io>`, PLAN D51)* | same |
+| `MAIL_FROM` | *(leave out: the default is `1880 Consulting <notifications@1880consulting.com>`, PLAN D51)* | same |
 | `MAIL_REPLY_TO` | `inquiries@1880consulting.com` (where replies to site emails go) | same |
 | `GA_MEASUREMENT_ID` | *(leave out)* | `G-FNXWW6CRNM` (Google Analytics 4, the same property as today's site) |
 
@@ -147,12 +147,12 @@ home page into the CMS. Then sign in at `<address>/admin`, invite the team
 
 Resend has `1880.io` and `1880consulting.com` verified, with click tracking off.
 Only Resend's records were added; IT's mail records on `1880consulting.com` are
-untouched. Emails send as `notifications@1880.io`; replies go to
-`inquiries@1880consulting.com`.
+untouched. Emails send as `notifications@1880consulting.com` for now (`1880.io` is
+verified too; switch with `MAIL_FROM`); replies go to `inquiries@1880consulting.com`.
 
 To switch it on (or after replacing the key):
 
-1. In Resend → API Keys, create a key with **Sending access**, limited to the domain `1880.io`. Copy it (Resend shows it once).
+1. In Resend → API Keys, create a key with **Sending access** (all domains, or limited to the one in `MAIL_FROM`). Copy it (Resend shows it once).
 2. Set `RESEND_API_KEY` to it in **both** apps (1880.io and the hub), with `MAIL_REPLY_TO=inquiries@1880consulting.com`, and redeploy both.
 
 **Check:** on `/admin/login`, ask for an email link to your own address. Then

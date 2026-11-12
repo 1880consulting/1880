@@ -5,7 +5,7 @@ import "server-only";
  * nothing a visitor types can turn into HTML in someone's inbox.
  *
  * Settings: RESEND_API_KEY, and MAIL_FROM (default "1880 Consulting
- * <notifications@1880.io>", PLAN D51), and MAIL_REPLY_TO for replies. Without a key nothing is
+ * <notifications@1880consulting.com>", PLAN D51), and MAIL_REPLY_TO for replies. Without a key nothing is
  * sent and the result says why.
  */
 
@@ -19,7 +19,7 @@ export interface Mail {
 export type MailResult =
   { ok: true; id: string } | { ok: false; error: string; configured: boolean };
 
-const DEFAULT_FROM = "1880 Consulting <notifications@1880.io>";
+const DEFAULT_FROM = "1880 Consulting <notifications@1880consulting.com>";
 
 /** Keeps a header value on one line. */
 const oneLine = (s: string) => s.replace(/[\r\n]+/g, " ").trim();

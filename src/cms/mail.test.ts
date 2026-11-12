@@ -32,7 +32,7 @@ describe("sendMail", () => {
     expect(body.reply_to).toBe("ada@example.com");
     expect(body.text).toBe("Hi");
     expect(body.html).toBeUndefined();
-    expect(body.from).toBe("1880 Consulting <notifications@1880.io>");
+    expect(body.from).toBe("1880 Consulting <notifications@1880consulting.com>");
   });
 
   it("sends replies to MAIL_REPLY_TO when the email has no reply-to of its own", async () => {
